@@ -62,7 +62,7 @@ export default function HomePage() {
                   onClick={() => scrollToSection("produk-unggulan")}
                   className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md w-fit transition-all duration-300 ease-in-out"
                 >
-                  Lihat Produk
+                  Lihat Produk osoosssssssssssssssssssss
                 </Button>
               </div>
               <div className="w-full sm:w-1/2 lg:w-2/5 h-48 sm:h-full order-1 sm:order-2">
