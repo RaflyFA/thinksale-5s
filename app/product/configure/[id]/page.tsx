@@ -1,24 +1,28 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Minus, Plus } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import Image from "next/image"
+import { useState } from "react";
+import { Minus, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import Image from "next/image";
 
-export default function ProductConfigurePage({ params }: { params: { id: string } }) {
-  const [selectedRam, setSelectedRam] = useState("8 GB")
-  const [selectedSsd, setSelectedSsd] = useState("128 GB")
-  const [quantity, setQuantity] = useState(1)
+export default function ProductConfigurePage({
+  params,
+}: {
+  params: { id: string };
+}) {
+  const [selectedRam, setSelectedRam] = useState("8 GB");
+  const [selectedSsd, setSelectedSsd] = useState("128 GB");
+  const [quantity, setQuantity] = useState(1);
 
-  const ramOptions = ["8 GB", "12 GB", "16 GB"]
-  const ssdOptions = ["128 GB", "256 GB", "512 GB", "1 TB"]
+  const ramOptions = ["8 GB", "12 GB", "16 GB"];
+  const ssdOptions = ["128 GB", "256 GB", "512 GB", "1 TB"];
 
-  const basePrice = 5200000
-  const totalPrice = basePrice * quantity
+  const basePrice = 5200000;
+  const totalPrice = basePrice * quantity;
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("id-ID").format(price)
-  }
+    return new Intl.NumberFormat("id-ID").format(price);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -28,7 +32,7 @@ export default function ProductConfigurePage({ params }: { params: { id: string 
           <div className="flex gap-4 mb-4">
             <div className="w-24 h-24 border rounded-lg overflow-hidden">
               <Image
-                src="/placeholder.svg?height=96&width=96"
+                src="/placeholder.svg?"
                 alt="Laptop"
                 width={96}
                 height={96}
@@ -51,7 +55,9 @@ export default function ProductConfigurePage({ params }: { params: { id: string 
                 key={ram}
                 variant={selectedRam === ram ? "default" : "outline"}
                 className={`rounded-full ${
-                  selectedRam === ram ? "bg-gray-800 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  selectedRam === ram
+                    ? "bg-gray-800 text-white"
+                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                 }`}
                 onClick={() => setSelectedRam(ram)}
               >
@@ -62,7 +68,7 @@ export default function ProductConfigurePage({ params }: { params: { id: string 
         </div>
 
         {/* SSD Selection */}
-        <div className="p-6 border-b">
+        <div className="p-6">
           <h3 className="font-bold text-lg mb-4">SSD</h3>
           <div className="flex gap-3 flex-wrap">
             {ssdOptions.map((ssd) => (
@@ -70,7 +76,9 @@ export default function ProductConfigurePage({ params }: { params: { id: string 
                 key={ssd}
                 variant={selectedSsd === ssd ? "default" : "outline"}
                 className={`rounded-full ${
-                  selectedSsd === ssd ? "bg-gray-800 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  selectedSsd === ssd
+                    ? "bg-gray-800 text-white"
+                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                 }`}
                 onClick={() => setSelectedSsd(ssd)}
               >
@@ -112,12 +120,16 @@ export default function ProductConfigurePage({ params }: { params: { id: string 
           <div className="flex items-center justify-between mb-6">
             <div>
               <p className="text-gray-600 text-sm">Total</p>
-              <p className="text-2xl font-bold">Rp. {formatPrice(totalPrice)}</p>
+              <p className="text-2xl font-bold">
+                Rp. {formatPrice(totalPrice)}
+              </p>
             </div>
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-full">Check Out</Button>
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-full">
+              Check Out
+            </Button>
           </div>
         </div>
       </main>
     </div>
-  )
+  );
 }

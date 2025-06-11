@@ -1,95 +1,99 @@
-"use client"
+// components/scrollable-product-list.tsx
+"use client";
 
-import { useRef, useEffect } from "react"
-import type { Product } from "@/lib/types"
-import ProductCard from "./product-card"
+import { useRef, useEffect } from "react";
+import type { Product } from "@/lib/types";
+import ProductCard from "./product-card";
 
 interface ScrollableProductListProps {
-  products: Product[]
-  id?: string
+  products: Product[];
+  id?: string;
 }
 
-export default function ScrollableProductList({ products, id }: ScrollableProductListProps) {
-  const scrollRef = useRef<HTMLDivElement>(null)
+export default function ScrollableProductList({
+  products,
+  id,
+}: ScrollableProductListProps) {
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const scrollContainer = scrollRef.current
-    if (!scrollContainer) return
+    const scrollContainer = scrollRef.current;
+    if (!scrollContainer) return;
 
-    let isDown = false
-    let startX: number
-    let scrollLeft: number
+    let isDown = false;
+    let startX: number;
+    let scrollLeft: number;
 
     const handleMouseDown = (e: MouseEvent) => {
-      isDown = true
-      scrollContainer.style.cursor = "grabbing"
-      scrollContainer.style.transition = "none"
-      startX = e.pageX - scrollContainer.offsetLeft
-      scrollLeft = scrollContainer.scrollLeft
-    }
+      isDown = true;
+      scrollContainer.style.cursor = "grabbing";
+      scrollContainer.style.transition = "none";
+      startX = e.pageX - scrollContainer.offsetLeft;
+      scrollLeft = scrollContainer.scrollLeft;
+    };
 
     const handleMouseLeave = () => {
-      isDown = false
-      scrollContainer.style.cursor = "grab"
-      scrollContainer.style.transition = "scroll-behavior 0.3s ease"
-    }
+      isDown = false;
+      scrollContainer.style.cursor = "grab";
+      scrollContainer.style.transition = "scroll-behavior 0.3s ease";
+    };
 
     const handleMouseUp = () => {
-      isDown = false
-      scrollContainer.style.cursor = "grab"
-      scrollContainer.style.transition = "scroll-behavior 0.3s ease"
-    }
+      isDown = false;
+      scrollContainer.style.cursor = "grab";
+      scrollContainer.style.transition = "scroll-behavior 0.3s ease";
+    };
 
     const handleMouseMove = (e: MouseEvent) => {
-      if (!isDown) return
-      e.preventDefault()
-      const x = e.pageX - scrollContainer.offsetLeft
-      const walk = (x - startX) * 1.5
-      scrollContainer.scrollLeft = scrollLeft - walk
-    }
+      if (!isDown) return;
+      e.preventDefault();
+      const x = e.pageX - scrollContainer.offsetLeft;
+      const walk = (x - startX) * 1.5;
+      scrollContainer.scrollLeft = scrollLeft - walk;
+    };
 
     // Touch events dengan smooth animation
     const handleTouchStart = (e: TouchEvent) => {
-      scrollContainer.style.transition = "none"
-      startX = e.touches[0].pageX - scrollContainer.offsetLeft
-      scrollLeft = scrollContainer.scrollLeft
-    }
+      scrollContainer.style.transition = "none";
+      startX = e.touches[0].pageX - scrollContainer.offsetLeft;
+      scrollLeft = scrollContainer.scrollLeft;
+    };
 
     const handleTouchMove = (e: TouchEvent) => {
-      const x = e.touches[0].pageX - scrollContainer.offsetLeft
-      const walk = (x - startX) * 1.5
-      scrollContainer.scrollLeft = scrollLeft - walk
-    }
+      const x = e.touches[0].pageX - scrollContainer.offsetLeft;
+      const walk = (x - startX) * 1.5;
+      scrollContainer.scrollLeft = scrollLeft - walk;
+    };
 
     const handleTouchEnd = () => {
-      scrollContainer.style.transition = "scroll-behavior 0.3s ease"
-    }
+      scrollContainer.style.transition = "scroll-behavior 0.3s ease";
+    };
 
     // Event listeners
-    scrollContainer.addEventListener("mousedown", handleMouseDown)
-    scrollContainer.addEventListener("mouseleave", handleMouseLeave)
-    scrollContainer.addEventListener("mouseup", handleMouseUp)
-    scrollContainer.addEventListener("mousemove", handleMouseMove)
-    scrollContainer.addEventListener("touchstart", handleTouchStart)
-    scrollContainer.addEventListener("touchmove", handleTouchMove)
-    scrollContainer.addEventListener("touchend", handleTouchEnd)
+    scrollContainer.addEventListener("mousedown", handleMouseDown);
+    scrollContainer.addEventListener("mouseleave", handleMouseLeave);
+    scrollContainer.addEventListener("mouseup", handleMouseUp);
+    scrollContainer.addEventListener("mousemove", handleMouseMove);
+    scrollContainer.addEventListener("touchstart", handleTouchStart);
+    scrollContainer.addEventListener("touchmove", handleTouchMove);
+    scrollContainer.addEventListener("touchend", handleTouchEnd);
 
     return () => {
-      scrollContainer.removeEventListener("mousedown", handleMouseDown)
-      scrollContainer.removeEventListener("mouseleave", handleMouseLeave)
-      scrollContainer.removeEventListener("mouseup", handleMouseUp)
-      scrollContainer.removeEventListener("mousemove", handleMouseMove)
-      scrollContainer.removeEventListener("touchstart", handleTouchStart)
-      scrollContainer.removeEventListener("touchmove", handleTouchMove)
-      scrollContainer.removeEventListener("touchend", handleTouchEnd)
-    }
-  }, [])
+      scrollContainer.removeEventListener("mousedown", handleMouseDown);
+      scrollContainer.removeEventListener("mouseleave", handleMouseLeave);
+      scrollContainer.removeEventListener("mouseup", handleMouseUp);
+      scrollContainer.removeEventListener("mousemove", handleMouseMove);
+      scrollContainer.removeEventListener("touchstart", handleTouchStart);
+      scrollContainer.removeEventListener("touchmove", handleTouchMove);
+      scrollContainer.removeEventListener("touchend", handleTouchEnd);
+    };
+  }, []);
 
   return (
     <div
       id={id}
       ref={scrollRef}
-      className="flex overflow-x-auto gap-3 sm:gap-4 pb-4 scrollbar-hide snap-x snap-mandatory cursor-grab select-none px-4 sm:px-6 lg:px-8 transition-all duration-300 ease-in-out"
+      className="flex overflow-x-auto gap-4 pb-4 scrollbar-hide snap-x snap-mandatory cursor-grab select-none transition-all duration-300 ease-in-out" // MENGHILANGKAN px-4 DI SINI
       style={{
         scrollbarWidth: "none",
         msOverflowStyle: "none",
@@ -99,11 +103,11 @@ export default function ScrollableProductList({ products, id }: ScrollableProduc
       {products.map((product) => (
         <div
           key={product.id}
-          className="min-w-[140px] w-[140px] sm:min-w-[160px] sm:w-[160px] lg:min-w-[180px] lg:w-[180px] flex-shrink-0 snap-start transition-transform duration-200 hover:scale-105"
+          className="min-w-[160px] w-[160px] flex-shrink-0 snap-start transition-transform duration-200 hover:scale-100"
         >
           <ProductCard product={product} />
         </div>
       ))}
     </div>
-  )
+  );
 }

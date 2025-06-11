@@ -1,18 +1,23 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useTheme } from "next-themes"
-import { Sun, Moon, Monitor } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { useState, useEffect } from "react";
+import { useTheme } from "next-themes";
+import { Sun, Moon, Monitor } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export function ThemeSwitcher() {
-  const [mounted, setMounted] = useState(false)
-  const { theme, setTheme } = useTheme()
+  const [mounted, setMounted] = useState(false);
+  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
-    setMounted(true)
-  }, [])
+    setMounted(true);
+  }, []);
 
   if (!mounted) {
     return (
@@ -20,7 +25,7 @@ export function ThemeSwitcher() {
         <Sun className="h-[1.2rem] w-[1.2rem]" />
         <span className="sr-only">Toggle theme</span>
       </Button>
-    )
+    );
   }
 
   return (
@@ -48,5 +53,5 @@ export function ThemeSwitcher() {
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
-  )
+  );
 }
