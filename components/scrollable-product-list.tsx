@@ -89,7 +89,7 @@ export default function ScrollableProductList({ products, id }: ScrollableProduc
     <div
       id={id}
       ref={scrollRef}
-      className="flex overflow-x-auto gap-4 pb-4 scrollbar-hide snap-x snap-mandatory cursor-grab select-none px-4 transition-all duration-300 ease-in-out"
+      className="flex overflow-x-auto gap-3 sm:gap-4 pb-4 scrollbar-hide snap-x snap-mandatory cursor-grab select-none px-4 sm:px-6 lg:px-8 transition-all duration-300 ease-in-out"
       style={{
         scrollbarWidth: "none",
         msOverflowStyle: "none",
@@ -99,7 +99,7 @@ export default function ScrollableProductList({ products, id }: ScrollableProduc
       {products.map((product) => (
         <div
           key={product.id}
-          className="min-w-[160px] w-[160px] flex-shrink-0 snap-start transition-transform duration-200 hover:scale-105"
+          className="min-w-[140px] w-[140px] sm:min-w-[160px] sm:w-[160px] lg:min-w-[180px] lg:w-[180px] flex-shrink-0 snap-start transition-transform duration-200 hover:scale-105"
         >
           <ProductCard product={product} />
         </div>

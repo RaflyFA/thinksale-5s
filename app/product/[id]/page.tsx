@@ -41,39 +41,41 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 relative pb-20">
-      {/* Header */}
+    <div className="min-h-screen bg-gray-50 relative pb-20 sm:pb-24">
+      {/* Header - Responsive */}
       <header className="bg-white shadow-sm sticky top-0 z-10">
-        <div className="w-full px-4 py-4">
+        <div className="w-full px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center gap-4">
             <Link href="/">
               <Button variant="ghost" size="icon">
                 <ArrowLeft className="h-5 w-5" />
               </Button>
             </Link>
-            <h1 className="text-lg font-semibold">Detail Produk</h1>
+            <h1 className="text-lg sm:text-xl font-semibold">Detail Produk</h1>
           </div>
         </div>
       </header>
 
-      <main className="w-full px-4 py-6">
-        {/* Product Images and Info in One Card */}
-        <div className="max-w-sm mx-auto">
+      <main className="w-full px-4 sm:px-6 lg:px-8 py-6">
+        {/* Product Images and Info - Responsive container */}
+        <div className="max-w-sm sm:max-w-md lg:max-w-2xl mx-auto">
           <Card className="bg-white mb-6">
             <CardContent className="p-0">
-              {/* Product Images */}
+              {/* Product Images - Responsive aspect ratio */}
               <div className="relative mb-4">
                 <div className="aspect-square w-full relative">
                   <Image
                     src={product.images[selectedImageIndex] || "/placeholder.svg"}
                     alt={product.name}
                     fill
-                    className="object-cover"
+                    className="object-cover rounded-t-lg"
+                    sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
+                    priority
                   />
                   <Button
                     variant="outline"
                     size="icon"
-                    className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/80"
+                    className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white/90"
                     onClick={prevImage}
                   >
                     <ChevronLeft className="h-4 w-4" />
@@ -81,7 +83,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                   <Button
                     variant="outline"
                     size="icon"
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/80"
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white/90"
                     onClick={nextImage}
                   >
                     <ChevronRight className="h-4 w-4" />
@@ -89,13 +91,13 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                 </div>
               </div>
 
-              {/* Thumbnail Images */}
-              <div className="flex justify-center gap-2 px-4 mb-4">
+              {/* Thumbnail Images - Responsive sizing */}
+              <div className="flex justify-center gap-2 px-4 mb-4 overflow-x-auto">
                 {product.images.map((image, index) => (
                   <button
                     key={index}
                     onClick={() => setSelectedImageIndex(index)}
-                    className={`w-16 h-16 rounded-lg overflow-hidden border-2 ${
+                    className={`w-12 h-12 sm:w-16 sm:h-16 rounded-lg overflow-hidden border-2 flex-shrink-0 ${
                       selectedImageIndex === index ? "border-blue-500" : "border-gray-200"
                     }`}
                   >
@@ -110,18 +112,18 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                 ))}
               </div>
 
-              {/* Product Info */}
-              <div className="p-6">
-                <h1 className="text-2xl font-bold mb-2">{product.name}</h1>
-                <p className="text-2xl font-bold text-blue-600 mb-4">Rp {product.priceRange}</p>
+              {/* Product Info - Responsive typography */}
+              <div className="p-4 sm:p-6">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-2">{product.name}</h1>
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-blue-600 mb-4">Rp {product.priceRange}</p>
 
                 <div className="mb-6">
-                  <p className="font-medium mb-2">{product.description}</p>
-                  <p className="text-gray-600 mb-4">{product.processor}</p>
+                  <p className="font-medium mb-2 text-sm sm:text-base">{product.description}</p>
+                  <p className="text-gray-600 mb-4 text-sm sm:text-base">{product.processor}</p>
 
                   <div className="space-y-1">
                     {product.specs.map((spec, index) => (
-                      <p key={index} className="text-sm text-gray-600">
+                      <p key={index} className="text-xs sm:text-sm text-gray-600">
                         • {spec}
                       </p>
                     ))}
@@ -131,15 +133,15 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
             </CardContent>
           </Card>
 
-          {/* Recommended Products */}
+          {/* Recommended Products - Responsive grid */}
           <section>
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">Rekomendasi Untukmu</h2>
-              <Link href="/recommended" className="text-blue-600 hover:underline">
+              <h2 className="text-lg sm:text-xl lg:text-2xl font-bold">Rekomendasi Untukmu</h2>
+              <Link href="/recommended" className="text-blue-600 hover:underline text-sm sm:text-base">
                 Lihat Semua
               </Link>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {recommendedProducts.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
@@ -148,13 +150,21 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
         </div>
       </main>
 
-      {/* Fixed Action Buttons at Bottom - full width */}
+      {/* Fixed Action Buttons - Responsive positioning */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 z-20">
-        <div className="max-w-sm mx-auto flex items-center gap-4">
-          <Button variant="outline" size="icon" className="flex-shrink-0" onClick={handleAskAdmin}>
+        <div className="max-w-sm sm:max-w-md lg:max-w-2xl mx-auto flex items-center gap-4">
+          <Button
+            variant="outline"
+            size="icon"
+            className="flex-shrink-0 w-12 h-12 sm:w-10 sm:h-10"
+            onClick={handleAskAdmin}
+          >
             <MessageCircle className="h-5 w-5" />
           </Button>
-          <Button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white" onClick={handleOrderNow}>
+          <Button
+            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 text-sm sm:text-base"
+            onClick={handleOrderNow}
+          >
             Pesan Sekarang
           </Button>
         </div>

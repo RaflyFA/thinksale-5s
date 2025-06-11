@@ -29,13 +29,13 @@ export default function ScrollToTopButton() {
 
   return (
     <Button
-      className={`fixed bottom-20 right-4 z-10 rounded-full bg-blue-600 hover:bg-blue-700 transition-opacity duration-300 p-3 ${
+      className={`fixed bottom-24 sm:bottom-28 right-4 sm:right-6 lg:right-8 z-10 rounded-full bg-blue-600 hover:bg-blue-700 transition-opacity duration-300 p-3 sm:p-4 ${
         isVisible ? "opacity-100" : "opacity-0 pointer-events-none"
       }`}
       onClick={scrollToTop}
       size="icon"
     >
-      <ArrowUp className="h-5 w-5 text-white" />
+      <ArrowUp className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
     </Button>
   )
 }

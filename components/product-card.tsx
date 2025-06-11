@@ -11,21 +11,22 @@ export default function ProductCard({ product }: ProductCardProps) {
   return (
     <Link href={`/product/${product.id}`}>
       <Card className="cursor-pointer hover:shadow-lg transition-shadow h-full">
-        <CardContent className="p-3">
-          <div className="aspect-square mb-3">
+        <CardContent className="p-2 sm:p-3">
+          <div className="aspect-square mb-2 sm:mb-3">
             <Image
               src={product.image || "/placeholder.svg"}
               alt={product.name}
-              width={150}
-              height={150}
+              width={200}
+              height={200}
               className="w-full h-full object-cover rounded-lg"
+              sizes="(max-width: 640px) 140px, (max-width: 1024px) 160px, 180px"
             />
           </div>
-          <h3 className="font-bold text-sm mb-1 line-clamp-2">{product.name}</h3>
-          <p className="text-xs text-gray-600 mb-1">{product.processor}</p>
-          <p className="text-xs text-gray-600 mb-1">RAM: {product.ramOptions.join(", ")}</p>
-          <p className="text-xs text-gray-600 mb-2">SSD: {product.ssdOptions.join(", ")}</p>
-          <p className="font-bold text-blue-600 text-sm">Rp {product.priceRange}</p>
+          <h3 className="font-bold text-xs sm:text-sm mb-1 line-clamp-2 leading-tight">{product.name}</h3>
+          <p className="text-xs text-gray-600 mb-1 truncate">{product.processor}</p>
+          <p className="text-xs text-gray-600 mb-1 truncate">RAM: {product.ramOptions.join(", ")}</p>
+          <p className="text-xs text-gray-600 mb-2 truncate">SSD: {product.ssdOptions.join(", ")}</p>
+          <p className="font-bold text-blue-600 text-xs sm:text-sm">Rp {product.priceRange}</p>
         </CardContent>
       </Card>
     </Link>
