@@ -1,85 +1,74 @@
 // app/page.tsx
-"use client";
+"use client"
 
-import { Search } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import Image from "next/image";
-import ScrollableProductList from "@/components/scrollable-product-list";
-import ScrollToTopButton from "@/components/scroll-to-top-button";
-import { products, categories, featuredProduct } from "@/lib/data";
-import { useState, useEffect, useMemo } from "react";
+import { Search } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import Image from "next/image"
+import ScrollableProductList from "@/components/scrollable-product-list"
+import ScrollToTopButton from "@/components/scroll-to-top-button"
+import { products, categories, featuredProduct } from "@/lib/data"
+import { useState, useEffect, useMemo } from "react"
 
 export default function HomePage() {
-  const thinkpadProducts = products.filter(
-    (product) => product.category === "thinkpad"
-  );
-  const dellProducts = products
-    .filter((product) => product.category === "dell")
-    .slice(0, 3);
+  const thinkpadProducts = products.filter((product) => product.category === "thinkpad")
+  const dellProducts = products.filter((product) => product.category === "dell").slice(0, 3)
 
-  const featuredDisplayProducts = products
-    .filter((product) => product.id !== "4")
-    .slice(0, 2);
+  const featuredDisplayProducts = products.filter((product) => product.id !== "4").slice(0, 2)
 
-  const recommendedDisplayProducts = products
-    .filter((product) => product.id !== "4")
-    .slice(0, 3);
+  const recommendedDisplayProducts = products.filter((product) => product.id !== "4").slice(0, 3)
 
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState("")
 
   const filteredProducts = useMemo(() => {
     if (!searchTerm) {
-      return [];
+      return []
     }
-    const lowerCaseSearchTerm = searchTerm.toLowerCase();
+    const lowerCaseSearchTerm = searchTerm.toLowerCase()
     return products.filter(
       (product) =>
         product.name.toLowerCase().includes(lowerCaseSearchTerm) ||
         product.processor.toLowerCase().includes(lowerCaseSearchTerm) ||
         product.description.toLowerCase().includes(lowerCaseSearchTerm) ||
-        product.category.toLowerCase().includes(lowerCaseSearchTerm)
-    );
-  }, [searchTerm, products]);
+        product.category.toLowerCase().includes(lowerCaseSearchTerm),
+    )
+  }, [searchTerm, products])
 
   const scrollToSection = (sectionId: string) => {
-    const element = document.getElementById(sectionId);
+    const element = document.getElementById(sectionId)
     if (element) {
       element.scrollIntoView({
         behavior: "smooth",
         block: "start",
         inline: "nearest",
-      });
+      })
     }
-  };
+  }
 
-  const [scrolled, setScrolled] = useState(false);
+  const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 10) {
-        setScrolled(true);
+        setScrolled(true)
       } else {
-        setScrolled(false);
+        setScrolled(false)
       }
-    };
+    }
 
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll)
 
     return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
-  }, []);
+      window.removeEventListener("scroll", handleScroll)
+    }
+  }, [])
 
   return (
     <div className="min-h-screen bg-gray-200 relative">
       {/* Header */}
       <header
-        className={`bg-white sticky top-0 z-10 transition-shadow duration-300 ${
-          scrolled ? "shadow-md" : "shadow-sm"
-        }`}
+        className={`bg-white sticky top-0 z-10 transition-shadow duration-300 ${scrolled ? "shadow-md" : "shadow-sm"}`}
       >
         <div className="w-full px-4 py-4 flex items-center justify-between">
           <h1 className="text-2xl font-bold">ThinkSale</h1>
@@ -101,18 +90,11 @@ export default function HomePage() {
         {/* Bagian untuk Menampilkan Hasil Pencarian */}
         {searchTerm && (
           <section className="px-4 py-6">
-            <h2 className="text-xl font-bold mb-4">
-              Hasil Pencarian untuk "{searchTerm}"
-            </h2>
+            <h2 className="text-xl font-bold mb-4">Hasil Pencarian untuk "{searchTerm}"</h2>
             {filteredProducts.length > 0 ? (
-              <ScrollableProductList
-                products={filteredProducts}
-                id="search-results-scroll"
-              />
+              <ScrollableProductList products={filteredProducts} id="search-results-scroll" />
             ) : (
-              <p className="text-gray-600">
-                Tidak ada produk yang cocok dengan pencarian Anda.
-              </p>
+              <p className="text-gray-600">Tidak ada produk yang cocok dengan pencarian Anda.</p>
             )}
           </section>
         )}
@@ -125,12 +107,8 @@ export default function HomePage() {
               <div className="bg-white px-6 mx-4 rounded-lg shadow-lg">
                 <div className="flex flex-row h-72">
                   <div className="flex-1 pr-6 flex flex-col justify-center">
-                    <h2 className="text-xl font-bold mb-3 featuredProduct">
-                      {featuredProduct.title}
-                    </h2>
-                    <p className="text-gray-600 mb-4 text-sm leading-relaxed">
-                      {featuredProduct.description}
-                    </p>
+                    <h2 className="text-xl font-bold mb-3 featuredProduct">{featuredProduct.title}</h2>
+                    <p className="text-gray-600 mb-4 text-sm leading-relaxed">{featuredProduct.description}</p>
                     <Button
                       onClick={() => scrollToSection("produk-unggulan")}
                       className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md w-fit transition-all duration-300 ease-in-out"
@@ -154,13 +132,13 @@ export default function HomePage() {
             {/* Categories - dengan smooth scroll yang lebih baik */}
             <section className="px-4">
               <h2 className="text-xl font-bold mb-4">Kategori</h2>
-              <div className="gap-4">
+              <div className="grid grid-cols-2 gap-4 items-stretch">
                 <button
                   onClick={() => scrollToSection("produk-thinkpad")}
-                  className="text-left transition-transform duration-300 ease-in-out hover:scale-100"
+                  className="text-left transition-transform duration-300 ease-in-out hover:scale-100 h-[120px]"
                 >
-                  <Card className="cursor-pointer hover:shadow-md transition-shadow">
-                    <CardContent className="p-6 text-center">
+                  <Card className="cursor-pointer hover:shadow-md transition-shadow h-full">
+                    <CardContent className="p-6 text-center h-full flex flex-col justify-center">
                       <Image
                         src={categories[0].image || "/putih 1.png"}
                         alt={categories[0].name}
@@ -174,15 +152,12 @@ export default function HomePage() {
                 </button>
                 <button
                   onClick={() => scrollToSection("produk-dell")}
-                  className="text-left transition-transform duration-300 ease-in-out hover:scale-100 pl-5"
+                  className="text-left transition-transform duration-300 ease-in-out hover:scale-100 h-[120px]"
                 >
-                  <Card className="cursor-pointer hover:shadow-md transition-shadow">
-                    <CardContent className="p-6 text-center">
+                  <Card className="cursor-pointer hover:shadow-md transition-shadow h-full">
+                    <CardContent className="p-6 text-center h-full flex flex-col justify-center">
                       <Image
-                        src={
-                          categories[1].image ||
-                          "/Dell Latitude 7490 i5 gen 8.png"
-                        }
+                        src={categories[1].image || "/Dell Latitude 7490 i5 gen 8.png" || "/placeholder.svg"}
                         alt={categories[1].name}
                         width={60}
                         height={60}
@@ -203,10 +178,7 @@ export default function HomePage() {
               <div className="px-4">
                 {" "}
                 {/* MENAMBAHKAN px-4 DI SINI */}
-                <ScrollableProductList
-                  products={featuredDisplayProducts}
-                  id="produk-unggulan-scroll"
-                />
+                <ScrollableProductList products={featuredDisplayProducts} id="produk-unggulan-scroll" />
               </div>
             </section>
 
@@ -218,10 +190,7 @@ export default function HomePage() {
               <div className="px-4">
                 {" "}
                 {/* MENAMBAHKAN px-4 DI SINI */}
-                <ScrollableProductList
-                  products={recommendedDisplayProducts}
-                  id="rekomendasi-scroll"
-                />
+                <ScrollableProductList products={recommendedDisplayProducts} id="rekomendasi-scroll" />
               </div>
             </section>
 
@@ -233,9 +202,7 @@ export default function HomePage() {
                   variant="link"
                   className="text-blue-600 hover:underline p-0"
                   onClick={() =>
-                    document
-                      .getElementById("thinkpad-scroll")
-                      ?.scrollTo({ left: 1000, behavior: "smooth" })
+                    document.getElementById("thinkpad-scroll")?.scrollTo({ left: 1000, behavior: "smooth" })
                   }
                 >
                   Lihat Semua
@@ -243,10 +210,7 @@ export default function HomePage() {
               </div>
               <div className="px-4">
                 {" "}
-                <ScrollableProductList
-                  products={thinkpadProducts}
-                  id="thinkpad-scroll"
-                />
+                <ScrollableProductList products={thinkpadProducts} id="thinkpad-scroll" />
               </div>
             </section>
 
@@ -258,10 +222,7 @@ export default function HomePage() {
               <div className="px-4">
                 {" "}
                 {/* MENAMBAHKAN px-4 DI SINI */}
-                <ScrollableProductList
-                  products={dellProducts}
-                  id="dell-scroll"
-                />
+                <ScrollableProductList products={dellProducts} id="dell-scroll" />
               </div>
             </section>
           </>
@@ -271,5 +232,5 @@ export default function HomePage() {
       {/* Scroll to Top Button */}
       <ScrollToTopButton />
     </div>
-  );
+  )
 }
