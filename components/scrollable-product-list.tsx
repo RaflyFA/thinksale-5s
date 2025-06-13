@@ -88,7 +88,7 @@ export default function ScrollableProductList({ products, id }: ScrollableProduc
   <div
     id={id}
     ref={scrollRef}
-    className="flex overflow-x-auto gap-4 pb-4 scrollbar-hide snap-x snap-mandatory cursor-grab select-none scroll-smooth"
+    className="flex overflow-x-auto gap-4 pb-4 scrollbar-hide cursor-grab select-none scroll-smooth"
   >
     {products.map((product) => (
       <div
