@@ -218,7 +218,7 @@ Terima kasih!
                     variant={deliveryOption === "cod" ? "default" : "outline"}
                     className={`rounded-lg px-4 py-2 transition-all duration-200 ${
                       deliveryOption === "cod"
-                        ? "bg-blue-600 text-white"
+                        ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg border border-gray-300" // Desain baru saat terpilih
                         : "bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300"
                     }`}
                     onClick={() => setDeliveryOption("cod")}
@@ -232,7 +232,7 @@ Terima kasih!
                     }
                     className={`rounded-lg px-4 py-2 transition-all duration-200 ${
                       deliveryOption === "delivery"
-                        ? "bg-blue-600 text-white"
+                        ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg border border-gray-300" // Desain baru saat terpilih
                         : "bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300"
                     }`}
                     onClick={() => setDeliveryOption("delivery")}
@@ -286,7 +286,9 @@ Terima kasih!
             <div className="pt-4">
               <Button
                 type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3"
+                className="w-full rounded-lg px-8 py-3 transition-all duration-200
+                            bg-gradient-to-r from-blue-600 to-purple-600 text-white
+                            shadow-lg border border-gray-300"
               >
                 Lanjutkan ke WhatsApp
               </Button>
@@ -316,18 +318,19 @@ Terima kasih!
 
             {/* RAM Selection */}
             <div className="">
-              <h3 className="font-bold text-lg mb-4">RAM</h3>
+              <h3 className="font-bold text-sm mb-4">RAM</h3>
               <div className="flex flex-wrap gap-3">
                 {product.ramOptions.map((ram) => (
                   <Button
                     key={ram}
                     variant={selectedRam === ram ? "default" : "outline"}
-                    className={`rounded-lg px-4 py-2 transition-all duration-200 ${
+                    className={`rounded-lg px-3 py-0.5 text-xs bg-gradient-to-r w-fit h-8 flex-shrink-0 transition-all duration-300 transform hover:shadow-lg ${
                       selectedRam === ram
-                        ? "bg-blue-600 text-white"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300"
+                        ? "from-blue-600 to-purple-600 "
+                        : " hover:bg-gray-200 border-gray-300 text-black"
                     }`}
                     onClick={() => setSelectedRam(ram)}
+                    size="sm"
                   >
                     {ram}
                   </Button>
@@ -337,18 +340,19 @@ Terima kasih!
 
             {/* SSD Selection */}
             <div className="">
-              <h3 className="font-bold text-lg mb-4">SSD</h3>
+              <h3 className="font-bold text-sm mb-4">SSD</h3>
               <div className="flex flex-wrap gap-3">
                 {product.ssdOptions.map((ssd) => (
                   <Button
                     key={ssd}
                     variant={selectedSsd === ssd ? "default" : "outline"}
-                    className={`rounded-lg px-4 py-2 transition-all duration-200 ${
+                    className={`rounded-lg px-3 py-0.5 text-xs bg-gradient-to-r w-fit h-8 flex-shrink-0 transition-all duration-300 transform hover:shadow-lg ${
                       selectedSsd === ssd
-                        ? "bg-blue-600 text-white"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300"
+                        ? "from-blue-600 to-purple-600 "
+                        : "hover:bg-gray-200 border-gray-300 text-black"
                     }`}
                     onClick={() => setSelectedSsd(ssd)}
+                    size="sm"
                   >
                     {ssd}
                   </Button>
@@ -387,12 +391,14 @@ Terima kasih!
               <div className="flex justify-between items-center mb-6">
                 <div>
                   <p className="text-gray-600 text-sm">Total</p>
-                  <p className="text-2xl font-bold">
+                  <p className="text-xl font-bold">
                     Rp {formatPrice(totalPrice)}
                   </p>
                 </div>
                 <Button
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3"
+                  className="rounded-lg px-8 py-3 transition-all duration-200
+                            bg-gradient-to-r from-blue-600 to-purple-600 text-white
+                            shadow-lg border border-gray-300"
                   onClick={handleCheckout}
                 >
                   Checkout

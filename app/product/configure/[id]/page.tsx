@@ -120,7 +120,7 @@ export default function ProductConfigurePage({
           <div className="flex items-center justify-between mb-6">
             <div>
               <p className="text-gray-600 text-sm">Total</p>
-              <p className="text-2xl font-bold">
+              <p className="text-xl font-bold">
                 Rp. {formatPrice(totalPrice)}
               </p>
             </div>

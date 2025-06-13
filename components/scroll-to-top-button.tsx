@@ -1,3 +1,4 @@
+// components/scroll-to-top-button.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -9,6 +10,7 @@ export default function ScrollToTopButton() {
 
   useEffect(() => {
     const toggleVisibility = () => {
+      // Deteksi scroll pada window (yang akan sama dengan body/html)
       if (window.scrollY > 300) {
         setIsVisible(true);
       } else {
@@ -16,11 +18,17 @@ export default function ScrollToTopButton() {
       }
     };
 
+    // Tambahkan event listener ke window
     window.addEventListener("scroll", toggleVisibility);
-    return () => window.removeEventListener("scroll", toggleVisibility);
-  }, []);
+
+    // Bersihkan event listener saat komponen di-unmount
+    return () => {
+      window.removeEventListener("scroll", toggleVisibility);
+    };
+  }, []); // Dependensi tetap kosong
 
   const scrollToTop = () => {
+    // Kembali ke window.scrollTo, yang akan menghormati scroll-behavior: smooth dari CSS global
     window.scrollTo({
       top: 0,
       behavior: "smooth",
@@ -29,9 +37,11 @@ export default function ScrollToTopButton() {
 
   return (
     <Button
-      className={`fixed bottom-20 right-4 z-10 rounded-full bg-blue-600 hover:bg-blue-700 transition-opacity duration-300 p-3 ${
-        isVisible ? "opacity-100" : "opacity-0 pointer-events-none"
-      }`}
+      className={`fixed bottom-20 right-4 z-10 rounded-full px-8 py-3
+                 bg-gradient-to-r from-blue-600 to-purple-600 text-white
+                 shadow-lg border border-gray-300 transition-opacity duration-300 p-3 ${
+                   isVisible ? "opacity-100" : "opacity-0 pointer-events-none"
+                 }`}
       onClick={scrollToTop}
       size="icon"
     >

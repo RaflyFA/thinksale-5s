@@ -24,7 +24,7 @@ export default function ScrollableProductList({ products, id }: ScrollableProduc
     const handleMouseDown = (e: MouseEvent) => {
       isDown = true
       scrollContainer.style.cursor = "grabbing"
-      scrollContainer.style.transition = "none"
+      
       startX = e.pageX - scrollContainer.offsetLeft
       scrollLeft = scrollContainer.scrollLeft
     }
@@ -32,13 +32,11 @@ export default function ScrollableProductList({ products, id }: ScrollableProduc
     const handleMouseLeave = () => {
       isDown = false
       scrollContainer.style.cursor = "grab"
-      scrollContainer.style.transition = "scroll-behavior 0.3s ease"
     }
 
     const handleMouseUp = () => {
       isDown = false
       scrollContainer.style.cursor = "grab"
-      scrollContainer.style.transition = "scroll-behavior 0.3s ease"
     }
 
     const handleMouseMove = (e: MouseEvent) => {
@@ -51,7 +49,7 @@ export default function ScrollableProductList({ products, id }: ScrollableProduc
 
     // Touch events dengan smooth animation
     const handleTouchStart = (e: TouchEvent) => {
-      scrollContainer.style.transition = "none"
+      
       startX = e.touches[0].pageX - scrollContainer.offsetLeft
       scrollLeft = scrollContainer.scrollLeft
     }
@@ -63,7 +61,7 @@ export default function ScrollableProductList({ products, id }: ScrollableProduc
     }
 
     const handleTouchEnd = () => {
-      scrollContainer.style.transition = "scroll-behavior 0.3s ease"
+      
     }
 
     // Event listeners
@@ -87,24 +85,20 @@ export default function ScrollableProductList({ products, id }: ScrollableProduc
   }, [])
 
   return (
-    <div
-      id={id}
-      ref={scrollRef}
-      className="flex overflow-x-auto gap-4 pb-4 scrollbar-hide snap-x snap-mandatory cursor-grab select-none transition-all duration-300 ease-in-out" // MENGHILANGKAN px-4 DI SINI
-      style={{
-        scrollbarWidth: "none",
-        msOverflowStyle: "none",
-        scrollBehavior: "smooth",
-      }}
-    >
-      {products.map((product) => (
-        <div
-          key={product.id}
-          className="min-w-[160px] w-[160px] h-[280px] flex-shrink-0 snap-start transition-transform duration-200 hover:scale-100"
-        >
-          <ProductCard product={product} />
-        </div>
-      ))}
-    </div>
-  )
+  <div
+    id={id}
+    ref={scrollRef}
+    className="flex overflow-x-auto gap-4 pb-4 scrollbar-hide snap-x snap-mandatory cursor-grab select-none scroll-smooth"
+  >
+    {products.map((product) => (
+      <div
+        key={product.id}
+        className="min-w-28 w-44 h-80 flex-shrink-0 snap-start transition-transform duration-200 hover:scale-100"
+      >
+        <ProductCard product={product} />
+      </div>
+    ))}
+  </div>
+)
+
 }

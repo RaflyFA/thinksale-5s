@@ -189,14 +189,14 @@ export default function AddProductPage() {
     <div className="min-h-screen bg-gray-200">
       {/* Header */}
       <header className="bg-white shadow-sm sticky top-0 z-10">
-        <div className="w-full px-4 py-4">
+        <div className="w-full px-4 py-2">
           <div className="flex items-center gap-4">
             <Link href="/">
               <Button variant="ghost" size="icon">
                 <ArrowLeft className="h-5 w-5" />
               </Button>
             </Link>
-            <h1 className="text-lg font-semibold">Tambah Produk</h1>
+            <h1 className="text-md font-semibold">Tambah Produk</h1>
           </div>
         </div>
       </header>
@@ -397,7 +397,7 @@ export default function AddProductPage() {
             <div className="pt-4">
               <Button
                 type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-md text-lg font-medium"
+                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-full shadow-lg py-3 text-lg font-medium"
               >
                 Tambah Produk
               </Button>

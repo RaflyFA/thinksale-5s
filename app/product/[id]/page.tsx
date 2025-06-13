@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Link from "next/link";
 import Image from "next/image";
-import ProductCard from "@/components/product-card";
+import ScrollableProductList from "@/components/scrollable-product-list";
 import ConfigureProduct from "@/components/configure-product"; // Pastikan ini diimpor dengan benar
 import { products } from "@/lib/data";
 import { useParams } from "next/navigation";
@@ -23,19 +23,15 @@ export default function ProductDetailPage({
 }) {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [showConfigure, setShowConfigure] = useState(false);
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
-  // Dapatkan ID dari URL menggunakan useParams hook
   const { id } = useParams();
+  const productId = Array.isArray(id) ? id[0] : id;
+  const product = products.find((p) => p.id === productId) || products[0];
 
-  // Temukan produk berdasarkan ID
-  // Gunakan `id` dari useParams, pastikan itu string
-  const productId = Array.isArray(id) ? id[0] : id; // Handle case where id might be array
-  const product = products.find((p) => p.id === productId) || products[0]; // Gunakan productId
-
-  // Produk rekomendasi (3 produk acak selain produk saat ini)
   const recommendedProducts = products
     .filter((p) => p.id !== productId)
-    .slice(0, 3); // Mengubah dari 2 menjadi 3
+    .slice(0, 3);
 
   const nextImage = () => {
     setSelectedImageIndex((prev) => (prev + 1) % product.images.length);
@@ -61,18 +57,29 @@ export default function ProductDetailPage({
     window.open(`https://wa.me/6281224086200?text=${message}`, "_blank");
   };
 
+  const descriptionLimit = 150; // Batas karakter deskripsi
+  const shortDescription =
+    product.description.length > descriptionLimit
+      ? product.description.substring(0, descriptionLimit) + "..."
+      : product.description;
+
+  // Konten deskripsi yang akan ditampilkan (HTML)
+  const displayDescriptionHtml = {
+    __html: isDescriptionExpanded ? product.description : shortDescription,
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 relative pb-20">
+    <div className="min-h-screen bg-gray-200 relative pb-20">
       {/* Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-10">
-        <div className="w-full px-4 py-4">
+      <header className="bg-white shadow-sm sticky top-0 z-20">
+        <div className="w-full px-4 py-2">
           <div className="flex items-center gap-4">
             <Link href="/">
               <Button variant="ghost" size="icon">
                 <ArrowLeft className="h-5 w-5" />
               </Button>
             </Link>
-            <h1 className="text-lg font-semibold">Detail Produk</h1>
+            <h1 className="text-md font-semibold">Detail Produk</h1>
           </div>
         </div>
       </header>
@@ -145,16 +152,31 @@ export default function ProductDetailPage({
 
               {/* Product Info */}
               <div className="p-6">
-                <h1 className="text-2xl font-bold mb-2">{product.name}</h1>
-                <p className="text-2xl font-bold text-blue-600 mb-4">
+                <h1 className="text-lg font-bold mb-2">{product.name}</h1>
+                <p className="text-lg font-bold text-blue-600 mb-4">
                   Rp {product.priceRange}
                 </p>
 
                 <div className="mb-6">
-                  <p className="font-medium mb-2">{product.description}</p>
-                  <p className="text-gray-600 mb-4">{product.processor}</p>
+                  <div
+                    className="text-gray-600 mb-0 text-sm" // Tambahkan margin bawah
+                    dangerouslySetInnerHTML={displayDescriptionHtml}
+                  />
+                  {product.description.length > descriptionLimit && (
+                    <button
+                      onClick={() =>
+                        setIsDescriptionExpanded(!isDescriptionExpanded)
+                      }
+                      className="text-blue-600 hover:underline text-sm font-medium "
+                    >
+                      {isDescriptionExpanded ? "Tutup" : "Baca Selengkapnya"}
+                    </button>
+                  )}
+                  <p className="text-gray-600 mb-4 mt-6 text-sm ">
+                    {product.processor}
+                  </p>
 
-                  <div className="space-y-1">
+                  <div className="space-y-1 text-xs">
                     {product.specs.map((spec, index) => {
                       const trimmedSpec = spec.trim();
                       const isSubItem =
@@ -164,7 +186,7 @@ export default function ProductDetailPage({
                       return (
                         <p
                           key={index}
-                          className={`text-sm text-gray-600 ${
+                          className={`text-xs text-gray-600 ${
                             isSubItem ? "pl-4" : ""
                           }`}
                         >
@@ -185,28 +207,24 @@ export default function ProductDetailPage({
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold">Rekomendasi Untukmu</h2>
             </div>
-            <div className="grid grid-cols-3 gap-4">
-              {recommendedProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
+            <ScrollableProductList products={recommendedProducts} id="recommended-products-scroll" />
           </section>
         </div>
       </main>
 
       {/* Fixed Action Buttons at Bottom - full width */}
-      <div className="fixed bottom-0 left-0 right-0  bg-white border-t p-4 z-20">
-        <div className="max-w-[39rem] mx-auto flex items-center gap-4">
+      <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t p-4 z-20 lg:hidden">
+        <div className="container-responsive flex items-center gap-4">
           <Button
             variant="outline"
             size="icon"
-            className="flex-shrink-0"
+            className="flex-shrink-0 w-12 h-12 rounded-full"
             onClick={handleAskAdmin}
           >
             <MessageCircle className="h-5 w-5" />
           </Button>
           <Button
-            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+            className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-3 rounded-full shadow-lg"
             onClick={handleOrderNow}
           >
             Pesan Sekarang

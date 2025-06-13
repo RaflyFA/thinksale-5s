@@ -7,7 +7,7 @@ export const products: Product[] = [
     name: "Lenovo Slim T470S Silver Edition",
     category: "thinkpad",
     processor: "Intel Core i5 Gen 7",
-    description: "Lenovo ThinkPad Slim T470S Silver Edition",
+    description: "Lenovo ThinkPad Slim T470S -  Performa Tangguh dalam Desain Elegan. Desainnya yang ultra-slim (hanya 18,8 mm) dan berat 1,32 kg dapat dibawa ke mana saja. Finishing silver-nya memberikan kesan elegan dan profesional. Ditenagai prosesor Intel Core i5/i7 dan RAM hingga 12GB, performanya lancar untuk multitasking, kerja harian, atau bahkan editing ringan. Layar 14 Full HD IPS. Fitur keamanannya lengkap, termasuk fingerprint reader dan TPM 2.0 untuk proteksi data. Port-nya beragam: USB-C, Thunderbolt, HDMI, dan dukungan WiFi 6 untuk koneksi stabil. Baterainya tahan lama dan mendukung hot-swapping.",
     image: "/putih 1.png", // Dihapus ?height=200&width=200
     images: [
       "/putih 1.png", // Dihapus ?height=300&width=300
@@ -58,7 +58,7 @@ export const products: Product[] = [
     name: "Lenovo Yoga Touchscreen",
     category: "thinkpad",
     processor: "Intel Core i5 Gen 8",
-    description: "Lenovo Yoga dengan layar sentuh dan desain convertible",
+    description: "Lenovo Yoga Touchscreen hadir dengan desain convertible dan layar sentuh elegan yang bikin kamu tampil beda. Ditenagai Intel Core i5 Gen 8 dan RAM 8GB, multitasking jadi lancar. SSD sampai 1TB bikin penyimpanan lega. Cocok buat kamu yang produktif, kreatif, dan pengin tampil stylish!",
     image: "/lenovo yoga.png", // Dihapus ?height=200&width=200
     images: ["/lenovo yoga.png", "/lenovo yoga 1.png", "/lenovo yoga 2.png"], // Dihapus ?height=200&width=200, ?height=300&width=300
     ramOptions: ["8 GB"],
@@ -85,7 +85,7 @@ export const products: Product[] = [
     name: "Lenovo T460 Dual VGA NVIDIA",
     category: "thinkpad",
     processor: "Core i7 Gen 6",
-    description: "Lenovo ThinkPad T460 dengan dual VGA NVIDIA",
+    description: "Laptop tangguh untuk kerja berat! Lenovo T460 dilengkapi prosesor Core i7 Gen 6 dan VGA NVIDIA untuk performa visual maksimal. RAM hingga 16GB dan SSD sampai 1TB bikin multitasking dan penyimpanan makin lega. Cocok buat kamu yang suka editing, desain, atau sekadar ngerjain tugas berat tanpa lemot.",
     image: "/lenovo hitam.png",
     images: ["/lenovo hitam 1.png", "/lenovo hitam 2.png", "/lenovo hitam 3.jpg", "/lenovo hitam 4.jpg"],
     ramOptions: ["4 GB", "8 GB", "16 GB"],
@@ -132,8 +132,8 @@ export const products: Product[] = [
     name: "Lenovo X1 Carbon",
     category: "thinkpad",
     processor: "X1 i5 Gen 6",
-    description: "Lenovo X1 dengan performa tinggi",
-    image: "/Lenovo X1 Carbon i5 gen 6 .png", // Dihapus ?height=200&width=200
+    description: "Tipis dan ringan. Lenovo X1 Carbon dengan prosesor i5 Gen 6 dan RAM 8GB siap nemenin aktivitas produktif kamu. Cocok banget buat kamu yang mobile dan butuh performa cepat. SSD 128GB atau 256GB bikin loading cepet tanpa nunggu lama.",
+    image: "/Lenovo X1 Carbon i5 gen 6 .png",
     images: [
       "/Lenovo X1 Carbon i5 gen 6 .png",
       "/Lenovo X1 Carbon i5 gen 6 (1).jpg",
@@ -152,8 +152,8 @@ export const products: Product[] = [
     name: "Lenovo X1 Carbon",
     category: "thinkpad",
     processor: "X1 i7 Gen 6",
-    description: "Lenovo X1 dengan performa tinggi",
-    image: "/X1 i7 Gen 6.jpg", // Dihapus ?height=200&width=200
+    description: "Lenovo X1 Carbon i7 Gen 6. Performa kencang dari RAM 8GB/16GB dan SSD hingga 256GB bikin multitasking anti-lag. Desain tipis dan premium bikin kamu tampil profesional kampus. Cocok untuk editing, presentasi, atau kerja berat lainnya.",
+    image: "/X1 i7 Gen 6-copy.jpg", // Dihapus ?height=200&width=200
     images: [
       "/X1 i7 Gen 6.jpg",
       "/X1 i7 Gen 6(1).jpg",
@@ -183,7 +183,7 @@ export const products: Product[] = [
     name: "Lenovo X1 Carbon",
     category: "thinkpad",
     processor: "X1 i7 Gen 5",
-    description: "Lenovo X1 dengan performa tinggi",
+    description: "Dengan prosesor tangguh, RAM 8GB, dan SSD sampai 256GB, laptop ini siap temani kamu kerja cepat dan efisien. Desain tipis dan ringan.",
     image: "/Lenovo X1 Carbon i7 Gen 5.jpg", // Dihapus ?height=200&width=200
     images: [
       "/Lenovo X1 Carbon i7 Gen 5.jpg",
@@ -205,7 +205,7 @@ export const products: Product[] = [
     name: "DELL 3420",
     category: "dell",
     processor: "i5 gen 11",
-    description: "DELL 3420 dengan performa tinggi",
+    description: "Laptop kekinian buat kamu yang butuh performa cepat dan stabil! DELL 3420 dibekali prosesor i5 Gen 11, RAM 8GB, dan SSD 512GB. Cocok banget buat multitasking, kerja kantoran, desain, atau kuliah. Desainnya simpel tapi elegan, nugas jadi lebih cepat dan efisien!",
     image: "/Dell 3420 i5 gen11 .png", // Dihapus ?height=200&width=200
     images: ["/Dell_3420_i5_gen11__(1).png", "/Dell_3420_i5_gen11__(2).png", "/Dell 3420 i5 gen11 (1).png"],
     ramOptions: ["8 GB"],
@@ -216,10 +216,10 @@ export const products: Product[] = [
   },
   {
     id: "8",
-    name: "DELL LATITUDE 7490",
+    name: "DELL Latitude 7490",
     category: "dell",
     processor: "i5 gen 8",
-    description: "DELL 3420 dengan performa tinggi",
+    description: "Perpaduan antara kecepatan dan efisiensi! DELL Latitude 7490 hadir dengan RAM hingga 16GB dan SSD sampai 256GB, cocok buat kerja berat sekalipun. Prosesor i5 Gen 8 bikin performanya tetap stabil, kencang, Desainnya profesional.",
     image: "/Dell Latitude 7490 i5 gen 8.png", // Dihapus ?height=200&width=200
     images: [
       "/Dell Latitude 7490 i5 gen 8.png",
@@ -268,8 +268,8 @@ export const categories: Category[] = [
 // COMMENT: Ganti produk unggulan sesuai dengan produk yang ingin ditampilkan
 export const featuredProduct = {
   id: "featured",
-  title: "Laptop Bagus, Awet, Cocok Buat Kuliah, Kenapa Ngga?",
+  title: "Tugas kuliah berat? Bikin desain? Coding? Aman pakai ini.",
   description:
-    "ThinkPad kuat buat Multitasking, Zoom, dan Desain. Pilih spesifikasi sesuai yang kamu butuh, tapi jangan sampai salah pilih ya!",
-  image: "/putih 1.png", // Dihapus ?height=200&width=300
+    "ThinkPad kuat buat Multitasking, Zoom, dan Desain. Pilih spesifikasi sesuai yang kamu butuh. Banyak pilihan tapi jangan sampai salah pilih!",
+  image: "/banner1.jpg", // Dihapus ?height=200&width=300
 };
