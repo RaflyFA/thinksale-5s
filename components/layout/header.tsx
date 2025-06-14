@@ -1,41 +1,50 @@
-// components/layout/header.tsx
 "use client"
 
 import { useState } from "react"
 import Link from "next/link"
-import { Search, ShoppingCart, User, Menu, X } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { Search, ShoppingCart, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { useAuth } from "@/lib/auth/auth-context"
+import { useCart } from "@/lib/cart/cart-context"
 import { cn } from "@/lib/utils/cn"
-import { useResponsive } from "@/lib/hooks/use-responsive"
 
 interface HeaderProps {
   searchTerm?: string
   onSearchChange?: (value: string) => void
-  cartItemCount?: number
   className?: string
 }
 
-export default function Header({ searchTerm = "", onSearchChange, cartItemCount = 0, className }: HeaderProps) {
+export default function Header({ searchTerm = "", onSearchChange, className }: HeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const { isMobile } = useResponsive()
+  const { user } = useAuth()
+  const { getTotalItems } = useCart()
+  const router = useRouter()
 
-  const navigationItems = [
-    { href: "/", label: "Beranda" },
-    { href: "/products", label: "Produk" },
-    { href: "/categories", label: "Kategori" },
-    { href: "/deals", label: "Penawaran" },
-    { href: "/about", label: "Tentang" },
-    { href: "/contact", label: "Kontak" },
-  ]
+  const handleCartClick = () => {
+    if (!user) {
+      router.push("/login?redirect=/keranjang")
+    } else {
+      router.push("/keranjang")
+    }
+  }
+
+  const handleProfileClick = () => {
+    if (!user) {
+      router.push("/login?redirect=/profil")
+    } else {
+      router.push("/profil")
+    }
+  }
 
   return (
     <header className={cn("bg-white sticky top-0 z-50 border-b border-gray-200", className)}>
       {/* Top Bar */}
       <div className="bg-blue-600 text-white py-2 px-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center text-sm">
-          <span className="hidden sm:block">📞 Hubungi Kami: +62 812-3456-7890</span>
-          <span className="text-center sm:text-right">🚚 Gratis Ongkir untuk Pembelian di atas Rp 5.000.000</span>
+          <span className="hidden sm:block">📞 Hubungi Kami: +62 812-2408-6200</span>
+          <span className="text-center sm:text-right">🚚 Gratis Ongkir untuk Pembelian di atas Rp 3.000.000</span>
         </div>
       </div>
 
@@ -50,7 +59,6 @@ export default function Header({ searchTerm = "", onSearchChange, cartItemCount 
             <span className="text-2xl font-bold text-gray-800 hidden sm:block">ThinkSale</span>
           </Link>
 
-
           {/* Search Bar - Desktop */}
           <div className="hidden md:flex flex-1 max-w-2xl mx-8">
             <div className="relative w-full">
@@ -64,22 +72,20 @@ export default function Header({ searchTerm = "", onSearchChange, cartItemCount 
             </div>
           </div>
 
-          {/* Action Buttons (User, ShoppingCart, Mobile Menu Toggle) */}
+          {/* Action Buttons */}
           <div className="flex items-center space-x-2">
-            {/* Tombol User: Hapus kelas 'hidden md:flex' agar selalu terlihat */}
-            <Button variant="ghost" size="icon"> {/* Hapus className="hidden md:flex" */}
+            <Button variant="ghost" size="icon" onClick={handleProfileClick}>
               <User className="h-5 w-5" />
             </Button>
 
-            <Button variant="ghost" size="icon" className="relative">
+            <Button variant="ghost" size="icon" className="relative" onClick={handleCartClick}>
               <ShoppingCart className="h-5 w-5" />
-              {cartItemCount > 0 && (
+              {getTotalItems() > 0 && (
                 <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  {cartItemCount > 99 ? "99+" : cartItemCount}
+                  {getTotalItems() > 99 ? "99+" : getTotalItems()}
                 </span>
               )}
             </Button>
-            
           </div>
         </div>
 

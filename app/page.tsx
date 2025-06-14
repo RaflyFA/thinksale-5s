@@ -1,16 +1,7 @@
-/**
- * Home Page
- *
- * Halaman utama website ThinkSale
- * Menggunakan layout dan komponen yang konsisten
- *
- * @author ThinkSale Development Team
- * @version 1.0.0
- */
-
 "use client"
 
 import { useState, useMemo } from "react"
+import { useRouter } from "next/navigation"
 import { Truck, Shield, Headphones } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -23,10 +14,11 @@ import { cn } from "@/lib/utils/cn"
 
 export default function HomePage() {
   const [searchTerm, setSearchTerm] = useState("")
+  const router = useRouter()
 
-  // Filter products based on categories
-  const featuredProducts = products.slice(0, 8)
-  const bestSellerProducts = products.slice(0, 4)
+  // Separate featured and best seller products
+  const featuredProducts = products.slice(0, 4) // First 4 products
+  const bestSellerProducts = products.slice(4, 8) // Next 4 products
 
   const filteredProducts = useMemo(() => {
     if (!searchTerm) return []
@@ -52,6 +44,10 @@ export default function HomePage() {
     }
   }
 
+  const handleCategoryClick = (categorySlug: string) => {
+    router.push(`/produk?kategori=${categorySlug}`)
+  }
+
   const features = [
     {
       icon: Truck,
@@ -74,7 +70,7 @@ export default function HomePage() {
   ]
 
   return (
-    <PageLayout searchTerm={searchTerm} onSearchChange={setSearchTerm} cartItemCount={0}>
+    <PageLayout searchTerm={searchTerm} onSearchChange={setSearchTerm}>
       <div className="max-w-7xl mx-auto px-4 space-y-16">
         {/* Search Results */}
         {searchTerm && (
@@ -109,7 +105,7 @@ export default function HomePage() {
               <div className="bg-gradient-to-r from-blue-600 to-purple-700 rounded-2xl overflow-hidden">
                 <div className="flex flex-col lg:flex-row items-center">
                   <div className="flex-1 p-8 lg:p-12 text-white">
-                    <h1 className="text-3xl lg:text-5xl lg:leading-[1.2] font-bold mb-8 ">{featuredProduct.title}</h1>
+                    <h1 className="text-3xl lg:text-5xl lg:leading-[1.2] font-bold mb-8">{featuredProduct.title}</h1>
                     <p className="text-lg lg:text-xl mb-6 opacity-90 leading-relaxed">{featuredProduct.description}</p>
                     <div className="flex flex-col sm:flex-row gap-4">
                       <Button
@@ -119,7 +115,6 @@ export default function HomePage() {
                       >
                         Lihat Koleksi
                       </Button>
-                      
                     </div>
                   </div>
                   <div className="flex-1 p-8">
@@ -153,32 +148,26 @@ export default function HomePage() {
 
             {/* Categories */}
             <section className="py-12">
-              <SectionHeader
-                title="Kategori Produk"
-                align="center"
-                className="lg:pb-10"
-              />
+              <SectionHeader title="Kategori Produk" align="center" className="lg:pb-10" />
 
-              <div className="md:max-w-4xl mx-auto"> {/* Wrapper untuk menengahkan dan membatasi lebar */}
+              <div className="md:max-w-4xl mx-auto">
                 <div className="grid grid-cols-2 md:grid-cols-2 gap-8">
                   {categories.map((category) => (
                     <button
                       key={category.id}
-                      // Panggil scrollToSection dengan searchTerm tambahan
-                      onClick={() => scrollToSection("produk-unggulan", category.name)}
-                      className="relative overflow-hidden rounded-2xl bg-white shadow-lg transition-all duration-300" // Kelas hover sudah dihapus
+                      onClick={() => handleCategoryClick(category.slug)}
+                      className="relative overflow-hidden rounded-2xl bg-white shadow-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
                     >
                       <div className="aspect-[16/9] relative">
                         <Image
                           src={category.image || "/placeholder.svg"}
                           alt={category.name}
                           fill
-                          className="object-cover transition-transform duration-300" // Kelas hover sudah dihapus
+                          className="object-cover transition-transform duration-300 hover:scale-105"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                         <div className="absolute bottom-4 lg:bottom-6 left-4 lg:left-6 text-white">
                           <h3 className="text-sm lg:text-2xl font-bold mb-0 lg:mb-2">{category.name}</h3>
-                          {/* category.description dihapus */}
                         </div>
                       </div>
                     </button>
@@ -194,22 +183,14 @@ export default function HomePage() {
                 description="Koleksi laptop terbaik dengan spesifikasi unggulan"
                 action={{
                   label: "Lihat Semua",
-                  href: "/products",
+                  href: "/produk",
                 }}
               />
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {/* Produk yang ditampilkan di sini sudah difilter oleh useMemo jika searchTerm ada */}
-                {filteredProducts.length > 0 ? (
-                  filteredProducts.map((product) => (
-                    <ProductCard key={product.id} product={product} />
-                  ))
-                ) : (
-                  // Jika tidak ada hasil filter setelah kategori diklik, tampilkan semua featuredProducts
-                  featuredProducts.map((product) => (
-                    <ProductCard key={product.id} product={product} />
-                  ))
-                )}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {featuredProducts.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
               </div>
             </section>
 
@@ -220,7 +201,7 @@ export default function HomePage() {
                 description="Laptop pilihan favorit pelanggan kami"
                 action={{
                   label: "Lihat Semua",
-                  href: "/products/best-sellers",
+                  href: "/produk",
                 }}
               />
 
