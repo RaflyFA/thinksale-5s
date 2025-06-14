@@ -51,9 +51,9 @@ export default function SectionHeader({
         <div className="flex-1">
           {subtitle && <p className="text-sm font-medium text-blue-600 mb-2 uppercase tracking-wide">{subtitle}</p>}
 
-          <h2 className={cn("text-3xl font-bold text-gray-900 mb-2", titleClassName)}>{title}</h2>
+          <h2 className={cn("text-2xl lg:text-3xl font-bold text-gray-900 mb-2", titleClassName)}>{title}</h2>
 
-          {description && <p className="text-gray-600 leading-relaxed max-w-2xl">{description}</p>}
+          {description && <p className="text-gray-600 leading-relaxed text-sm lg:text-xl lg:max-w-2xl">{description}</p>}
         </div>
 
         {action && (

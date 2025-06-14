@@ -1,13 +1,4 @@
-/**
- * Header Component
- *
- * Komponen header yang konsisten untuk seluruh aplikasi
- * Mencakup navigation, search, dan user actions
- *
- * @author ThinkSale Development Team
- * @version 1.0.0
- */
-
+// components/layout/header.tsx
 "use client"
 
 import { useState } from "react"
@@ -59,18 +50,6 @@ export default function Header({ searchTerm = "", onSearchChange, cartItemCount 
             <span className="text-2xl font-bold text-gray-800 hidden sm:block">ThinkSale</span>
           </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center space-x-8">
-            {navigationItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="text-gray-700 hover:text-blue-600 font-medium transition-colors duration-200"
-              >
-                {item.label}
-              </Link>
-            ))}
-          </div>
 
           {/* Search Bar - Desktop */}
           <div className="hidden md:flex flex-1 max-w-2xl mx-8">
@@ -85,9 +64,10 @@ export default function Header({ searchTerm = "", onSearchChange, cartItemCount 
             </div>
           </div>
 
-          {/* Action Buttons */}
+          {/* Action Buttons (User, ShoppingCart, Mobile Menu Toggle) */}
           <div className="flex items-center space-x-2">
-            <Button variant="ghost" size="icon" className="hidden md:flex">
+            {/* Tombol User: Hapus kelas 'hidden md:flex' agar selalu terlihat */}
+            <Button variant="ghost" size="icon"> {/* Hapus className="hidden md:flex" */}
               <User className="h-5 w-5" />
             </Button>
 
@@ -99,11 +79,7 @@ export default function Header({ searchTerm = "", onSearchChange, cartItemCount 
                 </span>
               )}
             </Button>
-
-            {/* Mobile Menu Toggle */}
-            <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-              {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </Button>
+            
           </div>
         </div>
 
@@ -119,30 +95,6 @@ export default function Header({ searchTerm = "", onSearchChange, cartItemCount 
             />
           </div>
         </div>
-
-        {/* Mobile Navigation Menu */}
-        {isMenuOpen && (
-          <div className="lg:hidden mt-4 py-4 border-t border-gray-200">
-            <div className="flex flex-col space-y-4">
-              {navigationItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="text-gray-700 hover:text-blue-600 font-medium transition-colors duration-200 py-2"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  {item.label}
-                </Link>
-              ))}
-              <div className="pt-4 border-t border-gray-200">
-                <Button variant="ghost" className="w-full justify-start">
-                  <User className="h-5 w-5 mr-2" />
-                  Akun Saya
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
       </nav>
     </header>
   )

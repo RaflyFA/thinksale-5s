@@ -56,7 +56,7 @@ export default function HomePage() {
     {
       icon: Truck,
       title: "Pengiriman Gratis",
-      description: "Gratis ongkir untuk pembelian di atas Rp 5.000.000",
+      description: "Gratis ongkir untuk pembelian di atas Rp 3.000.000",
       color: "bg-blue-100 text-blue-600",
     },
     {
@@ -109,7 +109,7 @@ export default function HomePage() {
               <div className="bg-gradient-to-r from-blue-600 to-purple-700 rounded-2xl overflow-hidden">
                 <div className="flex flex-col lg:flex-row items-center">
                   <div className="flex-1 p-8 lg:p-12 text-white">
-                    <h1 className="text-3xl lg:text-5xl font-bold mb-4 leading-tight">{featuredProduct.title}</h1>
+                    <h1 className="text-3xl lg:text-5xl lg:leading-[1.2] font-bold mb-8 ">{featuredProduct.title}</h1>
                     <p className="text-lg lg:text-xl mb-6 opacity-90 leading-relaxed">{featuredProduct.description}</p>
                     <div className="flex flex-col sm:flex-row gap-4">
                       <Button
@@ -119,13 +119,7 @@ export default function HomePage() {
                       >
                         Lihat Koleksi
                       </Button>
-                      <Button
-                        variant="outline"
-                        className="border-white text-white hover:bg-white hover:text-blue-600 px-8 py-3 text-lg rounded-full"
-                        size="lg"
-                      >
-                        Pelajari Lebih Lanjut
-                      </Button>
+                      
                     </div>
                   </div>
                   <div className="flex-1 p-8">
@@ -161,32 +155,35 @@ export default function HomePage() {
             <section className="py-12">
               <SectionHeader
                 title="Kategori Produk"
-                description="Pilih kategori laptop sesuai kebutuhan Anda"
                 align="center"
+                className="lg:pb-10"
               />
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {categories.map((category) => (
-                  <button
-                    key={category.id}
-                    onClick={() => scrollToSection(`produk-${category.name.toLowerCase()}`)}
-                    className="group relative overflow-hidden rounded-2xl bg-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2"
-                  >
-                    <div className="aspect-[16/9] relative">
-                      <Image
-                        src={category.image || "/placeholder.svg"}
-                        alt={category.name}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                      <div className="absolute bottom-6 left-6 text-white">
-                        <h3 className="text-2xl font-bold mb-2">{category.name}</h3>
-                        <p className="text-sm opacity-90">{category.description}</p>
+              <div className="md:max-w-4xl mx-auto"> {/* Wrapper untuk menengahkan dan membatasi lebar */}
+                <div className="grid grid-cols-2 md:grid-cols-2 gap-8">
+                  {categories.map((category) => (
+                    <button
+                      key={category.id}
+                      // Panggil scrollToSection dengan searchTerm tambahan
+                      onClick={() => scrollToSection("produk-unggulan", category.name)}
+                      className="relative overflow-hidden rounded-2xl bg-white shadow-lg transition-all duration-300" // Kelas hover sudah dihapus
+                    >
+                      <div className="aspect-[16/9] relative">
+                        <Image
+                          src={category.image || "/placeholder.svg"}
+                          alt={category.name}
+                          fill
+                          className="object-cover transition-transform duration-300" // Kelas hover sudah dihapus
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                        <div className="absolute bottom-4 lg:bottom-6 left-4 lg:left-6 text-white">
+                          <h3 className="text-sm lg:text-2xl font-bold mb-0 lg:mb-2">{category.name}</h3>
+                          {/* category.description dihapus */}
+                        </div>
                       </div>
-                    </div>
-                  </button>
-                ))}
+                    </button>
+                  ))}
+                </div>
               </div>
             </section>
 
@@ -202,9 +199,17 @@ export default function HomePage() {
               />
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {featuredProducts.map((product) => (
-                  <ProductCard key={product.id} product={product} />
-                ))}
+                {/* Produk yang ditampilkan di sini sudah difilter oleh useMemo jika searchTerm ada */}
+                {filteredProducts.length > 0 ? (
+                  filteredProducts.map((product) => (
+                    <ProductCard key={product.id} product={product} />
+                  ))
+                ) : (
+                  // Jika tidak ada hasil filter setelah kategori diklik, tampilkan semua featuredProducts
+                  featuredProducts.map((product) => (
+                    <ProductCard key={product.id} product={product} />
+                  ))
+                )}
               </div>
             </section>
 
