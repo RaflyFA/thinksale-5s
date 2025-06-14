@@ -70,8 +70,8 @@ export default function HomePage() {
   ]
 
   return (
-    <PageLayout searchTerm={searchTerm} onSearchChange={setSearchTerm}>
-      <div className="max-w-7xl mx-auto px-4 space-y-16">
+    <PageLayout searchTerm={searchTerm} onSearchChange={setSearchTerm} className="bg-slate-200">
+      <div className="max-w-7xl mx-auto px-4 space-y-16 ">
         {/* Search Results */}
         {searchTerm && (
           <section className="py-8">
@@ -175,9 +175,11 @@ export default function HomePage() {
                 </div>
               </div>
             </section>
+            
+            <hr className="my-16 border-gray-400 w-full max-w-7xl mx-auto" />
 
             {/* Featured Products */}
-            <section id="produk-unggulan" className="py-12">
+            <section id="produk-unggulan" className="py-8">
               <SectionHeader
                 title="Produk Unggulan"
                 description="Koleksi laptop terbaik dengan spesifikasi unggulan"
@@ -194,8 +196,10 @@ export default function HomePage() {
               </div>
             </section>
 
+            <hr className="my-16 border-gray-400 w-full max-w-7xl mx-auto" />
+
             {/* Best Sellers */}
-            <section className="py-12">
+            <section className="py-8">
               <SectionHeader
                 title="Produk Terlaris"
                 description="Laptop pilihan favorit pelanggan kami"
@@ -205,22 +209,10 @@ export default function HomePage() {
                 }}
               />
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
                 {bestSellerProducts.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
-              </div>
-            </section>
-
-            {/* Newsletter */}
-            <section className="py-16">
-              <div className="bg-gradient-to-r from-blue-600 to-purple-700 rounded-2xl p-8 lg:p-12 text-center text-white">
-                <h2 className="text-3xl font-bold mb-4">Dapatkan Penawaran Terbaik</h2>
-                <p className="text-lg mb-8 opacity-90">Berlangganan newsletter kami dan dapatkan diskon hingga 20%</p>
-                <div className="max-w-md mx-auto flex flex-col sm:flex-row gap-4">
-                  <Input placeholder="Masukkan email Anda" className="flex-1 bg-white text-gray-800" />
-                  <Button className="bg-white text-blue-600 hover:bg-gray-100 px-8">Berlangganan</Button>
-                </div>
               </div>
             </section>
           </>

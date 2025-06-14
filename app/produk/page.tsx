@@ -45,12 +45,11 @@ export default function ProductsPage() {
   }, [activeCategory, searchTerm])
 
   return (
-    <PageLayout searchTerm={searchTerm} onSearchChange={setSearchTerm}>
+    <PageLayout searchTerm={searchTerm} onSearchChange={setSearchTerm} className="bg-slate-200">
       <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
         {/* Page Header */}
         <SectionHeader
           title="Semua Produk"
-          description="Temukan laptop impian Anda dari koleksi lengkap kami"
           align="center"
         />
 
@@ -144,7 +143,7 @@ export default function ProductsPage() {
                   onClick: () => setActiveCategory("dell"),
                 }}
               />
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-10">
                 {products
                   .filter((product) => product.category === "dell")
                   .slice(0, 4)

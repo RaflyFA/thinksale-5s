@@ -4,11 +4,6 @@ export interface ProductVariant {
   price: number;
 }
 
-// Tidak ada perubahan di sini karena kita menggunakan cara simpel untuk specs
-// export interface ProductSpec {
-//   heading?: string;
-//   items?: string[];
-// }
 
 export interface Product {
   id: string;
@@ -23,6 +18,8 @@ export interface Product {
   priceRange: string;
   specs: string[]; // Pastikan ini tetap string[] jika menggunakan cara simpel
   variants: ProductVariant[];
+  rating?: number; // <--- TAMBAHKAN INI
+  reviewCount?: number; // <--- TAMBAHKAN INI
 }
 
 export interface Category {

@@ -44,7 +44,7 @@ export default function CartPage() {
   if (!user) {
     return (
       <PageLayout>
-        <div className="max-w-7xl mx-auto px-4 py-16">
+        <div className="max-w-7xl mx-auto px-4 py-16 bg-slate-200">
           <div className="text-center">
             <div className="w-24 h-24 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
               <ShoppingBag className="h-12 w-12 text-gray-400" />

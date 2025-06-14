@@ -46,7 +46,7 @@ export default function ScrollToTopButton({ showAfter = 300, className }: Scroll
   return (
     <Button
       className={cn(
-        "fixed bottom-6 right-6 z-50 rounded-full w-12 h-12 bg-blue-600 hover:bg-blue-700 text-white shadow-lg transition-all duration-300",
+        "fixed bottom-6 right-6 z-40 rounded-full w-12 h-12 bg-blue-600 hover:bg-blue-700 text-white shadow-lg transition-all duration-300",
         isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2 pointer-events-none",
         className,
       )}

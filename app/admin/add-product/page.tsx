@@ -186,7 +186,7 @@ export default function AddProductPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-200">
+    <div className="min-h-screen bg-slate-200">
       {/* Header */}
       <header className="bg-white shadow-sm sticky top-0 z-10">
         <div className="w-full px-4 py-2">
