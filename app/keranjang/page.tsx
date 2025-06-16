@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
@@ -10,12 +10,19 @@ import SectionHeader from "@/components/ui/section-header"
 import { useCart } from "@/lib/cart/cart-context"
 import { useAuth } from "@/lib/auth/auth-context"
 import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react"
+import CheckoutModal from "@/components/checkout/checkout-modal"
 
 export default function CartPage() {
   const { items, updateQuantity, removeItem, getTotalPrice, getTotalItems } = useCart()
   const { user } = useAuth()
   const router = useRouter()
   const [isProcessing, setIsProcessing] = useState(false)
+  const [showCheckout, setShowCheckout] = useState(false)
+
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" })
+  }, [])
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("id-ID", {
@@ -31,14 +38,7 @@ export default function CartPage() {
       return
     }
 
-    setIsProcessing(true)
-
-    // Simulate checkout process
-    await new Promise((resolve) => setTimeout(resolve, 2000))
-
-    // In real app, this would integrate with payment gateway
-    alert("Fitur checkout akan segera tersedia!")
-    setIsProcessing(false)
+    setShowCheckout(true)
   }
 
   if (!user) {
@@ -202,6 +202,7 @@ export default function CartPage() {
           </div>
         )}
       </div>
+      <CheckoutModal isOpen={showCheckout} onClose={() => setShowCheckout(false)} />
     </PageLayout>
   )
 }

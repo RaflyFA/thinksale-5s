@@ -1,18 +1,23 @@
 "use client"
 
+import { useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import PageLayout from "@/components/layout/page-layout"
-import SectionHeader from "@/components/ui/section-header"
 import { useAuth } from "@/lib/auth/auth-context"
 import { useCart } from "@/lib/cart/cart-context"
-import { User, Mail, ShoppingBag, LogOut, Settings } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { User, ShoppingCart, Package, LogOut } from "lucide-react"
 
-export default function ProfilePage() {
+export default function ProfilPage() {
   const { user, logout } = useAuth()
   const { getTotalItems } = useCart()
   const router = useRouter()
+
+  useEffect(() => {
+    if (!user) {
+      router.push("/login?redirect=/profil")
+    }
+  }, [user, router])
 
   const handleLogout = () => {
     logout()
@@ -21,168 +26,93 @@ export default function ProfilePage() {
 
   if (!user) {
     return (
-      <PageLayout>
-        <div className="max-w-7xl mx-auto px-4 py-16 bg-slate-200">
-          <div className="text-center">
-            <div className="w-24 h-24 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
-              <User className="h-12 w-12 text-gray-400" />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Silakan Login Terlebih Dahulu</h2>
-            <p className="text-gray-600 mb-8">Anda perlu login untuk melihat profil</p>
-            <Button
-              onClick={() => router.push("/login?redirect=/profil")}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-3 rounded-xl"
-            >
-              Login Sekarang
-            </Button>
-          </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Memuat...</p>
         </div>
-      </PageLayout>
+      </div>
     )
   }
 
   return (
-    <PageLayout>
-      <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
-        <SectionHeader title="Profil Saya" description="Kelola informasi akun dan preferensi Anda" />
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Profile Info */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
-                Informasi Akun
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <label className="text-sm font-medium text-gray-600">Nama Lengkap</label>
-                <p className="text-lg font-semibold">{user.name}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-600">Email</label>
-                <p className="text-lg font-semibold flex items-center gap-2">
-                  <Mail className="h-4 w-4" />
-                  {user.email}
-                </p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-600">Status Akun</label>
-                <p className="text-lg font-semibold text-green-600">Aktif</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Shopping Stats */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <ShoppingBag className="h-5 w-5" />
-                Statistik Belanja
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <label className="text-sm font-medium text-gray-600">Item di Keranjang</label>
-                <p className="text-2xl font-bold text-blue-600">{getTotalItems()}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-600">Total Pesanan</label>
-                <p className="text-2xl font-bold text-purple-600">0</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-600">Member Sejak</label>
-                <p className="text-lg font-semibold">
-                  {new Date().toLocaleDateString("id-ID", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-4xl mx-auto px-4">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Profil Saya</h1>
+          <p className="text-gray-600 mt-2">Kelola informasi akun dan preferensi Anda</p>
         </div>
 
+        {/* User Info Card */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
+                <User className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold">{user.name}</h2>
+                <p className="text-gray-600 text-sm">{user.email}</p>
+              </div>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="text-center p-4 bg-blue-50 rounded-lg">
+                <Package className="h-8 w-8 text-blue-600 mx-auto mb-2" />
+                <p className="text-2xl font-bold text-blue-600">0</p>
+                <p className="text-sm text-gray-600">Total Pesanan</p>
+              </div>
+              <div className="text-center p-4 bg-green-50 rounded-lg">
+                <ShoppingCart className="h-8 w-8 text-green-600 mx-auto mb-2" />
+                <p className="text-2xl font-bold text-green-600">{getTotalItems()}</p>
+                <p className="text-sm text-gray-600">Item di Keranjang</p>
+              </div>
+              <div className="text-center p-4 bg-purple-50 rounded-lg">
+                <User className="h-8 w-8 text-purple-600 mx-auto mb-2" />
+                <p className="text-2xl font-bold text-purple-600">Member</p>
+                <p className="text-sm text-gray-600">Status Akun</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Quick Actions */}
-        <Card>
+        <Card className="mb-8">
           <CardHeader>
             <CardTitle>Aksi Cepat</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Button
                 variant="outline"
+                className="h-16 flex flex-col items-center justify-center gap-2"
                 onClick={() => router.push("/keranjang")}
-                className="flex items-center gap-2 h-12"
               >
-                <ShoppingBag className="h-4 w-4" />
-                Lihat Keranjang
+                <ShoppingCart className="h-5 w-5" />
+                <span>Lihat Keranjang</span>
               </Button>
-
-              <Button variant="outline" onClick={() => router.push("/produk")} className="flex items-center gap-2 h-12">
-                <Settings className="h-4 w-4" />
-                Belanja Lagi
-              </Button>
-
               <Button
                 variant="outline"
-                onClick={() => alert("Fitur riwayat pesanan akan segera tersedia!")}
-                className="flex items-center gap-2 h-12"
+                className="h-16 flex flex-col items-center justify-center gap-2"
+                onClick={() => router.push("/produk")}
               >
-                <ShoppingBag className="h-4 w-4" />
-                Riwayat Pesanan
+                <Package className="h-5 w-5" />
+                <span>Belanja Lagi</span>
               </Button>
-
-              <Button variant="destructive" onClick={handleLogout} className="flex items-center gap-2 h-12">
-                <LogOut className="h-4 w-4" />
-                Keluar
+              <Button
+                variant="outline"
+                className="h-16 flex flex-col items-center justify-center gap-2 text-red-600 border-red-200 hover:bg-red-50"
+                onClick={handleLogout}
+              >
+                <LogOut className="h-5 w-5" />
+                <span>Keluar</span>
               </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Account Settings */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Pengaturan Akun</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div>
-                  <h4 className="font-medium">Notifikasi Email</h4>
-                  <p className="text-sm text-gray-600">Terima update pesanan dan penawaran khusus</p>
-                </div>
-                <Button variant="outline" size="sm">
-                  Aktif
-                </Button>
-              </div>
-
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div>
-                  <h4 className="font-medium">Keamanan Akun</h4>
-                  <p className="text-sm text-gray-600">Ubah password dan pengaturan keamanan</p>
-                </div>
-                <Button variant="outline" size="sm">
-                  Kelola
-                </Button>
-              </div>
-
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div>
-                  <h4 className="font-medium">Alamat Pengiriman</h4>
-                  <p className="text-sm text-gray-600">Kelola alamat untuk pengiriman</p>
-                </div>
-                <Button variant="outline" size="sm">
-                  Tambah
-                </Button>
-              </div>
             </div>
           </CardContent>
         </Card>
       </div>
-    </PageLayout>
+    </div>
   )
 }

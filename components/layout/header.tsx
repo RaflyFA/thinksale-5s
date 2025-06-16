@@ -14,13 +14,14 @@ import { cn } from "@/lib/utils/cn"
 interface HeaderProps {
   searchTerm?: string
   onSearchChange?: (value: string) => void
-  cartItemCount?: number;
+  cartItemCount?: number
   className?: string
 }
 
 export default function Header({ searchTerm = "", onSearchChange, className, cartItemCount }: HeaderProps) {
-  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false) // State khusus untuk search mobile
-  const mobileSearchInputRef = useRef<HTMLInputElement>(null) // Ref khusus untuk search input mobile
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false)
+  const mobileSearchInputRef = useRef<HTMLInputElement>(null)
+  const mobileSearchContainerRef = useRef<HTMLDivElement>(null)
 
   const { user } = useAuth()
   const { getTotalItems } = useCart()
@@ -36,7 +37,8 @@ export default function Header({ searchTerm = "", onSearchChange, className, car
 
   const handleProfileClick = () => {
     if (!user) {
-      router.push("/login?redirect=/profil")
+      // Jika belum login, arahkan langsung ke halaman login
+      router.push("/login")
     } else {
       router.push("/profil")
     }
@@ -46,27 +48,52 @@ export default function Header({ searchTerm = "", onSearchChange, className, car
     setIsMobileSearchOpen((prev) => !prev)
   }
 
+  // Focus input when mobile search opens
   useEffect(() => {
     if (isMobileSearchOpen && mobileSearchInputRef.current) {
       mobileSearchInputRef.current.focus()
     }
   }, [isMobileSearchOpen])
 
-  // Reset search term dan tutup mobile search saat berpindah halaman (opsional tapi bagus)
+  // Close mobile search when clicking outside
   useEffect(() => {
-    // Ini bisa di-trigger oleh router.pathname jika Anda perlu mendengarkan perubahan URL
-    // Tapi untuk komponen client-side seperti ini, onSearchChange mungkin sudah cukup
-    if (!searchTerm && isMobileSearchOpen) {
-      // Jika searchTerm dihapus dari luar, tutup mobile search juga
-      // atau jika Anda ingin menutup search bar mobile saat navigasi, tambahkan router.events
-      // Contoh sederhana:
-      // const handleRouteChange = () => setIsMobileSearchOpen(false);
-      // router.events.on('routeChangeStart', handleRouteChange);
-      // return () => { router.events.off('routeChangeStart', handleRouteChange); };
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        isMobileSearchOpen &&
+        mobileSearchContainerRef.current &&
+        !mobileSearchContainerRef.current.contains(event.target as Node)
+      ) {
+        setIsMobileSearchOpen(false)
+      }
     }
-  }, [searchTerm, isMobileSearchOpen, router]);
 
-  const currentCartItemCount = typeof cartItemCount === 'number' ? cartItemCount : getTotalItems();
+    if (isMobileSearchOpen) {
+      document.addEventListener("mousedown", handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+    }
+  }, [isMobileSearchOpen])
+
+  // Close mobile search on ESC key
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && isMobileSearchOpen) {
+        setIsMobileSearchOpen(false)
+      }
+    }
+
+    if (isMobileSearchOpen) {
+      document.addEventListener("keydown", handleEscape)
+    }
+
+    return () => {
+      document.removeEventListener("keydown", handleEscape)
+    }
+  }, [isMobileSearchOpen])
+
+  const currentCartItemCount = typeof cartItemCount === "number" ? cartItemCount : getTotalItems()
 
   return (
     <header className={cn("bg-white sticky top-0 z-50 border-b border-gray-200", className)}>
@@ -89,8 +116,7 @@ export default function Header({ searchTerm = "", onSearchChange, className, car
             <span className="text-2xl font-bold text-gray-800 hidden sm:block">ThinkSale</span>
           </Link>
 
-          {/* Search Bar - Desktop (Hidden on md and below) */}
-          {/* Ini adalah search bar asli desktop, tidak berubah */}
+          {/* Search Bar - Desktop */}
           <div className="hidden md:flex flex-1 max-w-2xl mx-8">
             <div className="relative w-full">
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
@@ -103,25 +129,44 @@ export default function Header({ searchTerm = "", onSearchChange, className, car
             </div>
           </div>
 
-          {/* Action Buttons (Desktop & Mobile Icons) */}
-          {/* Kontainer ini sekarang menampung tombol User/Cart/Search Mobile */}
-          <div className="flex items-center space-x-0 lg:space-x-2">
-            {/* Mobile Search Icon (Hanya tampil di mobile, di samping User/Cart) */}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleMobileSearch}
-              className="md:hidden" // Hanya tampil di mobile
-            >
-              {isMobileSearchOpen ? <X className="h-5 w-5" /> : <Search className="h-5 w-5" />}
-            </Button>
+          {/* Action Buttons */}
+          <div className="flex items-center space-x-0 lg:space-x-2 relative">
+            {/* Mobile Search Container */}
+            <div ref={mobileSearchContainerRef} className="md:hidden flex items-center relative">
+              {/* Mobile Search Input */}
+              <div
+                className={cn(
+                  "absolute right-12 top-1/2 -translate-y-1/2",
+                  "transition-all duration-300 ease-in-out",
+                  isMobileSearchOpen
+                    ? "w-48 opacity-100 translate-x-0"
+                    : "w-0 opacity-0 translate-x-4 pointer-events-none",
+                )}
+              >
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Input
+                    ref={mobileSearchInputRef}
+                    placeholder="Cari produk..."
+                    className="pl-10 pr-4 py-2 w-full border-2 border-gray-200 focus:border-blue-500 rounded-full text-sm"
+                    value={searchTerm}
+                    onChange={(e) => onSearchChange?.(e.target.value)}
+                  />
+                </div>
+              </div>
 
-            {/* User Button (Selalu tampil) */}
+              {/* Mobile Search Toggle Button */}
+              <Button variant="ghost" size="icon" onClick={toggleMobileSearch} className="relative z-10">
+                {isMobileSearchOpen ? <X className="h-5 w-5" /> : <Search className="h-5 w-5" />}
+              </Button>
+            </div>
+
+            {/* User Button */}
             <Button variant="ghost" size="icon" onClick={handleProfileClick}>
               <User className="h-5 w-5" />
             </Button>
 
-            {/* Cart Button (Selalu tampil) */}
+            {/* Cart Button */}
             <Button variant="ghost" size="icon" className="relative" onClick={handleCartClick}>
               <ShoppingCart className="h-5 w-5" />
               {currentCartItemCount > 0 && (
@@ -132,48 +177,6 @@ export default function Header({ searchTerm = "", onSearchChange, className, car
             </Button>
           </div>
         </div>
-
-        {/* Mobile Search Input - LUNAK DARI SAMPING (Hanya tampil di mobile, di baris terpisah/overlay) */}
-        {/* Kontainer ini hanya akan muncul saat isMobileSearchOpen true, dan di layar md:hidden */}
-        <div
-          className={cn(
-            "md:hidden absolute left-0 w-full px-4 pt-2 pb-4 bg-white border-b border-gray-200 transform", // Gaya dasar
-            "transition-all duration-300 ease-in-out", // Animasi
-            isMobileSearchOpen ? "top-full opacity-100 translate-y-0" : "-top-full opacity-0 -translate-y-full pointer-events-none", // Posisi animasi
-            "z-40" // Pastikan di atas konten lain tapi di bawah header utama
-          )}
-          // Opsional: Jika Anda ingin input muncul dari samping bukan dari atas/bawah
-          // className={cn(
-          //   "md:hidden absolute left-0 w-full px-4 pt-2 pb-4 bg-white border-b border-gray-200 transform",
-          //   "transition-all duration-300 ease-in-out",
-          //   isMobileSearchOpen ? "left-0 opacity-100" : "left-full opacity-0 pointer-events-none", // Slide dari kanan
-          //   "z-40"
-          // )}
-        >
-          <div className="relative w-full">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              ref={mobileSearchInputRef}
-              placeholder="Cari produk..."
-              className="pl-10 w-full"
-              value={searchTerm}
-              onChange={(e) => onSearchChange?.(e.target.value)}
-              onBlur={() => {
-                // Tutup search bar hanya jika searchTerm kosong setelah blur
-                if (!searchTerm && isMobileSearchOpen) {
-                  setIsMobileSearchOpen(false);
-                }
-              }}
-              onKeyDown={(e) => {
-                // Tutup search bar saat Esc ditekan
-                if (e.key === 'Escape') {
-                  setIsMobileSearchOpen(false);
-                }
-              }}
-            />
-          </div>
-        </div>
-
       </nav>
     </header>
   )
