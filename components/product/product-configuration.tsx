@@ -147,7 +147,7 @@ export default function ProductConfiguration({ product, isOpen, onClose }: Produ
         <div
           ref={modalRef}
           className={cn(
-            "bg-white w-full rounded-t-2xl shadow-xl",
+            "bg-white w-full lg:w-2/4 rounded-t-2xl shadow-xl",
             "transform transition-transform duration-300 ease-out",
             isOpen ? "translate-y-0" : "translate-y-full",
             "max-h-[90vh] overflow-y-auto",
@@ -157,9 +157,9 @@ export default function ProductConfiguration({ product, isOpen, onClose }: Produ
           aria-labelledby="config-title"
           onClick={(e) => e.stopPropagation()}
         >
-          <Card className="border-0 rounded-t-2xl">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b">
-              <CardTitle id="config-title" className="text-lg font-semibold">
+          <Card className="border-0 rounded-t-2xl ">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 lg:pb-6 border-b">
+              <CardTitle id="config-title" className="text-lg lg:text-xl font-semibold">
                 Konfigurasi Produk
               </CardTitle>
               <Button variant="ghost" size="icon" onClick={onClose} aria-label="Tutup konfigurasi">
@@ -167,21 +167,21 @@ export default function ProductConfiguration({ product, isOpen, onClose }: Produ
               </Button>
             </CardHeader>
 
-            <CardContent className="p-6 space-y-6">
+            <CardContent className="p-6 space-y-6 mb-8 lg:mb-2">
               {/* Product Info */}
-              <div className="flex gap-4">
-                <div className="w-16 h-16 relative bg-gray-50 rounded-lg overflow-hidden flex-shrink-0">
-                  <Image src={product.image || "/placeholder.svg"} alt={product.name} fill className="object-cover" />
+              <div className="flex gap-4 mb-10">
+                <div className="w-36 h-36 lg:w-52 lg:h-52 relative bg-gray-50 rounded-lg overflow-hidden flex-shrink-0">
+                  <Image src={product.image || "/placeholder.svg"} alt={product.name} fill className="object-cover " />
                 </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900 text-sm leading-tight">{product.name}</h3>
-                  <p className="text-gray-600 text-xs mt-1">{product.processor}</p>
-                  <p className="text-blue-600 font-bold text-sm mt-1">Rp {formatPrice(currentPrice)}</p>
+                <div className="flex-1 ml-5">
+                  <h3 className="font-semibold text-gray-900 text-lg lg:text-xl leading-tight">{product.name}</h3>
+                  <p className="text-gray-600 text-sm mt-1">{product.processor}</p>
+                  <p className="text-blue-600 font-bold text-lg mt-2">Rp {formatPrice(currentPrice)}</p>
                 </div>
               </div>
 
               {/* RAM Selection */}
-              <div className="space-y-3">
+              <div className="space-y-3 ">
                 <label className="block text-sm font-semibold text-gray-900">RAM</label>
                 <div className="flex flex-wrap gap-2">
                   {ramOptions.map((ram) => (
@@ -202,7 +202,7 @@ export default function ProductConfiguration({ product, isOpen, onClose }: Produ
               </div>
 
               {/* SSD Selection */}
-              <div className="space-y-3">
+              <div className="space-y-3 ">
                 <label className="block text-sm font-semibold text-gray-900">SSD</label>
                 <div className="flex flex-wrap gap-2">
                   {ssdOptions.map((ssd) => (
@@ -210,7 +210,7 @@ export default function ProductConfiguration({ product, isOpen, onClose }: Produ
                       key={ssd}
                       onClick={() => setSelectedSsd(ssd)}
                       className={cn(
-                        "px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
+                        "px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 mb-16",
                         selectedSsd === ssd
                           ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white"
                           : "bg-gray-100 text-gray-700 hover:bg-gray-200",

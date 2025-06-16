@@ -325,7 +325,7 @@ Terima kasih!
               <Button
                 type="submit"
                 disabled={isProcessing}
-                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-4 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-4 text-sm lg:teks:lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
               >
                 {isProcessing ? "Memproses..." : "Lanjutkan ke WhatsApp"}
               </Button>
