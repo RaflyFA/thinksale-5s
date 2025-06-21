@@ -1,0 +1,84 @@
+-- Category
+CREATE TABLE categories (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  name text NOT NULL,
+  slug text UNIQUE NOT NULL,
+  image text NOT NULL
+);
+
+-- Product
+CREATE TABLE products (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  name text NOT NULL,
+  category_id uuid REFERENCES categories(id),
+  processor text NOT NULL,
+  description text,
+  image text,
+  images text[],
+  ram_options text[],
+  ssd_options text[],
+  price_range text,
+  specs text[],
+  rating float,
+  review_count int,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
+-- Product Variant
+CREATE TABLE product_variants (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  product_id uuid REFERENCES products(id),
+  ram text,
+  ssd text,
+  price int
+);
+
+-- User
+CREATE TABLE users (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  name text NOT NULL,
+  email text UNIQUE NOT NULL,
+  image text,
+  password text,
+  role text NOT NULL DEFAULT 'user',
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
+-- Cart
+CREATE TABLE carts (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid REFERENCES users(id),
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
+-- Cart Item
+CREATE TABLE cart_items (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  cart_id uuid REFERENCES carts(id),
+  product_id uuid REFERENCES products(id),
+  variant_id uuid REFERENCES product_variants(id),
+  quantity int NOT NULL
+);
+
+-- Order
+CREATE TABLE orders (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid REFERENCES users(id),
+  total int,
+  status text,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
+-- Order Item
+CREATE TABLE order_items (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_id uuid REFERENCES orders(id),
+  product_id uuid REFERENCES products(id),
+  variant_id uuid REFERENCES product_variants(id),
+  quantity int NOT NULL,
+  price int NOT NULL
+);

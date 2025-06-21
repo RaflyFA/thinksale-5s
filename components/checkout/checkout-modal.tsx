@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { X } from "lucide-react"
 import { useCart } from "@/lib/cart/cart-context"
-import { useAuth } from "@/lib/auth/auth-context"
+import { useAuth } from "@/lib/auth/use-auth"
 import { cn } from "@/lib/utils/cn"
 
 interface CheckoutModalProps {

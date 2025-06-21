@@ -101,7 +101,7 @@ export default function HomePage() {
         {!searchTerm && (
           <>
             {/* Hero Banner */}
-            <section className="py-8">
+            <section className="pt-8 pb-0">
               <div className="bg-gradient-to-r from-blue-600 to-purple-700 rounded-2xl overflow-hidden">
                 <div className="flex flex-col lg:flex-row items-center">
                   <div className="flex-1 p-8 lg:p-12 text-white">
@@ -132,22 +132,27 @@ export default function HomePage() {
             </section>
 
             {/* Features Section */}
-            <section className="py-12">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <section className="py-0">
+              <div className="grid grid-cols-3 gap-4">
                 {features.map(({ icon: Icon, title, description, color }) => (
-                  <div key={title} className="text-center p-6">
-                    <div className={cn("w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4", color)}>
-                      <Icon className="h-8 w-8" />
+                  <div
+                    key={title}
+                    className="flex h-full flex-col items-center justify-start p-4 text-center"
+                  >
+                    <div
+                      className={cn("mb-3 flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full", color)}
+                    >
+                      <Icon className="h-6 w-6" />
                     </div>
-                    <h3 className="text-xl font-semibold mb-2">{title}</h3>
-                    <p className="text-gray-600">{description}</p>
+                    <h3 className="mb-2 text-base font-semibold text-gray-800">{title}</h3>
+                    <p className="hidden sm:block text-xs leading-relaxed text-gray-600">{description}</p>
                   </div>
                 ))}
               </div>
             </section>
 
             {/* Categories */}
-            <section className="py-12">
+            <section className="pt-0 pb-12">
               <SectionHeader title="Kategori Produk" align="center" className="lg:pb-10" />
 
               <div className="md:max-w-4xl mx-auto">

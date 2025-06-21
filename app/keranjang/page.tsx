@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import PageLayout from "@/components/layout/page-layout"
 import SectionHeader from "@/components/ui/section-header"
 import { useCart } from "@/lib/cart/cart-context"
-import { useAuth } from "@/lib/auth/auth-context"
+import { useAuth } from "@/lib/auth/use-auth"
 import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react"
 import CheckoutModal from "@/components/checkout/checkout-modal"
 

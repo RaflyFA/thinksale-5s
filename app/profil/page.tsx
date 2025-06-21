@@ -2,29 +2,29 @@
 
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { useAuth } from "@/lib/auth/auth-context"
+import { useAuth } from "@/lib/auth/use-auth"
 import { useCart } from "@/lib/cart/cart-context"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { User, ShoppingCart, Package, LogOut } from "lucide-react"
 
 export default function ProfilPage() {
-  const { user, logout } = useAuth()
+  const { user, logout, isAuthenticated, isLoading } = useAuth()
   const { getTotalItems } = useCart()
   const router = useRouter()
 
   useEffect(() => {
-    if (!user) {
+    if (!isLoading && !isAuthenticated) {
       router.push("/login?redirect=/profil")
     }
-  }, [user, router])
+  }, [isAuthenticated, isLoading, router])
 
-  const handleLogout = () => {
-    logout()
+  const handleLogout = async () => {
+    await logout()
     router.push("/")
   }
 
-  if (!user) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -33,6 +33,10 @@ export default function ProfilPage() {
         </div>
       </div>
     )
+  }
+
+  if (!isAuthenticated || !user) {
+    return null
   }
 
   return (
@@ -49,7 +53,15 @@ export default function ProfilPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-3">
               <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
-                <User className="h-6 w-6 text-white" />
+                {user.image ? (
+                  <img 
+                    src={user.image} 
+                    alt={user.name || 'User'} 
+                    className="w-12 h-12 rounded-full object-cover"
+                  />
+                ) : (
+                  <User className="h-6 w-6 text-white" />
+                )}
               </div>
               <div>
                 <h2 className="text-xl font-semibold">{user.name}</h2>

@@ -12,7 +12,7 @@ import SectionHeader from "@/components/ui/section-header"
 import ProductConfiguration from "@/components/product/product-configuration"
 import { products } from "@/lib/data"
 import { useParams, useRouter } from "next/navigation"
-import { useAuth } from "@/lib/auth/auth-context"
+import { useAuth } from "@/lib/auth/use-auth"
 import { cn } from "@/lib/utils/cn"
 
 export default function ProductDetailPage() {

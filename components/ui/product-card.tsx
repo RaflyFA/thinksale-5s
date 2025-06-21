@@ -51,13 +51,16 @@ export default function ProductCard({
       : Number.parseInt(product.priceRange.replace(/\./g, ""))
 
   // Set originalPrice 15-25% lebih tinggi dari harga tertinggi
-  const originalPrice = Math.round(highestPrice * (1 + (Math.random() * 0.1 + 0.15)))
+  // Use product ID to generate deterministic value instead of Math.random()
+  const priceMultiplier = 1 + ((parseInt(product.id) % 10) * 0.01 + 0.15)
+  const originalPrice = Math.round(highestPrice * priceMultiplier)
 
-  // Calculate discount percentage
-  const discountPercentage = Math.floor(Math.random() * 20) + 10 // 10-30% discount
+  // Calculate discount percentage based on product ID for consistency
+  const discountPercentage = 10 + (parseInt(product.id) % 20) // 10-29% discount
 
   const rating = 4.8
-  const reviewCount = Math.floor(Math.random() * 200) + 50
+  // Use product ID to generate deterministic review count
+  const reviewCount = 50 + (parseInt(product.id) % 200) // 50-249 reviews
 
   const aspectRatioClasses = {
     square: "aspect-square",

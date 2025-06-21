@@ -6,37 +6,30 @@ import { useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { useAuth } from "@/lib/auth/auth-context"
-import { Eye, EyeOff, Mail, Lock } from "lucide-react"
+import { useAuth } from "@/lib/auth/use-auth"
+import { Chrome } from "lucide-react"
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [showPassword, setShowPassword] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
 
-  const { login, isLoading } = useAuth()
+  const { login, isLoading: authLoading } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
   const redirectTo = searchParams.get("redirect") || "/"
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleGoogleLogin = async () => {
+    setIsLoading(true)
     setError("")
 
-    if (!email || !password) {
-      setError("Mohon isi semua field")
-      return
-    }
-
-    const success = await login(email, password)
-    if (success) {
-      router.push(redirectTo)
-    } else {
-      setError("Email atau password salah")
+    try {
+      await login("google")
+    } catch (error) {
+      setError("Gagal login dengan Google. Silakan coba lagi.")
+      console.error("Login error:", error)
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -56,71 +49,37 @@ export default function LoginPage() {
         <Card className="shadow-xl border-0">
           <CardHeader className="space-y-1 text-center">
             <CardTitle className="text-2xl font-bold">Masuk ke Akun</CardTitle>
-            <CardDescription>Masukkan email dan password untuk melanjutkan</CardDescription>
+            <CardDescription>Pilih metode login yang Anda inginkan</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {error && (
-                <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">{error}</div>
-              )}
-
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="nama@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10"
-                    required
-                  />
-                </div>
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm mb-4">
+                {error}
               </div>
+            )}
 
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Masukkan password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 pr-10"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                  </button>
-                </div>
-              </div>
-
+            <div className="space-y-4">
               <Button
-                type="submit"
-                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-3 rounded-xl font-semibold"
-                disabled={isLoading}
+                onClick={handleGoogleLogin}
+                disabled={isLoading || authLoading}
+                className="w-full bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 py-3 rounded-xl font-semibold flex items-center justify-center space-x-2"
               >
-                {isLoading ? "Memproses..." : "Masuk"}
+                <Chrome className="h-5 w-5" />
+                <span>{isLoading || authLoading ? "Memproses..." : "Masuk dengan Google"}</span>
               </Button>
-            </form>
+            </div>
 
             <div className="mt-6 text-center">
-              <p className="text-gray-600">
-                Belum punya akun?{" "}
-                <Link
-                  href={`/register${redirectTo !== "/" ? `?redirect=${redirectTo}` : ""}`}
-                  className="text-blue-600 hover:text-blue-700 font-semibold"
-                >
-                  Daftar sekarang
-                </Link>
+              <p className="text-gray-600 text-sm">
+                Dengan melanjutkan, Anda menyetujui{" "}
+                <Link href="/terms" className="text-blue-600 hover:text-blue-700">
+                  Syarat & Ketentuan
+                </Link>{" "}
+                dan{" "}
+                <Link href="/privacy" className="text-blue-600 hover:text-blue-700">
+                  Kebijakan Privasi
+                </Link>{" "}
+                kami.
               </p>
             </div>
 
