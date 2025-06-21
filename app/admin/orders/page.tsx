@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -36,82 +36,94 @@ import {
   CheckCircle,
   Truck,
   Package,
+  Loader2,
 } from "lucide-react"
+import { toast } from "sonner"
 
-// Mock order data - nanti bisa diganti dengan data real dari Supabase
-const mockOrders = [
-  {
-    id: "ORD-001",
-    customerName: "John Doe",
-    customerEmail: "john@example.com",
-    products: [
-      { name: "Lenovo ThinkPad T470", quantity: 1, price: 8500000 }
-    ],
-    total: 8500000,
-    status: "pending",
-    createdAt: "2024-01-20 10:30",
-    updatedAt: "2024-01-20 10:30"
-  },
-  {
-    id: "ORD-002",
-    customerName: "Jane Smith",
-    customerEmail: "jane@example.com",
-    products: [
-      { name: "Dell Latitude 5520", quantity: 2, price: 7500000 }
-    ],
-    total: 15000000,
-    status: "processing",
-    createdAt: "2024-01-19 15:45",
-    updatedAt: "2024-01-20 09:15"
-  },
-  {
-    id: "ORD-003",
-    customerName: "Bob Johnson",
-    customerEmail: "bob@example.com",
-    products: [
-      { name: "Lenovo ThinkPad X1 Carbon", quantity: 1, price: 12000000 }
-    ],
-    total: 12000000,
-    status: "shipped",
-    createdAt: "2024-01-18 14:20",
-    updatedAt: "2024-01-19 16:30"
-  },
-  {
-    id: "ORD-004",
-    customerName: "Alice Brown",
-    customerEmail: "alice@example.com",
-    products: [
-      { name: "Dell Precision 5560", quantity: 1, price: 18000000 }
-    ],
-    total: 18000000,
-    status: "delivered",
-    createdAt: "2024-01-17 11:10",
-    updatedAt: "2024-01-18 14:45"
+interface Order {
+  id: string
+  user_id: string
+  total: number | null
+  status: string | null
+  created_at: string
+  updated_at: string
+  user?: {
+    id: string
+    name: string
+    email: string
   }
-]
+  items?: Array<{
+    id: string
+    quantity: number
+    price: number
+    product?: {
+      id: string
+      name: string
+    }
+    variant?: {
+      id: string
+      ram: string | null
+      ssd: string | null
+    }
+  }>
+}
 
 export default function OrdersPage() {
+  const [orders, setOrders] = useState<Order[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedStatus, setSelectedStatus] = useState("all")
 
-  // Filter orders based on search and status
-  const filteredOrders = mockOrders.filter((order) => {
-    const matchesSearch = order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         order.customerEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         order.id.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesStatus = selectedStatus === "all" || order.status === selectedStatus
-    return matchesSearch && matchesStatus
-  })
+  useEffect(() => {
+    fetchOrders()
+  }, [searchTerm, selectedStatus])
 
-  const statuses = [
-    { id: "all", name: "Semua Status" },
-    { id: "pending", name: "Menunggu" },
-    { id: "processing", name: "Diproses" },
-    { id: "shipped", name: "Dikirim" },
-    { id: "delivered", name: "Terkirim" }
-  ]
+  const fetchOrders = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      
+      const params = new URLSearchParams()
+      if (searchTerm) params.append('query', searchTerm)
+      if (selectedStatus !== 'all') params.append('status', selectedStatus)
+      
+      const response = await fetch(`/api/admin/orders?${params.toString()}`)
+      
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('API Error Response:', errorText)
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+      
+      const contentType = response.headers.get('content-type')
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text()
+        console.error('Non-JSON response:', text)
+        throw new Error('Invalid response format from server')
+      }
+      
+      const data = await response.json()
+      setOrders(data)
+    } catch (err) {
+      console.error('Error fetching orders:', err)
+      setError(err instanceof Error ? err.message : 'An error occurred')
+      toast.error('Failed to load orders')
+    } finally {
+      setLoading(false)
+    }
+  }
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string | null) => {
+    if (!status) {
+      return (
+        <Badge variant="outline" className="flex items-center gap-1">
+          <Package className="h-3 w-3" />
+          Unknown
+        </Badge>
+      )
+    }
+
     const statusConfig = {
       pending: {
         icon: Clock,
@@ -132,12 +144,25 @@ export default function OrdersPage() {
         icon: CheckCircle,
         variant: "default" as const,
         text: "Terkirim"
+      },
+      completed: {
+        icon: CheckCircle,
+        variant: "default" as const,
+        text: "Selesai"
       }
     }
 
     const config = statusConfig[status as keyof typeof statusConfig]
-    const Icon = config.icon
+    if (!config) {
+      return (
+        <Badge variant="outline" className="flex items-center gap-1">
+          <Package className="h-3 w-3" />
+          {status}
+        </Badge>
+      )
+    }
 
+    const Icon = config.icon
     return (
       <Badge variant={config.variant} className="flex items-center gap-1">
         <Icon className="h-3 w-3" />
@@ -180,11 +205,12 @@ export default function OrdersPage() {
           onChange={(e) => setSelectedStatus(e.target.value)}
           className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
         >
-          {statuses.map((status) => (
-            <option key={status.id} value={status.id}>
-              {status.name}
-            </option>
-          ))}
+          <option value="all">Semua Status</option>
+          <option value="pending">Menunggu</option>
+          <option value="processing">Diproses</option>
+          <option value="shipped">Dikirim</option>
+          <option value="delivered">Terkirim</option>
+          <option value="completed">Selesai</option>
         </select>
       </div>
 
@@ -196,77 +222,104 @@ export default function OrdersPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>ID Pesanan</TableHead>
-                <TableHead>Pelanggan</TableHead>
-                <TableHead>Produk</TableHead>
-                <TableHead>Total</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Tanggal</TableHead>
-                <TableHead className="text-right">Aksi</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredOrders.map((order) => (
-                <TableRow key={order.id}>
-                  <TableCell className="font-medium">{order.id}</TableCell>
-                  <TableCell>
-                    <div>
-                      <div className="font-medium">{order.customerName}</div>
-                      <div className="text-sm text-muted-foreground">{order.customerEmail}</div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm">
-                      {order.products.map((product, index) => (
-                        <div key={index}>
-                          {product.name} (x{product.quantity})
-                        </div>
-                      ))}
-                    </div>
-                  </TableCell>
-                  <TableCell className="font-medium">{formatPrice(order.total)}</TableCell>
-                  <TableCell>{getStatusBadge(order.status)}</TableCell>
-                  <TableCell className="text-sm">
-                    {new Date(order.createdAt).toLocaleDateString('id-ID')}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <span className="sr-only">Buka menu</span>
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Aksi</DropdownMenuLabel>
-                        <DropdownMenuItem>
-                          <Eye className="mr-2 h-4 w-4" />
-                          Lihat Detail
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem>Update Status</DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive">
-                          Batalkan Pesanan
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-
-          {filteredOrders.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-12">
-              <ShoppingCart className="h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-medium mb-2">Tidak ada pesanan ditemukan</h3>
-              <p className="text-muted-foreground">
-                Coba ubah filter pencarian Anda
-              </p>
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="flex items-center gap-2">
+                <Loader2 className="h-6 w-6 animate-spin" />
+                <span>Loading orders...</span>
+              </div>
             </div>
+          ) : error ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <p className="text-destructive mb-4">{error}</p>
+                <Button onClick={fetchOrders}>
+                  Try Again
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>ID Pesanan</TableHead>
+                    <TableHead>Pelanggan</TableHead>
+                    <TableHead>Produk</TableHead>
+                    <TableHead>Total</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Tanggal</TableHead>
+                    <TableHead className="text-right">Aksi</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {orders.map((order) => (
+                    <TableRow key={order.id}>
+                      <TableCell className="font-medium">{order.id}</TableCell>
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">{order.user?.name || 'Unknown'}</div>
+                          <div className="text-sm text-muted-foreground">{order.user?.email || 'No email'}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm">
+                          {order.items?.map((item, index) => (
+                            <div key={item.id}>
+                              {item.product?.name || 'Unknown Product'} 
+                              {item.variant && ` (${item.variant.ram || 'N/A'}, ${item.variant.ssd || 'N/A'})`}
+                              {item.quantity > 1 && ` x${item.quantity}`}
+                            </div>
+                          )) || 'No items'}
+                        </div>
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {order.total ? formatPrice(order.total) : 'N/A'}
+                      </TableCell>
+                      <TableCell>{getStatusBadge(order.status)}</TableCell>
+                      <TableCell className="text-sm">
+                        {new Date(order.created_at).toLocaleDateString('id-ID')}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                              <span className="sr-only">Buka menu</span>
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Aksi</DropdownMenuLabel>
+                            <DropdownMenuItem>
+                              <Eye className="mr-2 h-4 w-4" />
+                              Lihat Detail
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem>Update Status</DropdownMenuItem>
+                            <DropdownMenuItem className="text-destructive">
+                              Batalkan Pesanan
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+
+              {orders.length === 0 && (
+                <div className="flex flex-col items-center justify-center py-12">
+                  <ShoppingCart className="h-12 w-12 text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-medium mb-2">Tidak ada pesanan ditemukan</h3>
+                  <p className="text-muted-foreground">
+                    {searchTerm || selectedStatus !== 'all' 
+                      ? 'Coba ubah filter pencarian Anda' 
+                      : 'Belum ada pesanan dalam sistem'
+                    }
+                  </p>
+                </div>
+              )}
+            </>
           )}
         </CardContent>
       </Card>

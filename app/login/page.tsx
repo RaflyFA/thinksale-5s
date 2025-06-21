@@ -52,7 +52,7 @@ export default function LoginPage() {
             <CardDescription>Pilih metode login yang Anda inginkan</CardDescription>
           </CardHeader>
           <CardContent>
-            {error && (
+              {error && (
               <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm mb-4">
                 {error}
               </div>

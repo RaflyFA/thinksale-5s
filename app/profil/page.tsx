@@ -60,7 +60,7 @@ export default function ProfilPage() {
                     className="w-12 h-12 rounded-full object-cover"
                   />
                 ) : (
-                  <User className="h-6 w-6 text-white" />
+                <User className="h-6 w-6 text-white" />
                 )}
               </div>
               <div>

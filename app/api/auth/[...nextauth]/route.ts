@@ -1,7 +1,11 @@
 import NextAuth from "next-auth"
 import GoogleProvider from "next-auth/providers/google"
 import type { NextAuthOptions } from 'next-auth'
-import { supabaseAdmin } from "@/lib/supabase/server"
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -11,79 +15,77 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async signIn({ user, account }) {
-      if (account?.provider === "google") {
-        const { name, email, image } = user;
-
-        if (!email) {
-          console.error("Email not found in Google profile");
-          return false;
-        }
-
-        try {
-          const { data: existingUser, error: selectError } = await supabaseAdmin
-            .from('users')
-            .select('id, name, image')
-            .eq('email', email)
-            .single();
-
-          if (selectError && selectError.code !== 'PGRST116') { // 'PGRST116' is "No rows found"
-            console.error('Error fetching user:', selectError);
-            return false;
-          }
-
-          if (!existingUser) {
-            // User does not exist, create a new one
-            const { error: insertError } = await supabaseAdmin
-              .from('users')
-              .insert({ name, email, image, role: 'user' });
-
-            if (insertError) {
-              console.error('Error creating user:', insertError);
-              return false;
-            }
-          } else {
-            // User exists, update if name or image has changed
-            if (existingUser.name !== name || existingUser.image !== image) {
-              const { error: updateError } = await supabaseAdmin
-                .from('users')
-                .update({ name, image, updatedAt: new Date() })
-                .eq('email', email);
-              
-              if (updateError) {
-                console.error('Error updating user:', updateError);
-                // Non-blocking error, just log it
-              }
-            }
-          }
-        } catch (error) {
-          console.error("Error in signIn callback:", error);
-          return false;
-        }
-      }
-      return true;
-    },
     async jwt({ token, user }) {
-      // Fetch user from DB to add custom properties to the token
-      const { data: dbUser } = await supabaseAdmin
-        .from('users')
-        .select('id, role')
-        .eq('email', token.email)
-        .single();
-      
-      if (dbUser) {
-        token.id = dbUser.id;
-        token.role = dbUser.role;
+      if (user) {
+        token.id = user.id;
+        token.role = user.role;
       }
-      
       return token;
     },
     async session({ session, token }) {
-      if (token) {
+      if (session.user) {
         session.user.id = token.id as string;
         session.user.role = token.role as string;
       }
       return session;
+    },
+    async signIn({ user, account, profile }) {
+      if (!user.email) {
+        return false;
+      }
+
+      try {
+        const { data: existingUser, error } = await supabaseAdmin
+          .from('users')
+          .select('*')
+          .eq('email', user.email)
+          .single();
+
+        if (existingUser) {
+          // Update user if they exist
+          const { error: updateError } = await supabaseAdmin
+            .from('users')
+            .update({
+              name: user.name,
+              image: user.image,
+            })
+            .eq('email', user.email);
+          
+          if (updateError) {
+            console.error('Error updating user:', updateError);
+            return false;
+          }
+          // Attach role and id to the user object for session
+          user.role = existingUser.role;
+          user.id = existingUser.id;
+        } else {
+          // Create new user if they don't exist
+          const { data: newUser, error: insertError } = await supabaseAdmin
+            .from('users')
+            .insert({
+              email: user.email,
+              name: user.name,
+              image: user.image,
+              role: 'user', // Default role
+            })
+            .select()
+            .single();
+
+          if (insertError) {
+            console.error('Error creating user:', insertError);
+            return false;
+          }
+
+          if (newUser) {
+            user.role = newUser.role;
+            user.id = newUser.id;
+          }
+        }
+        return true;
+      } catch (error) {
+        console.error('SignIn Error:', error);
+        return false;
+      }
     },
   },
   pages: {

@@ -1,7 +1,7 @@
 // app/admin/add-product/page.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft, Upload, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +20,15 @@ import Link from "next/link";
 import Image from "next/image";
 import { toast } from "sonner";
 
+interface ValidationErrors {
+  name?: string;
+  processor?: string;
+  ramOptions?: string;
+  ssdOptions?: string;
+  variants?: string;
+  specs?: string;
+}
+
 export default function AddProductPage() {
   const [formData, setFormData] = useState({
     name: "",
@@ -36,6 +45,111 @@ export default function AddProductPage() {
   const [loading, setLoading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [errors, setErrors] = useState<ValidationErrors>({});
+  const [isFormValid, setIsFormValid] = useState(false);
+
+  // Real-time validation
+  useEffect(() => {
+    const newErrors: ValidationErrors = {};
+
+    // Validate name
+    if (!formData.name.trim()) {
+      newErrors.name = "Nama Produk wajib diisi";
+    } else if (formData.name.trim().length < 3) {
+      newErrors.name = "Nama Produk minimal 3 karakter";
+    }
+
+    // Validate processor
+    if (!formData.processor.trim()) {
+      newErrors.processor = "Processor wajib diisi";
+    } else if (formData.processor.trim().length < 5) {
+      newErrors.processor = "Processor minimal 5 karakter";
+    }
+
+    // Validate RAM options
+    if (!formData.ramOptions.trim()) {
+      newErrors.ramOptions = "Opsi RAM wajib diisi";
+    } else {
+      const ramOptions = formData.ramOptions
+        .split(",")
+        .map(ram => ram.trim())
+        .filter(ram => ram);
+      
+      if (ramOptions.length === 0) {
+        newErrors.ramOptions = "Minimal satu opsi RAM harus diisi";
+      } else if (ramOptions.some(ram => ram.length < 2)) {
+        newErrors.ramOptions = "Format RAM tidak valid (contoh: 8GB, 16GB)";
+      }
+    }
+
+    // Validate SSD options
+    if (!formData.ssdOptions.trim()) {
+      newErrors.ssdOptions = "Opsi SSD wajib diisi";
+    } else {
+      const ssdOptions = formData.ssdOptions
+        .split(",")
+        .map(ssd => ssd.trim())
+        .filter(ssd => ssd);
+      
+      if (ssdOptions.length === 0) {
+        newErrors.ssdOptions = "Minimal satu opsi SSD harus diisi";
+      } else if (ssdOptions.some(ssd => ssd.length < 3)) {
+        newErrors.ssdOptions = "Format SSD tidak valid (contoh: 256GB, 512GB)";
+      }
+    }
+
+    // Validate variants
+    if (!formData.variants.trim()) {
+      newErrors.variants = "Varian dan Harga wajib diisi";
+    } else {
+      const variants = formData.variants
+        .split("\n")
+        .filter(line => line.trim());
+      
+      if (variants.length === 0) {
+        newErrors.variants = "Minimal satu varian harus diisi";
+      } else {
+        for (let i = 0; i < variants.length; i++) {
+          const variant = variants[i];
+          const parts = variant.split(",").map(v => v.trim());
+          
+          if (parts.length < 3) {
+            newErrors.variants = `Format varian baris ${i + 1} tidak valid. Gunakan format: RAM, SSD, Harga`;
+            break;
+          }
+          
+          const [ram, ssd, price] = parts;
+          if (!ram || !ssd || !price) {
+            newErrors.variants = `Data varian baris ${i + 1} tidak lengkap`;
+            break;
+          }
+          
+          const parsedPrice = parseInt(price.replace(/\D/g, ""), 10);
+          if (isNaN(parsedPrice) || parsedPrice <= 0) {
+            newErrors.variants = `Format harga di varian baris ${i + 1} tidak valid`;
+            break;
+          }
+        }
+      }
+    }
+
+    // Validate specs (optional but if filled, should be valid)
+    if (formData.specs.trim()) {
+      const specs = formData.specs
+        .split("\n")
+        .filter(line => line.trim());
+      
+      if (specs.some(spec => spec.trim().length < 2)) {
+        newErrors.specs = "Spesifikasi tidak boleh kosong";
+      }
+    }
+
+    setErrors(newErrors);
+    
+    // Check if form is valid
+    const isValid = Object.keys(newErrors).length === 0 && formData.imageUrl;
+    setIsFormValid(isValid);
+  }, [formData, formData.imageUrl]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({
@@ -67,7 +181,7 @@ export default function AddProductPage() {
 
     try {
       const data = new FormData();
-      data.append("image", imageFile);
+      data.append("file", imageFile);
 
       const response = await fetch("/api/upload-image", {
         method: "POST",
@@ -76,13 +190,13 @@ export default function AddProductPage() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Gagal mengunggah gambar.");
+        throw new Error(errorData.error || "Gagal mengunggah gambar.");
       }
 
       const result = await response.json();
       setFormData((prev) => ({
         ...prev,
-        imageUrl: result.imageUrl,
+        imageUrl: result.url,
       }));
       toast.success("Gambar berhasil diunggah!");
     } catch (error: any) {
@@ -96,10 +210,10 @@ export default function AddProductPage() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validation
+    // Basic validation
     if (!formData.imageUrl) {
       toast.error("Harap unggah gambar produk terlebih dahulu.");
       return;
@@ -112,80 +226,158 @@ export default function AddProductPage() {
       toast.error("Processor wajib diisi.");
       return;
     }
-    if (!formData.ramOptions.trim()) {
-      toast.error("Opsi RAM wajib diisi.");
-      return;
-    }
-    if (!formData.ssdOptions.trim()) {
-      toast.error("Opsi SSD wajib diisi.");
-      return;
-    }
-    if (!formData.variants.trim()) {
-      toast.error("Varian dan Harga wajib diisi.");
-      return;
-    }
 
-    // Format data for lib/data.ts
-    const formattedData = `{
-  id: "${Math.random().toString(36).substr(2, 9)}",
-  name: "${formData.name}",
-  category: "${formData.category}",
-  processor: "${formData.processor}",
-  description: "${formData.description}",
-  image: "${formData.imageUrl}",
-  images: [
-    "${formData.imageUrl}",
-  ],
-  ramOptions: [${formData.ramOptions
-    .split(",")
-    .map((ram) => `"${ram.trim()}"`)
-    .join(", ")}],
-  ssdOptions: [${formData.ssdOptions
-    .split(",")
-    .map((ssd) => `"${ssd.trim()}"`)
-    .join(", ")}],
-  priceRange: "${
-    formData.variants.split("\n")[0]?.split(",")[2]?.trim() || "0"
-  } - ${formData.variants.split("\n").pop()?.split(",")[2]?.trim() || "0"}",
-  specs: [
-    ${formData.specs
-      .split("\n")
-      .map((spec) => `"${spec.trim()}"`)
-      .join(",\n     ")}
-  ],
-  variants: [
-    ${formData.variants
-      .split("\n")
-      .map((variant) => {
-        const [ram, ssd, price] = variant.split(",").map((v) => v.trim());
-        const parsedPrice = parseInt(price.replace(/\D/g, ""), 10);
-        if (isNaN(parsedPrice)) {
-          toast.error("Format harga di Varian tidak valid. Harap masukkan angka.");
-          throw new Error("Invalid price format");
+    setLoading(true);
+
+    try {
+      // Parse variants with better validation
+      if (!formData.variants.trim()) {
+        throw new Error("Varian dan Harga wajib diisi.");
+      }
+
+      const variants = formData.variants
+        .split("\n")
+        .filter(line => line.trim())
+        .map((variant, index) => {
+          const parts = variant.split(",").map((v) => v.trim());
+          if (parts.length < 3) {
+            throw new Error(`Format varian baris ${index + 1} tidak valid. Gunakan format: RAM, SSD, Harga`);
+          }
+          
+          const [ram, ssd, price] = parts;
+          if (!ram || !ssd || !price) {
+            throw new Error(`Data varian baris ${index + 1} tidak lengkap. Pastikan RAM, SSD, dan Harga terisi.`);
+          }
+          
+          const parsedPrice = parseInt(price.replace(/\D/g, ""), 10);
+          if (isNaN(parsedPrice) || parsedPrice <= 0) {
+            throw new Error(`Format harga di varian baris ${index + 1} tidak valid. Harap masukkan angka yang valid.`);
+          }
+          
+          return { ram, ssd, price: parsedPrice };
+        });
+
+      if (variants.length === 0) {
+        throw new Error("Minimal satu varian harus diisi.");
+      }
+
+      // Parse specs with validation
+      const specs = formData.specs
+        .split("\n")
+        .filter(line => line.trim())
+        .map(spec => spec.trim());
+
+      // Parse RAM and SSD options with validation
+      if (!formData.ramOptions.trim()) {
+        throw new Error("Opsi RAM wajib diisi.");
+      }
+      
+      const ramOptions = formData.ramOptions
+        .split(",")
+        .map(ram => ram.trim())
+        .filter(ram => ram);
+
+      if (ramOptions.length === 0) {
+        throw new Error("Minimal satu opsi RAM harus diisi.");
+      }
+
+      if (!formData.ssdOptions.trim()) {
+        throw new Error("Opsi SSD wajib diisi.");
+      }
+      
+      const ssdOptions = formData.ssdOptions
+        .split(",")
+        .map(ssd => ssd.trim())
+        .filter(ssd => ssd);
+
+      if (ssdOptions.length === 0) {
+        throw new Error("Minimal satu opsi SSD harus diisi.");
+      }
+
+      // Calculate price range
+      const prices = variants.map(v => v.price);
+      const minPrice = Math.min(...prices);
+      const maxPrice = Math.max(...prices);
+      const priceRange = minPrice === maxPrice ? `${minPrice}` : `${minPrice} - ${maxPrice}`;
+
+      // Prepare product data for Supabase
+      const productData = {
+        name: formData.name.trim(),
+        category_id: formData.category === 'thinkpad' ? '6a25773b-eb0f-4eb9-98ff-812cf0ebd557' : '12993668-30d2-46c6-9107-a076708fcd9b',
+        processor: formData.processor.trim(),
+        description: formData.description.trim() || null,
+        image: formData.imageUrl,
+        images: [formData.imageUrl],
+        ram_options: ramOptions,
+        ssd_options: ssdOptions,
+        price_range: priceRange,
+        specs: specs,
+        rating: null,
+        review_count: 0
+      };
+
+      // Save to Supabase
+      const response = await fetch('/api/admin/products', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(productData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Gagal menyimpan produk');
+      }
+
+      const savedProduct = await response.json();
+
+      // Save variants
+      for (const variant of variants) {
+        const variantResponse = await fetch('/api/admin/product-variants', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            product_id: savedProduct.id,
+            ram: variant.ram,
+            ssd: variant.ssd,
+            price: variant.price
+          }),
+        });
+
+        if (!variantResponse.ok) {
+          console.warn('Failed to save variant:', variant);
         }
-        return `{ ram: "${ram}", ssd: "${ssd}", price: ${parsedPrice} }`;
-      })
-      .join(",\n     ")}
-  ]
-}`;
+      }
 
-    console.log("Formatted data for lib/data.ts:", formattedData);
-    toast.success("Produk berhasil ditambahkan! Lihat console untuk data yang dihasilkan.");
-    
-    // Reset form
-    setFormData({
-      name: "",
-      category: "thinkpad",
-      processor: "",
-      description: "",
-      ramOptions: "",
-      ssdOptions: "",
-      variants: "",
-      specs: "",
-      imageUrl: "",
-    });
-    setImageFile(null);
-    setPreviewUrl(null);
+      toast.success("Produk berhasil ditambahkan!");
+      
+      // Reset form
+      setFormData({
+        name: "",
+        category: "thinkpad",
+        processor: "",
+        description: "",
+        ramOptions: "",
+        ssdOptions: "",
+        variants: "",
+        specs: "",
+        imageUrl: "",
+      });
+      setImageFile(null);
+      setPreviewUrl(null);
+
+      // Redirect to products list
+      window.location.href = '/admin/products';
+
+    } catch (error: any) {
+      console.error("Error saving product:", error);
+      toast.error(error.message || "Terjadi kesalahan saat menyimpan produk.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const removeImage = () => {
@@ -214,6 +406,33 @@ export default function AddProductPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+        {/* Form Status */}
+        {Object.keys(errors).length > 0 && (
+          <Card className="border-red-200 bg-red-50">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-2 text-red-700">
+                <div className="h-2 w-2 rounded-full bg-red-500"></div>
+                <span className="text-sm font-medium">
+                  Ada {Object.keys(errors).length} field yang perlu diperbaiki
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {isFormValid && (
+          <Card className="border-green-200 bg-green-50">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-2 text-green-700">
+                <div className="h-2 w-2 rounded-full bg-green-500"></div>
+                <span className="text-sm font-medium">
+                  Form sudah valid dan siap disimpan
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Basic Information */}
         <Card>
           <CardHeader>
@@ -231,8 +450,12 @@ export default function AddProductPage() {
                   value={formData.name}
                   onChange={(e) => handleInputChange("name", e.target.value)}
                   placeholder="Contoh: Lenovo ThinkPad T470"
+                  className={errors.name ? "border-red-500 focus:border-red-500" : ""}
                   required
                 />
+                {errors.name && (
+                  <p className="text-sm text-red-500">{errors.name}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="category">Kategori *</Label>
@@ -254,8 +477,12 @@ export default function AddProductPage() {
                 value={formData.processor}
                 onChange={(e) => handleInputChange("processor", e.target.value)}
                 placeholder="Contoh: Intel Core i5-7300U"
+                className={errors.processor ? "border-red-500 focus:border-red-500" : ""}
                 required
               />
+              {errors.processor && (
+                <p className="text-sm text-red-500">{errors.processor}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="description">Deskripsi</Label>
@@ -356,11 +583,16 @@ export default function AddProductPage() {
                   value={formData.ramOptions}
                   onChange={(e) => handleInputChange("ramOptions", e.target.value)}
                   placeholder="Contoh: 4GB, 8GB, 16GB"
+                  className={errors.ramOptions ? "border-red-500 focus:border-red-500" : ""}
                   required
                 />
-                <p className="text-sm text-muted-foreground">
-                  Pisahkan dengan koma
-                </p>
+                {errors.ramOptions ? (
+                  <p className="text-sm text-red-500">{errors.ramOptions}</p>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Pisahkan dengan koma
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="ssdOptions">Opsi SSD *</Label>
@@ -369,11 +601,16 @@ export default function AddProductPage() {
                   value={formData.ssdOptions}
                   onChange={(e) => handleInputChange("ssdOptions", e.target.value)}
                   placeholder="Contoh: 128GB, 256GB, 512GB"
+                  className={errors.ssdOptions ? "border-red-500 focus:border-red-500" : ""}
                   required
                 />
-                <p className="text-sm text-muted-foreground">
-                  Pisahkan dengan koma
-                </p>
+                {errors.ssdOptions ? (
+                  <p className="text-sm text-red-500">{errors.ssdOptions}</p>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Pisahkan dengan koma
+                  </p>
+                )}
               </div>
             </div>
             <div className="space-y-2">
@@ -384,10 +621,15 @@ export default function AddProductPage() {
                 onChange={(e) => handleInputChange("specs", e.target.value)}
                 placeholder="Masukkan spesifikasi detail, satu per baris..."
                 rows={4}
+                className={errors.specs ? "border-red-500 focus:border-red-500" : ""}
               />
-              <p className="text-sm text-muted-foreground">
-                Satu spesifikasi per baris
-              </p>
+              {errors.specs ? (
+                <p className="text-sm text-red-500">{errors.specs}</p>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Satu spesifikasi per baris
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -409,11 +651,16 @@ export default function AddProductPage() {
                 onChange={(e) => handleInputChange("variants", e.target.value)}
                 placeholder="Format: RAM, SSD, Harga&#10;Contoh:&#10;4GB, 128GB, 8500000&#10;8GB, 256GB, 9500000&#10;16GB, 512GB, 11500000"
                 rows={6}
+                className={errors.variants ? "border-red-500 focus:border-red-500" : ""}
                 required
               />
-              <p className="text-sm text-muted-foreground">
-                Format: RAM, SSD, Harga (satu varian per baris)
-              </p>
+              {errors.variants ? (
+                <p className="text-sm text-red-500">{errors.variants}</p>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Format: RAM, SSD, Harga (satu varian per baris)
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -427,9 +674,9 @@ export default function AddProductPage() {
               Batal
             </Link>
           </Button>
-          <Button type="submit" disabled={!formData.imageUrl}>
+          <Button type="submit" disabled={!isFormValid || loading}>
             <Plus className="mr-2 h-4 w-4" />
-            Tambah Produk
+            {loading ? "Menyimpan..." : "Tambah Produk"}
           </Button>
         </div>
       </form>
