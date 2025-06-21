@@ -266,6 +266,12 @@ export default function AdminDashboardPage() {
                 </Link>
               </Button>
               <Button asChild variant="outline" className="w-full justify-start">
+                <Link href="/admin/products">
+                  <Package2 className="mr-2 h-4 w-4" />
+                  Kelola Produk
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="w-full justify-start">
                 <Link href="/admin/orders">
                   <CreditCard className="mr-2 h-4 w-4" />
                   Lihat Pesanan

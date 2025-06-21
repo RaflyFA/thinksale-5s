@@ -1,0 +1,120 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { supabaseAdmin } from '@/lib/supabase/server'
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const { data: product, error } = await supabaseAdmin
+      .from('products')
+      .select(`
+        *,
+        category:categories(*),
+        variants:product_variants(*)
+      `)
+      .eq('id', params.id)
+      .single()
+
+    if (error) {
+      console.error('Error fetching product:', error)
+      return NextResponse.json(
+        { error: 'Product not found' },
+        { status: 404 }
+      )
+    }
+
+    return NextResponse.json(product)
+  } catch (error) {
+    console.error('Error:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const body = await request.json()
+    
+    // Only allow specific fields to be updated
+    const allowedFields = ['is_featured', 'is_best_seller', 'name', 'description', 'processor', 'price_range']
+    const updateData: any = {}
+    
+    for (const field of allowedFields) {
+      if (body[field] !== undefined) {
+        updateData[field] = body[field]
+      }
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from('products')
+      .update(updateData)
+      .eq('id', params.id)
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Error updating product:', error)
+      return NextResponse.json(
+        { error: 'Failed to update product' },
+        { status: 400 }
+      )
+    }
+
+    return NextResponse.json(data)
+  } catch (error) {
+    console.error('Error:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    // First delete related product variants
+    const { error: variantsError } = await supabaseAdmin
+      .from('product_variants')
+      .delete()
+      .eq('product_id', params.id)
+
+    if (variantsError) {
+      console.error('Error deleting product variants:', variantsError)
+      return NextResponse.json(
+        { error: 'Failed to delete product variants' },
+        { status: 400 }
+      )
+    }
+
+    // Then delete the product
+    const { error } = await supabaseAdmin
+      .from('products')
+      .delete()
+      .eq('id', params.id)
+
+    if (error) {
+      console.error('Error deleting product:', error)
+      return NextResponse.json(
+        { error: 'Failed to delete product' },
+        { status: 400 }
+      )
+    }
+
+    return NextResponse.json({ message: 'Product deleted successfully' })
+  } catch (error) {
+    console.error('Error:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+} 

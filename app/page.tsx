@@ -2,36 +2,59 @@
 
 import { useState, useMemo } from "react"
 import { useRouter } from "next/navigation"
-import { Truck, Shield, Headphones } from "lucide-react"
+import { Truck, Shield, Headphones, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import Image from "next/image"
 import PageLayout from "@/components/layout/page-layout"
 import ProductCard from "@/components/ui/product-card"
 import SectionHeader from "@/components/ui/section-header"
-import { products, categories, featuredProduct } from "@/lib/data"
+import LoadingSpinner from "@/components/ui/loading-spinner"
+import ErrorState from "@/components/ui/error-state"
+import EmptyState from "@/components/ui/empty-state"
+import { useFeaturedProducts, useBestSellerProducts, useSearchProducts } from "@/lib/hooks/use-products"
+import { useCategories } from "@/lib/hooks/use-categories"
 import { cn } from "@/lib/utils/cn"
+
+// Fallback data for hero section
+const featuredProduct = {
+  title: "Laptop Terpercaya untuk Kebutuhan Anda",
+  description: "Koleksi lengkap laptop ThinkPad dan Dell dengan kualitas terjamin dan harga terbaik. Dapatkan laptop impian Anda sekarang!",
+  image: "/lenovo yoga.png"
+}
 
 export default function HomePage() {
   const [searchTerm, setSearchTerm] = useState("")
   const router = useRouter()
 
-  // Separate featured and best seller products
-  const featuredProducts = products.slice(0, 4) // First 4 products
-  const bestSellerProducts = products.slice(4, 8) // Next 4 products
+  // Fetch data from database
+  const { 
+    data: featuredProducts, 
+    isLoading: featuredLoading, 
+    error: featuredError,
+    refetch: refetchFeatured 
+  } = useFeaturedProducts()
 
-  const filteredProducts = useMemo(() => {
-    if (!searchTerm) return []
+  const { 
+    data: bestSellerProducts, 
+    isLoading: bestSellerLoading, 
+    error: bestSellerError,
+    refetch: refetchBestSeller 
+  } = useBestSellerProducts()
 
-    const lowerCaseSearchTerm = searchTerm.toLowerCase()
-    return products.filter(
-      (product) =>
-        product.name.toLowerCase().includes(lowerCaseSearchTerm) ||
-        product.processor.toLowerCase().includes(lowerCaseSearchTerm) ||
-        product.description.toLowerCase().includes(lowerCaseSearchTerm) ||
-        product.category.toLowerCase().includes(lowerCaseSearchTerm),
-    )
-  }, [searchTerm])
+  const { 
+    data: categories, 
+    isLoading: categoriesLoading, 
+    error: categoriesError,
+    refetch: refetchCategories 
+  } = useCategories()
+
+  const { 
+    data: searchResults, 
+    isLoading: searchLoading, 
+    error: searchError,
+    refetch: refetchSearch 
+  } = useSearchProducts(searchTerm)
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId)
@@ -69,6 +92,10 @@ export default function HomePage() {
     },
   ]
 
+  // Loading states
+  const isLoading = featuredLoading || bestSellerLoading || categoriesLoading
+  const hasError = featuredError || bestSellerError || categoriesError
+
   return (
     <PageLayout searchTerm={searchTerm} onSearchChange={setSearchTerm} className="bg-slate-200">
       <div className="max-w-7xl mx-auto px-4 space-y-16 ">
@@ -77,22 +104,35 @@ export default function HomePage() {
           <section className="py-8">
             <SectionHeader
               title={`Hasil Pencarian untuk "${searchTerm}"`}
-              description={`Ditemukan ${filteredProducts.length} produk`}
+              description={`Ditemukan ${searchResults?.length || 0} produk`}
             />
 
-            {filteredProducts.length > 0 ? (
+            {searchLoading ? (
+              <div className="flex justify-center py-12">
+                <LoadingSpinner size="lg" />
+              </div>
+            ) : searchError ? (
+              <ErrorState 
+                title="Gagal Mencari Produk"
+                message="Terjadi kesalahan saat mencari produk. Silakan coba lagi."
+                onRetry={refetchSearch}
+              />
+            ) : searchResults && searchResults.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {filteredProducts.map((product) => (
+                {searchResults.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
               </div>
             ) : (
-              <div className="text-center py-12">
-                <p className="text-gray-600 text-lg">Tidak ada produk yang cocok dengan pencarian Anda.</p>
-                <Button variant="outline" className="mt-4" onClick={() => setSearchTerm("")}>
-                  Lihat Semua Produk
-                </Button>
-              </div>
+              <EmptyState 
+                title="Tidak Ada Hasil Pencarian"
+                description={`Tidak ada produk yang cocok dengan pencarian "${searchTerm}". Coba kata kunci lain atau lihat semua produk kami.`}
+                icon={Search}
+                action={{
+                  label: "Lihat Semua Produk",
+                  onClick: () => setSearchTerm("")
+                }}
+              />
             )}
           </section>
         )}
@@ -107,6 +147,19 @@ export default function HomePage() {
                   <div className="flex-1 p-8 lg:p-12 text-white">
                     <h1 className="text-3xl lg:text-5xl lg:leading-[1.2] font-bold mb-8">{featuredProduct.title}</h1>
                     <p className="text-lg lg:text-xl mb-6 opacity-90 leading-relaxed">{featuredProduct.description}</p>
+                    
+                    {/* Statistics */}
+                    <div className="grid grid-cols-2 gap-4 mb-6">
+                      <div className="text-center">
+                        <div className="text-2xl font-bold">{featuredProducts?.length || 0}</div>
+                        <div className="text-sm opacity-80">Produk Unggulan</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold">{bestSellerProducts?.length || 0}</div>
+                        <div className="text-sm opacity-80">Produk Terlaris</div>
+                      </div>
+                    </div>
+                    
                     <div className="flex flex-col sm:flex-row gap-4">
                       <Button
                         onClick={() => scrollToSection("produk-unggulan")}
@@ -155,30 +208,47 @@ export default function HomePage() {
             <section className="pt-0 pb-12">
               <SectionHeader title="Kategori Produk" align="center" className="lg:pb-10" />
 
-              <div className="md:max-w-4xl mx-auto">
-                <div className="grid grid-cols-2 md:grid-cols-2 gap-8">
-                  {categories.map((category) => (
-                    <button
-                      key={category.id}
-                      onClick={() => handleCategoryClick(category.slug)}
-                      className="relative overflow-hidden rounded-2xl bg-white shadow-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
-                    >
-                      <div className="aspect-[16/9] relative">
-                        <Image
-                          src={category.image || "/placeholder.svg"}
-                          alt={category.name}
-                          fill
-                          className="object-cover transition-transform duration-300 hover:scale-105"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                        <div className="absolute bottom-4 lg:bottom-6 left-4 lg:left-6 text-white">
-                          <h3 className="text-sm lg:text-2xl font-bold mb-0 lg:mb-2">{category.name}</h3>
-                        </div>
-                      </div>
-                    </button>
-                  ))}
+              {categoriesLoading ? (
+                <div className="flex justify-center py-12">
+                  <LoadingSpinner size="lg" />
                 </div>
-              </div>
+              ) : categoriesError ? (
+                <ErrorState 
+                  title="Gagal Memuat Kategori"
+                  message="Terjadi kesalahan saat memuat kategori produk."
+                  onRetry={refetchCategories}
+                />
+              ) : categories && categories.length > 0 ? (
+                <div className="md:max-w-4xl mx-auto">
+                  <div className="grid grid-cols-2 md:grid-cols-2 gap-8">
+                    {categories.map((category) => (
+                      <button
+                        key={category.id}
+                        onClick={() => handleCategoryClick(category.slug)}
+                        className="relative overflow-hidden rounded-2xl bg-white shadow-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+                      >
+                        <div className="aspect-[16/9] relative">
+                          <Image
+                            src={category.image || "/placeholder.svg"}
+                            alt={category.name}
+                            fill
+                            className="object-cover transition-transform duration-300 hover:scale-105"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                          <div className="absolute bottom-4 lg:bottom-6 left-4 lg:left-6 text-white">
+                            <h3 className="text-sm lg:text-2xl font-bold mb-0 lg:mb-2">{category.name}</h3>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <EmptyState 
+                  title="Belum Ada Kategori"
+                  description="Belum ada kategori produk yang tersedia saat ini."
+                />
+              )}
             </section>
             
             <hr className="my-16 border-gray-400 w-full max-w-7xl mx-auto" />
@@ -194,11 +264,28 @@ export default function HomePage() {
                 }}
               />
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {featuredProducts.map((product) => (
-                  <ProductCard key={product.id} product={product} />
-                ))}
-              </div>
+              {featuredLoading ? (
+                <div className="flex justify-center py-12">
+                  <LoadingSpinner size="lg" />
+                </div>
+              ) : featuredError ? (
+                <ErrorState 
+                  title="Gagal Memuat Produk Unggulan"
+                  message="Terjadi kesalahan saat memuat produk unggulan."
+                  onRetry={refetchFeatured}
+                />
+              ) : featuredProducts && featuredProducts.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {featuredProducts.map((product) => (
+                    <ProductCard key={product.id} product={product} />
+                  ))}
+                </div>
+              ) : (
+                <EmptyState 
+                  title="Belum Ada Produk Unggulan"
+                  description="Belum ada produk unggulan yang tersedia saat ini."
+                />
+              )}
             </section>
 
             <hr className="my-16 border-gray-400 w-full max-w-7xl mx-auto" />
@@ -214,11 +301,28 @@ export default function HomePage() {
                 }}
               />
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-                {bestSellerProducts.map((product) => (
-                  <ProductCard key={product.id} product={product} />
-                ))}
-              </div>
+              {bestSellerLoading ? (
+                <div className="flex justify-center py-12">
+                  <LoadingSpinner size="lg" />
+                </div>
+              ) : bestSellerError ? (
+                <ErrorState 
+                  title="Gagal Memuat Produk Terlaris"
+                  message="Terjadi kesalahan saat memuat produk terlaris."
+                  onRetry={refetchBestSeller}
+                />
+              ) : bestSellerProducts && bestSellerProducts.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+                  {bestSellerProducts.map((product) => (
+                    <ProductCard key={product.id} product={product} />
+                  ))}
+                </div>
+              ) : (
+                <EmptyState 
+                  title="Belum Ada Produk Terlaris"
+                  description="Belum ada produk terlaris yang tersedia saat ini."
+                />
+              )}
             </section>
           </>
         )}

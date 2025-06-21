@@ -26,6 +26,8 @@ export interface Product {
   ssd_options: string[] | null
   price_range: string | null
   specs: string[] | null
+  is_featured: boolean
+  is_best_seller: boolean
   rating: number | null
   review_count: number | null
   created_at: string

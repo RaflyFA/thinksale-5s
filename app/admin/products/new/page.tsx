@@ -268,7 +268,7 @@ export default function AddProductPage() {
         .map(spec => spec.trim());
 
       // Parse RAM and SSD options with validation
-      if (!formData.ramOptions.trim()) {
+    if (!formData.ramOptions.trim()) {
         throw new Error("Opsi RAM wajib diisi.");
       }
       
@@ -281,12 +281,12 @@ export default function AddProductPage() {
         throw new Error("Minimal satu opsi RAM harus diisi.");
       }
 
-      if (!formData.ssdOptions.trim()) {
+    if (!formData.ssdOptions.trim()) {
         throw new Error("Opsi SSD wajib diisi.");
       }
       
       const ssdOptions = formData.ssdOptions
-        .split(",")
+    .split(",")
         .map(ssd => ssd.trim())
         .filter(ssd => ssd);
 
@@ -355,17 +355,17 @@ export default function AddProductPage() {
       toast.success("Produk berhasil ditambahkan!");
       
       // Reset form
-      setFormData({
-        name: "",
+    setFormData({
+      name: "",
         category: "thinkpad",
-        processor: "",
-        description: "",
-        ramOptions: "",
-        ssdOptions: "",
-        variants: "",
-        specs: "",
-        imageUrl: "",
-      });
+      processor: "",
+      description: "",
+      ramOptions: "",
+      ssdOptions: "",
+      variants: "",
+      specs: "",
+      imageUrl: "",
+    });
       setImageFile(null);
       setPreviewUrl(null);
 
@@ -428,7 +428,7 @@ export default function AddProductPage() {
                 <span className="text-sm font-medium">
                   Form sudah valid dan siap disimpan
                 </span>
-              </div>
+                  </div>
             </CardContent>
           </Card>
         )}
@@ -514,7 +514,7 @@ export default function AddProductPage() {
                     Pilih gambar
                   </span>
                   <span className="text-muted-foreground"> atau drag and drop</span>
-                </Label>
+              </Label>
                 <input
                   id="image"
                   type="file"
@@ -578,9 +578,9 @@ export default function AddProductPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="ramOptions">Opsi RAM *</Label>
-                <Input
-                  id="ramOptions"
-                  value={formData.ramOptions}
+              <Input
+                id="ramOptions"
+                value={formData.ramOptions}
                   onChange={(e) => handleInputChange("ramOptions", e.target.value)}
                   placeholder="Contoh: 4GB, 8GB, 16GB"
                   className={errors.ramOptions ? "border-red-500 focus:border-red-500" : ""}
@@ -593,12 +593,12 @@ export default function AddProductPage() {
                     Pisahkan dengan koma
                   </p>
                 )}
-              </div>
+            </div>
               <div className="space-y-2">
                 <Label htmlFor="ssdOptions">Opsi SSD *</Label>
-                <Input
-                  id="ssdOptions"
-                  value={formData.ssdOptions}
+              <Input
+                id="ssdOptions"
+                value={formData.ssdOptions}
                   onChange={(e) => handleInputChange("ssdOptions", e.target.value)}
                   placeholder="Contoh: 128GB, 256GB, 512GB"
                   className={errors.ssdOptions ? "border-red-500 focus:border-red-500" : ""}
@@ -667,7 +667,7 @@ export default function AddProductPage() {
 
         <Separator />
 
-        {/* Submit Button */}
+            {/* Submit Button */}
         <div className="flex justify-end gap-4">
           <Button type="button" variant="outline" asChild>
             <Link href="/admin/products">
@@ -677,9 +677,9 @@ export default function AddProductPage() {
           <Button type="submit" disabled={!isFormValid || loading}>
             <Plus className="mr-2 h-4 w-4" />
             {loading ? "Menyimpan..." : "Tambah Produk"}
-          </Button>
-        </div>
-      </form>
+              </Button>
+            </div>
+          </form>
     </div>
   );
 }

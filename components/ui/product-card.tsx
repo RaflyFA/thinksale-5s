@@ -15,8 +15,9 @@ import type React from "react"
 
 import Link from "next/link"
 import Image from "next/image"
-import { Star, ShoppingCart } from "lucide-react"
+import { Star, ShoppingCart, TrendingUp } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils/cn"
 import type { Product } from "@/lib/types"
 import { useCart } from "@/lib/cart/cart-context"
@@ -58,9 +59,9 @@ export default function ProductCard({
   // Calculate discount percentage based on product ID for consistency
   const discountPercentage = 10 + (parseInt(product.id) % 20) // 10-29% discount
 
-  const rating = 4.8
-  // Use product ID to generate deterministic review count
-  const reviewCount = 50 + (parseInt(product.id) % 200) // 50-249 reviews
+  // Use real rating and review count from database, fallback to generated values
+  const rating = product.rating || 4.8
+  const reviewCount = product.reviewCount || (50 + (parseInt(product.id) % 200))
 
   const aspectRatioClasses = {
     square: "aspect-square",
@@ -122,6 +123,20 @@ export default function ProductCard({
 
           {/* Badges */}
           <div className="absolute top-3 left-3 right-3 flex justify-between">
+            <div className="flex gap-1">
+              {product.is_featured && (
+                <Badge variant="secondary" className="text-xs bg-yellow-100 text-yellow-800 border-yellow-200">
+                  <Star className="mr-1 h-3 w-3" />
+                  Unggulan
+                </Badge>
+              )}
+              {product.is_best_seller && (
+                <Badge variant="secondary" className="text-xs bg-orange-100 text-orange-800 border-orange-200">
+                  <TrendingUp className="mr-1 h-3 w-3" />
+                  Terlaris
+                </Badge>
+              )}
+            </div>
             {showDiscount && (
               <div className="bg-red-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
                 -{discountPercentage}%
@@ -165,6 +180,20 @@ export default function ProductCard({
                 <span className="font-medium">{formattedSsdOptions}</span>
               </div>
             )}
+            {/* Stock Information */}
+            {product.variants && product.variants.length > 0 && (
+              <div className="flex justify-between">
+                <span>Stok:</span>
+                <span className={cn(
+                  "font-medium",
+                  product.variants.some(v => v.stock && v.stock > 0) 
+                    ? "text-green-600" 
+                    : "text-red-600"
+                )}>
+                  {product.variants.some(v => v.stock && v.stock > 0) ? "Tersedia" : "Habis"}
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Rating */}
@@ -181,7 +210,7 @@ export default function ProductCard({
                   />
                 ))}
               </div>
-              <span className="text-xs text-gray-500 ml-2">({rating})</span>
+              <span className="text-xs text-gray-500 ml-2">({rating.toFixed(1)})</span>
               <span className="text-xs text-gray-400 ml-1">• {reviewCount} ulasan</span>
             </div>
           )}

@@ -59,6 +59,8 @@ export async function POST(request: NextRequest) {
         ssd_options: body.ssd_options,
         price_range: body.price_range,
         specs: body.specs,
+        is_featured: body.is_featured || false,
+        is_best_seller: body.is_best_seller || false,
         rating: body.rating,
         review_count: body.review_count || 0
       })

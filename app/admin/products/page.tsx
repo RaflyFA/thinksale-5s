@@ -38,6 +38,8 @@ import {
   Eye,
   Package,
   Loader2,
+  Star,
+  TrendingUp,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -49,6 +51,10 @@ interface Product {
   description: string | null
   image: string | null
   price_range: string | null
+  is_featured: boolean
+  is_best_seller: boolean
+  rating: number | null
+  review_count: number | null
   created_at: string
   category?: {
     id: string
@@ -132,6 +138,56 @@ export default function ProductsPage() {
     }
   }
 
+  const toggleFeatured = async (productId: string, currentStatus: boolean) => {
+    try {
+      const response = await fetch(`/api/admin/products/${productId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          is_featured: !currentStatus
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Gagal mengupdate status produk.')
+      }
+
+      toast.success(`Produk ${!currentStatus ? 'ditambahkan ke' : 'dihapus dari'} produk unggulan!`)
+      fetchProducts() // Refresh the list
+    } catch (error: any) {
+      console.error('Error toggling featured status:', error)
+      toast.error(error.message || 'Terjadi kesalahan saat mengupdate status produk.')
+    }
+  }
+
+  const toggleBestSeller = async (productId: string, currentStatus: boolean) => {
+    try {
+      const response = await fetch(`/api/admin/products/${productId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          is_best_seller: !currentStatus
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Gagal mengupdate status produk.')
+      }
+
+      toast.success(`Produk ${!currentStatus ? 'ditambahkan ke' : 'dihapus dari'} produk terlaris!`)
+      fetchProducts() // Refresh the list
+    } catch (error: any) {
+      console.error('Error toggling best seller status:', error)
+      toast.error(error.message || 'Terjadi kesalahan saat mengupdate status produk.')
+    }
+  }
+
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("id-ID", {
       style: "currency",
@@ -211,6 +267,7 @@ export default function ProductsPage() {
                     <TableHead>Kategori</TableHead>
                     <TableHead>Processor</TableHead>
                     <TableHead>Harga</TableHead>
+                    <TableHead>Status</TableHead>
                     <TableHead>Varian</TableHead>
                     <TableHead className="text-right">Aksi</TableHead>
                   </TableRow>
@@ -239,6 +296,22 @@ export default function ProductsPage() {
                       </TableCell>
                       <TableCell className="text-sm">{product.processor}</TableCell>
                       <TableCell className="text-sm">{product.price_range || 'N/A'}</TableCell>
+                      <TableCell>
+                        <div className="flex gap-1">
+                          {product.is_featured && (
+                            <Badge variant="secondary" className="text-xs">
+                              <Star className="mr-1 h-3 w-3" />
+                              Unggulan
+                            </Badge>
+                          )}
+                          {product.is_best_seller && (
+                            <Badge variant="secondary" className="text-xs">
+                              <TrendingUp className="mr-1 h-3 w-3" />
+                              Terlaris
+                            </Badge>
+                          )}
+                        </div>
+                      </TableCell>
                       <TableCell className="text-sm">
                         {product.variants?.length || 0} varian
                       </TableCell>
@@ -263,6 +336,19 @@ export default function ProductsPage() {
                                 <Edit className="mr-2 h-4 w-4" />
                                 Edit
                               </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem 
+                              onClick={() => toggleFeatured(product.id, product.is_featured)}
+                            >
+                              <Star className="mr-2 h-4 w-4" />
+                              {product.is_featured ? 'Hapus dari Unggulan' : 'Tambah ke Unggulan'}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => toggleBestSeller(product.id, product.is_best_seller)}
+                            >
+                              <TrendingUp className="mr-2 h-4 w-4" />
+                              {product.is_best_seller ? 'Hapus dari Terlaris' : 'Tambah ke Terlaris'}
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem 

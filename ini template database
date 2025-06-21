@@ -21,6 +21,8 @@ CREATE TABLE products (
   specs text[],
   rating float,
   review_count int,
+  is_featured boolean DEFAULT false,        -- ✅ BARU
+  is_best_seller boolean DEFAULT false,    -- ✅ BARU
   created_at timestamptz DEFAULT now(),
   updated_at timestamptz DEFAULT now()
 );
@@ -31,7 +33,10 @@ CREATE TABLE product_variants (
   product_id uuid REFERENCES products(id),
   ram text,
   ssd text,
-  price int
+  price int,
+  stock integer DEFAULT 0,                 -- ✅ BARU
+  created_at timestamptz DEFAULT now(),    -- ✅ BARU
+  updated_at timestamptz DEFAULT now()     -- ✅ BARU
 );
 
 -- User
@@ -82,3 +87,9 @@ CREATE TABLE order_items (
   quantity int NOT NULL,
   price int NOT NULL
 );
+
+-- Indexes untuk performa
+CREATE INDEX idx_products_category ON products(category_id);
+CREATE INDEX idx_products_featured ON products(is_featured);
+CREATE INDEX idx_products_best_seller ON products(is_best_seller);
+CREATE INDEX idx_variants_product ON product_variants(product_id);
