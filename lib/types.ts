@@ -1,4 +1,5 @@
 export interface ProductVariant {
+  id: string;
   ram: string;
   ssd: string;
   price: number;
@@ -11,7 +12,7 @@ export interface ProductVariant {
 export interface Product {
   id: string;
   name: string;
-  category: string;
+  category: Category;
   processor: string;
   description: string;
   image: string;

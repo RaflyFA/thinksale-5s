@@ -38,6 +38,7 @@ export async function getProducts(): Promise<Product[]> {
       .from('products')
       .select(`
         *,
+        category:categories(*),
         product_variants (*)
       `)
       .order('created_at', { ascending: false })
@@ -50,7 +51,12 @@ export async function getProducts(): Promise<Product[]> {
     return products?.map((product: any) => ({
       id: product.id,
       name: product.name,
-      category: product.category_id,
+      category: {
+        id: product.category.id,
+        name: product.category.name,
+        slug: product.category.slug,
+        image: product.category.image
+      },
       processor: product.processor,
       description: product.description,
       image: product.image,
@@ -60,6 +66,7 @@ export async function getProducts(): Promise<Product[]> {
       priceRange: product.price_range,
       specs: product.specs || [],
       variants: product.product_variants?.map((variant: DatabaseVariant) => ({
+        id: variant.id,
         ram: variant.ram,
         ssd: variant.ssd,
         price: variant.price,
@@ -86,6 +93,7 @@ export async function getFeaturedProducts(): Promise<Product[]> {
       .from('products')
       .select(`
         *,
+        category:categories(*),
         product_variants (*)
       `)
       .eq('is_featured', true)
@@ -100,7 +108,12 @@ export async function getFeaturedProducts(): Promise<Product[]> {
     return products?.map((product: any) => ({
       id: product.id,
       name: product.name,
-      category: product.category_id,
+      category: {
+        id: product.category.id,
+        name: product.category.name,
+        slug: product.category.slug,
+        image: product.category.image
+      },
       processor: product.processor,
       description: product.description,
       image: product.image,
@@ -110,6 +123,7 @@ export async function getFeaturedProducts(): Promise<Product[]> {
       priceRange: product.price_range,
       specs: product.specs || [],
       variants: product.product_variants?.map((variant: DatabaseVariant) => ({
+        id: variant.id,
         ram: variant.ram,
         ssd: variant.ssd,
         price: variant.price,
@@ -136,6 +150,7 @@ export async function getBestSellerProducts(): Promise<Product[]> {
       .from('products')
       .select(`
         *,
+        category:categories(*),
         product_variants (*)
       `)
       .eq('is_best_seller', true)
@@ -150,7 +165,12 @@ export async function getBestSellerProducts(): Promise<Product[]> {
     return products?.map((product: any) => ({
       id: product.id,
       name: product.name,
-      category: product.category_id,
+      category: {
+        id: product.category.id,
+        name: product.category.name,
+        slug: product.category.slug,
+        image: product.category.image
+      },
       processor: product.processor,
       description: product.description,
       image: product.image,
@@ -160,6 +180,7 @@ export async function getBestSellerProducts(): Promise<Product[]> {
       priceRange: product.price_range,
       specs: product.specs || [],
       variants: product.product_variants?.map((variant: DatabaseVariant) => ({
+        id: variant.id,
         ram: variant.ram,
         ssd: variant.ssd,
         price: variant.price,
@@ -186,6 +207,7 @@ export async function searchProducts(searchTerm: string): Promise<Product[]> {
       .from('products')
       .select(`
         *,
+        category:categories(*),
         product_variants (*)
       `)
       .or(`name.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,processor.ilike.%${searchTerm}%`)
@@ -199,7 +221,12 @@ export async function searchProducts(searchTerm: string): Promise<Product[]> {
     return products?.map((product: any) => ({
       id: product.id,
       name: product.name,
-      category: product.category_id,
+      category: {
+        id: product.category.id,
+        name: product.category.name,
+        slug: product.category.slug,
+        image: product.category.image
+      },
       processor: product.processor,
       description: product.description,
       image: product.image,
@@ -209,6 +236,7 @@ export async function searchProducts(searchTerm: string): Promise<Product[]> {
       priceRange: product.price_range,
       specs: product.specs || [],
       variants: product.product_variants?.map((variant: DatabaseVariant) => ({
+        id: variant.id,
         ram: variant.ram,
         ssd: variant.ssd,
         price: variant.price,
@@ -235,6 +263,7 @@ export async function getTopRatedProducts(): Promise<Product[]> {
       .from('products')
       .select(`
         *,
+        category:categories(*),
         product_variants (*)
       `)
       .not('rating', 'is', null)
@@ -251,7 +280,12 @@ export async function getTopRatedProducts(): Promise<Product[]> {
     return products?.map((product: any) => ({
       id: product.id,
       name: product.name,
-      category: product.category_id,
+      category: {
+        id: product.category.id,
+        name: product.category.name,
+        slug: product.category.slug,
+        image: product.category.image
+      },
       processor: product.processor,
       description: product.description,
       image: product.image,
@@ -261,6 +295,7 @@ export async function getTopRatedProducts(): Promise<Product[]> {
       priceRange: product.price_range,
       specs: product.specs || [],
       variants: product.product_variants?.map((variant: DatabaseVariant) => ({
+        id: variant.id,
         ram: variant.ram,
         ssd: variant.ssd,
         price: variant.price,
@@ -287,6 +322,7 @@ export async function getInStockProducts(): Promise<Product[]> {
       .from('products')
       .select(`
         *,
+        category:categories(*),
         product_variants (*)
       `)
       .order('created_at', { ascending: false })
@@ -305,7 +341,12 @@ export async function getInStockProducts(): Promise<Product[]> {
     return inStockProducts.map((product: any) => ({
       id: product.id,
       name: product.name,
-      category: product.category_id,
+      category: {
+        id: product.category.id,
+        name: product.category.name,
+        slug: product.category.slug,
+        image: product.category.image
+      },
       processor: product.processor,
       description: product.description,
       image: product.image,
@@ -315,6 +356,7 @@ export async function getInStockProducts(): Promise<Product[]> {
       priceRange: product.price_range,
       specs: product.specs || [],
       variants: product.product_variants?.map((variant: DatabaseVariant) => ({
+        id: variant.id,
         ram: variant.ram,
         ssd: variant.ssd,
         price: variant.price,

@@ -16,6 +16,7 @@ import {
   Search,
   Settings,
   ShieldCheck,
+  Shapes,
 } from "lucide-react"
 
 import {
@@ -55,6 +56,7 @@ import React from "react"
 const navigation = [
   { name: 'Dashboard', href: '/admin/dashboard', icon: Home },
   { name: 'Produk', href: '/admin/products', icon: Package },
+  { name: 'Kategori', href: '/admin/categories', icon: Shapes },
   { name: 'Pesanan', href: '/admin/orders', icon: ShoppingCart },
   { name: 'Pengguna', href: '/admin/users', icon: Users },
   { name: 'Analitik', href: '/admin/analytics', icon: LineChart },

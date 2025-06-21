@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils/cn"
 const featuredProduct = {
   title: "Laptop Terpercaya untuk Kebutuhan Anda",
   description: "Koleksi lengkap laptop ThinkPad dan Dell dengan kualitas terjamin dan harga terbaik. Dapatkan laptop impian Anda sekarang!",
-  image: "/lenovo yoga.png"
+  image: "/lenovo hitam 1.png"
 }
 
 export default function HomePage() {
@@ -148,17 +148,7 @@ export default function HomePage() {
                     <h1 className="text-3xl lg:text-5xl lg:leading-[1.2] font-bold mb-8">{featuredProduct.title}</h1>
                     <p className="text-lg lg:text-xl mb-6 opacity-90 leading-relaxed">{featuredProduct.description}</p>
                     
-                    {/* Statistics */}
-                    <div className="grid grid-cols-2 gap-4 mb-6">
-                      <div className="text-center">
-                        <div className="text-2xl font-bold">{featuredProducts?.length || 0}</div>
-                        <div className="text-sm opacity-80">Produk Unggulan</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold">{bestSellerProducts?.length || 0}</div>
-                        <div className="text-sm opacity-80">Produk Terlaris</div>
-                      </div>
-                    </div>
+                    
                     
                     <div className="flex flex-col sm:flex-row gap-4">
                       <Button

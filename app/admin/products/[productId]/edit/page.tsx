@@ -18,6 +18,7 @@ import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
 import Image from "next/image";
 import { toast } from "sonner";
+import { useCategories } from "@/lib/hooks/use-categories";
 
 // Re-using the same validation interface
 interface ValidationErrors {
@@ -27,6 +28,7 @@ interface ValidationErrors {
   ssdOptions?: string;
   variants?: string;
   specs?: string;
+  category?: string;
 }
 
 export default function EditProductPage() {
@@ -53,6 +55,13 @@ export default function EditProductPage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [isFormValid, setIsFormValid] = useState(false);
+
+  // Fetch categories from database
+  const { 
+    data: categories = [], 
+    isLoading: categoriesLoading, 
+    error: categoriesError 
+  } = useCategories()
 
   const fetchProductData = useCallback(async () => {
     if (!productId) return;
@@ -95,6 +104,7 @@ export default function EditProductPage() {
   useEffect(() => {
     const newErrors: ValidationErrors = {};
     if (!formData.name.trim()) newErrors.name = "Nama Produk wajib diisi";
+    if (!formData.category_id) newErrors.category = "Kategori wajib dipilih";
     if (!formData.processor.trim()) newErrors.processor = "Processor wajib diisi";
     if (!formData.ramOptions.trim()) newErrors.ramOptions = "Opsi RAM wajib diisi";
     if (!formData.ssdOptions.trim()) newErrors.ssdOptions = "Opsi SSD wajib diisi";
@@ -264,10 +274,22 @@ export default function EditProductPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="category">Kategori *</Label>
-                <select id="category" value={formData.category_id} onChange={(e) => handleInputChange("category_id", e.target.value)} className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
-                  <option value="6a25773b-eb0f-4eb9-98ff-812cf0ebd557">ThinkPad</option>
-                  <option value="12993668-30d2-46c6-9107-a076708fcd9b">Dell</option>
+                <select 
+                  id="category" 
+                  value={formData.category_id} 
+                  onChange={(e) => handleInputChange("category_id", e.target.value)} 
+                  className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                  disabled={categoriesLoading}
+                  required
+                >
+                  <option value="">Pilih Kategori</option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
                 </select>
+                {errors.category && <p className="text-sm text-red-500">{errors.category}</p>}
               </div>
             </div>
             <div className="space-y-2">

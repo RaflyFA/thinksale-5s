@@ -1,22 +1,46 @@
-import { useQuery } from '@tanstack/react-query'
-import { getCategories, getCategoryBySlug } from '../services/category-service'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { getCategories, createCategory, updateCategory, deleteCategory } from '../services/category-service'
 import type { Category } from '../types'
 
 export function useCategories() {
   return useQuery({
     queryKey: ['categories'],
     queryFn: getCategories,
-    staleTime: 10 * 60 * 1000, // 10 minutes
-    gcTime: 30 * 60 * 1000, // 30 minutes
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
   })
 }
 
-export function useCategoryBySlug(slug: string) {
-  return useQuery({
-    queryKey: ['categories', slug],
-    queryFn: () => getCategoryBySlug(slug),
-    enabled: !!slug,
-    staleTime: 10 * 60 * 1000, // 10 minutes
-    gcTime: 30 * 60 * 1000, // 30 minutes
+export function useCreateCategory() {
+  const queryClient = useQueryClient()
+  
+  return useMutation({
+    mutationFn: createCategory,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['categories'] })
+    },
+  })
+}
+
+export function useUpdateCategory() {
+  const queryClient = useQueryClient()
+  
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<Category> }) => 
+      updateCategory(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['categories'] })
+    },
+  })
+}
+
+export function useDeleteCategory() {
+  const queryClient = useQueryClient()
+  
+  return useMutation({
+    mutationFn: deleteCategory,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['categories'] })
+    },
   })
 } 

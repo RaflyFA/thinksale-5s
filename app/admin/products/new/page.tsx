@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import Image from "next/image";
 import { toast } from "sonner";
+import { useCategories } from "@/lib/hooks/use-categories";
 
 interface ValidationErrors {
   name?: string;
@@ -32,7 +33,7 @@ interface ValidationErrors {
 export default function AddProductPage() {
   const [formData, setFormData] = useState({
     name: "",
-    category: "thinkpad",
+    category_id: "",
     processor: "",
     description: "",
     ramOptions: "",
@@ -48,6 +49,20 @@ export default function AddProductPage() {
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [isFormValid, setIsFormValid] = useState(false);
 
+  // Fetch categories from database
+  const { 
+    data: categories = [], 
+    isLoading: categoriesLoading, 
+    error: categoriesError 
+  } = useCategories()
+
+  // Set default category when categories are loaded
+  useEffect(() => {
+    if (categories.length > 0 && !formData.category_id) {
+      setFormData(prev => ({ ...prev, category_id: categories[0].id }))
+    }
+  }, [categories, formData.category_id])
+
   // Real-time validation
   useEffect(() => {
     const newErrors: ValidationErrors = {};
@@ -57,6 +72,11 @@ export default function AddProductPage() {
       newErrors.name = "Nama Produk wajib diisi";
     } else if (formData.name.trim().length < 3) {
       newErrors.name = "Nama Produk minimal 3 karakter";
+    }
+
+    // Validate category
+    if (!formData.category_id) {
+      newErrors.category = "Kategori wajib dipilih";
     }
 
     // Validate processor
@@ -222,6 +242,10 @@ export default function AddProductPage() {
       toast.error("Nama Produk wajib diisi.");
       return;
     }
+    if (!formData.category_id) {
+      toast.error("Kategori wajib dipilih.");
+      return;
+    }
     if (!formData.processor.trim()) {
       toast.error("Processor wajib diisi.");
       return;
@@ -303,7 +327,7 @@ export default function AddProductPage() {
       // Prepare product data for Supabase
       const productData = {
         name: formData.name.trim(),
-        category_id: formData.category === 'thinkpad' ? '6a25773b-eb0f-4eb9-98ff-812cf0ebd557' : '12993668-30d2-46c6-9107-a076708fcd9b',
+        category_id: formData.category_id,
         processor: formData.processor.trim(),
         description: formData.description.trim() || null,
         image: formData.imageUrl,
@@ -357,7 +381,7 @@ export default function AddProductPage() {
       // Reset form
     setFormData({
       name: "",
-        category: "thinkpad",
+        category_id: "",
       processor: "",
       description: "",
       ramOptions: "",
@@ -461,13 +485,22 @@ export default function AddProductPage() {
                 <Label htmlFor="category">Kategori *</Label>
                 <select
                   id="category"
-                  value={formData.category}
-                  onChange={(e) => handleInputChange("category", e.target.value)}
+                  value={formData.category_id}
+                  onChange={(e) => handleInputChange("category_id", e.target.value)}
                   className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                  disabled={categoriesLoading}
+                  required
                 >
-                  <option value="thinkpad">ThinkPad</option>
-                  <option value="dell">Dell</option>
+                  <option value="">Pilih Kategori</option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
                 </select>
+                {errors.category && (
+                  <p className="text-sm text-red-500">{errors.category}</p>
+                )}
               </div>
             </div>
             <div className="space-y-2">

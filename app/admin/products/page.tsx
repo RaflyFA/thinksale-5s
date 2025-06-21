@@ -42,6 +42,7 @@ import {
   TrendingUp,
 } from "lucide-react"
 import { toast } from "sonner"
+import { useCategories } from "@/lib/hooks/use-categories"
 
 interface Product {
   id: string
@@ -75,6 +76,13 @@ export default function ProductsPage() {
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("all")
+
+  // Fetch categories from database
+  const { 
+    data: categories = [], 
+    isLoading: categoriesLoading, 
+    error: categoriesError 
+  } = useCategories()
 
   useEffect(() => {
     fetchProducts()
@@ -227,10 +235,14 @@ export default function ProductsPage() {
           value={selectedCategory}
           onChange={(e) => setSelectedCategory(e.target.value)}
           className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+          disabled={categoriesLoading}
         >
           <option value="all">Semua Kategori</option>
-          <option value="thinkpad">ThinkPad</option>
-          <option value="dell">Dell</option>
+          {categories.map((category) => (
+            <option key={category.id} value={category.id}>
+              {category.name}
+            </option>
+          ))}
         </select>
       </div>
 

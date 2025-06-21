@@ -1,228 +1,162 @@
-// pages/product/[id].tsx
 "use client"
 
-import { useState } from "react"
-import { ArrowLeft, ChevronLeft, ChevronRight, MessageCircle } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import Link from "next/link"
-import Image from "next/image"
-import PageLayout from "@/components/layout/page-layout"
-import ProductCard from "@/components/ui/product-card"
-import SectionHeader from "@/components/ui/section-header"
-import ProductConfiguration from "@/components/product/product-configuration"
-import { products } from "@/lib/data"
+import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { useAuth } from "@/lib/auth/use-auth"
+import Image from "next/image"
+import { Button } from "@/components/ui/button"
+import LoadingSpinner from "@/components/ui/loading-spinner"
+import ErrorState from "@/components/ui/error-state"
+import { useCart } from "@/lib/cart/cart-context"
 import { cn } from "@/lib/utils/cn"
 
 export default function ProductDetailPage() {
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0)
-  const [showConfiguration, setShowConfiguration] = useState(false)
-  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false)
-
-  const { id } = useParams()
-  const { user } = useAuth()
+  const { id } = useParams() as { id: string }
   const router = useRouter()
+  const { addItem } = useCart()
 
-  const productId = Array.isArray(id) ? id[0] : id
-  const product = products.find((p) => p.id === productId) || products[0]
+  const [product, setProduct] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [selectedVariant, setSelectedVariant] = useState<string | null>(null)
 
-  const recommendedProducts = products.filter((p) => p.id !== productId).slice(0, 4)
+  useEffect(() => {
+    if (!id) return
+    setLoading(true)
+    fetch(`/api/admin/products/${id}`)
+      .then(async (res) => {
+        if (!res.ok) throw new Error("Produk tidak ditemukan")
+        return res.json()
+      })
+      .then((data) => {
+        setProduct(data)
+        if (data.variants && data.variants.length > 0) {
+          setSelectedVariant(data.variants[0].id)
+        }
+        setError(null)
+      })
+      .catch((err) => {
+        setError(err.message)
+      })
+      .finally(() => setLoading(false))
+  }, [id])
 
-  const nextImage = () => {
-    setSelectedImageIndex((prev) => (prev + 1) % product.images.length)
-  }
-
-  const prevImage = () => {
-    setSelectedImageIndex((prev) => (prev - 1 + product.images.length) % product.images.length)
-  }
-
-  const handleOrderNow = () => {
-    // Cek status autentikasi pengguna
-    if (!user) {
-      // Jika belum login, redirect ke halaman login dengan parameter redirect
-      const currentUrl = `/product/${productId}`
-      router.push(`/login?redirect=${encodeURIComponent(currentUrl)}`)
-      return
-    }
-
-    // Jika sudah login, tampilkan modal konfigurasi produk
-    setShowConfiguration(true)
-  }
-
-  const handleAskAdmin = () => {
-    const message = encodeURIComponent(
-      `Halo, saya ingin bertanya tentang produk ${product.name}\n\n(isi pesan kamu disini)`,
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-[60vh]">
+        <LoadingSpinner size="lg" />
+      </div>
     )
-    window.open(`https://wa.me/6281224086200?text=${message}`, "_blank")
   }
 
-  const descriptionLimit = 150
-  const shortDescription =
-    product.description.length > descriptionLimit
-      ? product.description.substring(0, descriptionLimit) + "..."
-      : product.description
+  if (error || !product) {
+    return (
+      <div className="flex justify-center items-center min-h-[60vh]">
+        <ErrorState 
+          title="Produk tidak ditemukan"
+          message={error || "Produk ini tidak tersedia."}
+          action={{ label: "Kembali", onClick: () => router.back() }}
+        />
+      </div>
+    )
+  }
+
+  const handleAddToCart = () => {
+    if (!selectedVariant && product.variants && product.variants.length > 0) return
+    const variant = product.variants?.find((v: any) => v.id === selectedVariant)
+    addItem({
+      id: product.id,
+      name: product.name,
+      image: product.image,
+      price: variant ? variant.price : product.price_range,
+      variant: variant ? { ram: variant.ram, ssd: variant.ssd, id: variant.id } : undefined,
+      category: product.category,
+      quantity: 1,
+    })
+  }
 
   return (
-    <PageLayout>
-      {/* Custom Header for Product Detail */}
-      <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 py-3">
-          <div className="flex items-center gap-4">
-            <Link href="/">
-              <Button variant="ghost" size="icon" className="rounded-full">
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-            </Link>
-            <h1 className="text-lg font-semibold text-gray-900">Detail Produk</h1>
-          </div>
+    <div className="max-w-5xl mx-auto px-4 py-10 grid grid-cols-1 md:grid-cols-2 gap-10">
+      {/* Product Images */}
+      <div className="flex flex-col gap-4">
+        <div className="relative w-full aspect-square bg-gray-100 rounded-lg overflow-hidden">
+          {product.image ? (
+            <Image src={product.image} alt={product.name} fill className="object-contain" />
+          ) : (
+            <div className="flex items-center justify-center h-full text-gray-400">No Image</div>
+          )}
         </div>
-      </div>
-
-      <main className="max-w-7xl mx-auto px-4 py-8 space-y-12">
-        {/* Product Detail Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          {/* Product Images */}
-          <div className="space-y-6">
-            {/* Main Image */}
-            <div className="relative aspect-square bg-white rounded-2xl overflow-hidden shadow-lg">
-              <Image
-                src={product.images[selectedImageIndex] || "/placeholder.svg"}
-                alt={product.name}
-                fill
-                className="object-cover"
-                priority
-              />
-
-              {/* Navigation Arrows */}
-              <Button
-                variant="outline"
-                size="icon"
-                className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/90 hover:bg-white rounded-full shadow-lg"
-                onClick={prevImage}
-              >
-                <ChevronLeft className="h-5 w-5" />
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/90 hover:bg-white rounded-full shadow-lg"
-                onClick={nextImage}
-              >
-                <ChevronRight className="h-5 w-5" />
-              </Button>
-            </div>
-
-            {/* Thumbnail Images */}
-            <div className="flex gap-3 justify-center">
-              {product.images.map((image, index) => (
-                <button
-                  key={index}
-                  onClick={() => setSelectedImageIndex(index)}
-                  className={cn(
-                    "w-20 h-20 rounded-lg overflow-hidden border-2 transition-all duration-200",
-                    selectedImageIndex === index
-                      ? "border-blue-500 ring-2 ring-blue-200"
-                      : "border-gray-200 hover:border-gray-300",
-                  )}
-                >
-                  <Image
-                    src={image || "/placeholder.svg"}
-                    alt={`${product.name} ${index + 1}`}
-                    width={80}
-                    height={80}
-                    className="w-full h-full object-cover"
-                  />
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Product Information */}
-          <div className="space-y-6">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-3">{product.name}</h1>
-              <p className="text-2xl font-bold text-blue-600 mb-4">Rp {product.priceRange}</p>
-              <p className="text-lg text-gray-600 mb-4">{product.processor}</p>
-            </div>
-
-            {/* Description */}
-            <div className="space-y-3">
-              <h3 className="text-lg font-semibold text-gray-900">Deskripsi Produk</h3>
-              <div className="text-gray-600 leading-relaxed">
-                {isDescriptionExpanded ? product.description : shortDescription}
-                {product.description.length > descriptionLimit && (
-                  <button
-                    onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
-                    className="text-blue-600 hover:text-blue-700 font-medium ml-2 transition-colors"
-                  >
-                    {isDescriptionExpanded ? "Tutup" : "Baca Selengkapnya"}
-                  </button>
-                )}
+        {/* Thumbnails if multiple images */}
+        {product.images && product.images.length > 1 && (
+          <div className="flex gap-2 mt-2">
+            {product.images.map((img: string, idx: number) => (
+              <div key={idx} className="w-16 h-16 relative rounded overflow-hidden border">
+                <Image src={img} alt={product.name} fill className="object-cover" />
               </div>
-            </div>
-
-            {/* Specifications */}
-            <div className="space-y-3">
-              <h3 className="text-lg font-semibold text-gray-900">Spesifikasi</h3>
-              <div className="bg-gray-50 rounded-xl p-4 space-y-2">
-                {product.specs.map((spec, index) => {
-                  const trimmedSpec = spec.trim()
-                  const isSubItem = trimmedSpec.match(/^(\d|-|\s{2,})/) || trimmedSpec.startsWith("-")
-
-                  return (
-                    <p
-                      key={index}
-                      className={cn("text-sm text-gray-700", isSubItem ? "pl-4 text-gray-600" : "font-medium")}
-                    >
-                      {isSubItem ? `• ${trimmedSpec.replace(/^(\s*[-\d])?\s*/, "")}` : trimmedSpec}
-                    </p>
-                  )
-                })}
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex gap-4 pt-6">
-              <Button
-                onClick={handleOrderNow}
-                className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-4 text-md font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
-              >
-                Pesan Sekarang
-              </Button>
-              <Button
-                onClick={handleAskAdmin}
-                variant="outline"
-                className="px-6 py-4 rounded-xl border-2 border-gray-300 hover:border-blue-500 hover:text-blue-600 transition-all duration-300"
-              >
-                <MessageCircle className="h-5 w-5 mr-2" />
-                Tanya Admin
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        {/* Recommended Products */}
-        <section>
-          <SectionHeader
-            title="Rekomendasi Untukmu"
-            description="Produk lain yang mungkin Anda sukai"
-            action={{
-              label: "Lihat Semua",
-              href: "/produk",
-            }}
-          />
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {recommendedProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
             ))}
           </div>
-        </section>
-      </main>
+        )}
+      </div>
 
-      {/* Product Configuration Modal */}
-      <ProductConfiguration product={product} isOpen={showConfiguration} onClose={() => setShowConfiguration(false)} />
-    </PageLayout>
+      {/* Product Info */}
+      <div className="flex flex-col gap-6">
+        <div>
+          <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
+          <div className="text-gray-500 mb-1">Kategori: {product.category?.name}</div>
+          <div className="text-gray-700 mb-2">{product.processor}</div>
+          {product.rating && (
+            <div className="text-yellow-500 font-semibold mb-2">Rating: {product.rating} / 5</div>
+          )}
+        </div>
+        <div>
+          <div className="text-2xl font-bold text-blue-600 mb-2">
+            {product.variants && product.variants.length > 0
+              ? `Rp${product.variants[0].price.toLocaleString()}`
+              : product.price_range || "-"}
+          </div>
+          {product.variants && product.variants.length > 0 && (
+            <div className="flex flex-col gap-2 mb-4">
+              <div className="font-medium">Pilih Varian:</div>
+              <div className="flex flex-wrap gap-2">
+                {product.variants.map((variant: any) => (
+                  <Button
+                    key={variant.id}
+                    variant={selectedVariant === variant.id ? "default" : "outline"}
+                    onClick={() => setSelectedVariant(variant.id)}
+                    className={cn(
+                      "rounded-full px-4 py-2",
+                      selectedVariant === variant.id && "ring-2 ring-blue-500"
+                    )}
+                  >
+                    {variant.ram} / {variant.ssd} - Rp{variant.price.toLocaleString()}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+        <Button
+          size="lg"
+          className="w-full md:w-auto"
+          onClick={handleAddToCart}
+          disabled={product.variants && product.variants.length > 0 && !selectedVariant}
+        >
+          Tambah ke Keranjang
+        </Button>
+        <div>
+          <h2 className="text-lg font-semibold mb-2">Deskripsi</h2>
+          <p className="text-gray-700 whitespace-pre-line">{product.description}</p>
+        </div>
+        {product.specs && product.specs.length > 0 && (
+          <div>
+            <h2 className="text-lg font-semibold mb-2">Spesifikasi</h2>
+            <ul className="list-disc pl-5 text-gray-700">
+              {product.specs.map((spec: string, idx: number) => (
+                <li key={idx}>{spec}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    </div>
   )
-}
+} 

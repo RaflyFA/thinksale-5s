@@ -44,7 +44,7 @@ export default function ProductsPage() {
       ...(categories?.map(category => ({
         id: category.slug,
         name: category.name,
-        count: products.filter((p) => p.category === category.slug).length
+        count: products.filter((p) => p.category.slug === category.slug).length
       })) || [])
     ]
   }, [products, categories])
@@ -56,7 +56,7 @@ export default function ProductsPage() {
 
     // Filter by category
     if (activeCategory !== "semua") {
-      filtered = filtered.filter((product) => product.category === activeCategory)
+      filtered = filtered.filter((product) => product.category.slug === activeCategory)
     }
 
     // Filter by search term
@@ -165,11 +165,11 @@ export default function ProductsPage() {
           />
         )}
 
-        {/* Category Sections - Only show when no search term and "semua" category */}
-        {!searchTerm && activeCategory === "semua" && categories && categories.length > 0 && (
+        {/* Category Sections - Only show when specific category is selected (not "semua") */}
+        {!searchTerm && activeCategory !== "semua" && categories && categories.length > 0 && (
           <div className="space-y-16">
             {categories.map((category) => {
-              const categoryProducts = products?.filter((product) => product.category === category.slug).slice(0, 4) || []
+              const categoryProducts = products?.filter((product) => product.category.slug === category.slug).slice(0, 4) || []
               
               if (categoryProducts.length === 0) return null
               
