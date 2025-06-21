@@ -9,7 +9,11 @@ export function useAuth() {
 
   const login = async (provider?: string) => {
     try {
-      await signIn(provider || "google", { callbackUrl: "/" })
+      await signIn(
+        provider || "google",
+        { callbackUrl: "/" },
+        { prompt: "select_account" }
+      )
     } catch (error) {
       console.error("Login error:", error)
     }
