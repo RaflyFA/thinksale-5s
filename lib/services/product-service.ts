@@ -403,4 +403,73 @@ export async function getInStockProducts(): Promise<Product[]> {
     console.error('Error in getInStockProducts:', error)
     return []
   }
+}
+
+/**
+ * Retrieves a single product by its ID.
+ * @param productId The ID of the product to fetch.
+ * @returns A single product object, or null if not found.
+ */
+export async function getProductById(productId: string): Promise<Product | null> {
+  try {
+    const { data: product, error } = await supabase
+      .from('products')
+      .select(`
+        *,
+        category:categories(*),
+        product_variants (*)
+      `)
+      .eq('id', productId)
+      .single();
+
+    if (error) {
+      console.error(`Error fetching product with ID ${productId}:`, error);
+      return null;
+    }
+    
+    if (!product) {
+      return null;
+    }
+
+    return {
+      id: product.id,
+      name: product.name,
+      category: {
+        id: product.category.id,
+        name: product.category.name,
+        slug: product.category.slug,
+        image: product.category.image
+      },
+      processor: product.processor,
+      description: product.description,
+      image: product.image,
+      images: product.images || [],
+      ramOptions: product.ram_options || [],
+      ssdOptions: product.ssd_options || [],
+      priceRange: product.price_range,
+      specs: product.specs || [],
+      variants: product.product_variants?.map((variant: any) => ({
+        id: variant.id,
+        ram: variant.ram,
+        ssd: variant.ssd,
+        price: variant.price,
+        stock: variant.stock,
+        created_at: variant.created_at,
+        updated_at: variant.updated_at
+      })) || [],
+      rating: product.rating || 0,
+      reviewCount: product.review_count || 0,
+      is_featured: product.is_featured || false,
+      is_best_seller: product.is_best_seller || false,
+      discount_percentage: product.discount_percentage || null,
+      discount_start_date: product.discount_start_date || null,
+      discount_end_date: product.discount_end_date || null,
+      is_discount_active: product.is_discount_active || false,
+      created_at: product.created_at,
+      updated_at: product.updated_at
+    };
+  } catch (error) {
+    console.error(`Error in getProductById for ID ${productId}:`, error);
+    return null;
+  }
 } 

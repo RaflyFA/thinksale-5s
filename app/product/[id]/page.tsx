@@ -1,12 +1,12 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useParams } from "next/navigation"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import Link from "next/link"
-import { ArrowLeft, ChevronLeft, ChevronRight, MessageCircle } from "lucide-react"
+import { ArrowLeft, ChevronLeft, ChevronRight, MessageCircle, Star, TrendingUp, Package, Clock } from "lucide-react"
 import ScrollableProductList from "@/components/scrollable-product-list"
 import ConfigureProduct from "@/components/product/product-configuration"
 import { useCart } from "@/lib/cart/cart-context"
@@ -16,7 +16,7 @@ import ErrorState from "@/components/ui/error-state"
 import { Badge } from "@/components/ui/badge"
 import type { Product } from "@/lib/types"
 import { isDiscountActive, getBasePrice, getDiscountedPrice } from "@/lib/utils/product-helpers"
-import { getProducts } from "@/lib/services/product-service"
+import { useProductById, useProducts } from "@/lib/hooks/use-products"
 
 export default function ProductDetailPage() {
   const { id } = useParams() as { id: string }
@@ -26,53 +26,30 @@ export default function ProductDetailPage() {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const [showConfigure, setShowConfigure] = useState(false)
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false)
-  const [product, setProduct] = useState<Product | null>(null)
-  const [recommendedProducts, setRecommendedProducts] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [selectedVariant, setSelectedVariant] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (!productId) return
-    setLoading(true)
-    fetch(`/api/admin/products/${productId}`)
-      .then(async (res) => {
-        if (!res.ok) throw new Error("Produk tidak ditemukan")
-        return res.json()
-      })
-      .then((data) => {
-        setProduct(data)
-        if (data.variants && data.variants.length > 0) {
-          setSelectedVariant(data.variants[0].id)
-        }
-        setError(null)
-      })
-      .catch((err) => {
-        setError(err.message)
-      })
-      .finally(() => setLoading(false))
-  }, [productId])
+  // --- Data Fetching using React Query ---
+  const { data: product, isLoading: loading, error } = useProductById(productId)
+  const { data: allProducts } = useProducts()
 
+  // --- Memoized Recommended Products ---
+  const recommendedProducts = useMemo(() => {
+    if (!allProducts || !productId) return []
+    return allProducts
+      .filter((p) => p.id !== productId)
+      .slice(0, 10)
+  }, [allProducts, productId])
+
+  // --- Effect to set default variant ---
   useEffect(() => {
-    const fetchRecommendedProducts = async () => {
-      try {
-        const products = await getProducts();
-        if (products) {
-          const filtered = products
-            .filter((p: any) => p.id !== productId)
-            .slice(0, 10)
-          setRecommendedProducts(filtered)
-        }
-      } catch (err) {
-        console.error('Error fetching recommended products:', err)
+    if (product && product.variants && product.variants.length > 0) {
+      if (!selectedVariant) {
+        setSelectedVariant(product.variants[0].id)
       }
     }
-
-    if (productId) {
-      fetchRecommendedProducts()
-    }
-  }, [productId])
-
+  }, [product, selectedVariant])
+  
+  // --- Loading and Error States ---
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-200 flex justify-center items-center">
@@ -86,7 +63,7 @@ export default function ProductDetailPage() {
       <div className="min-h-screen bg-gray-200 flex justify-center items-center">
         <ErrorState 
           title="Produk tidak ditemukan"
-          message={error || "Produk ini tidak tersedia."}
+          message={error?.message || "Produk ini tidak tersedia."}
           onRetry={() => window.history.back()}
         />
       </div>
@@ -96,6 +73,11 @@ export default function ProductDetailPage() {
   const hasDiscount = isDiscountActive(product);
   const basePrice = getBasePrice(product);
   const discountedPrice = getDiscountedPrice(product);
+
+  const totalStock = useMemo(() => {
+    if (!product?.variants) return 0;
+    return product.variants.reduce((acc: number, variant: any) => acc + (variant.stock || 0), 0);
+  }, [product?.variants]);
 
   const productImages = product.images && product.images.length > 0 
     ? product.images 
@@ -236,6 +218,28 @@ export default function ProductDetailPage() {
               <div className="p-6">
                 <h1 className="text-lg font-bold mb-2">{product.name}</h1>
                 
+                <div className="flex items-center gap-2 mb-2">
+                  {product.is_featured && (
+                    <Badge variant="secondary" className="text-xs">
+                      <Star className="mr-1 h-3 w-3" />
+                      Unggulan
+                    </Badge>
+                  )}
+                  {product.is_best_seller && (
+                    <Badge variant="secondary" className="text-xs">
+                      <TrendingUp className="mr-1 h-3 w-3" />
+                      Terlaris
+                    </Badge>
+                  )}
+                  {product.category && (
+                    <Badge variant="outline">{product.category.name}</Badge>
+                  )}
+                  <Badge variant={totalStock > 0 ? "secondary" : "destructive"} className="gap-1">
+                    <Package className="h-3 w-3" />
+                    {totalStock > 0 ? `Stok Tersedia (${totalStock})` : "Stok Habis"}
+                  </Badge>
+                </div>
+
                 {/* Price Display with Discount */}
                 <div className="mb-4">
                   {hasDiscount ? (
@@ -253,17 +257,46 @@ export default function ProductDetailPage() {
                       <p className="text-sm text-gray-500 line-through">
                         Rp {basePrice.toLocaleString()}
                       </p>
+                      {product.discount_end_date && (
+                        <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
+                          <Clock className="h-3 w-3" />
+                          <span>
+                            Diskon berakhir pada {new Date(product.discount_end_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   ) : (
-                    <p className="text-lg font-bold text-blue-600 mb-4">
+                    <p className="text-lg font-bold text-blue-600">
                       Rp {basePrice.toLocaleString()}
                     </p>
                   )}
                 </div>
 
-                <div className="mb-6">
-                  <div
-                    className="text-gray-600 mb-0 text-sm"
+                {product.rating && product.rating > 0 && product.reviewCount ? (
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="flex items-center">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`h-4 w-4 ${
+                            i < Math.round(product.rating || 0) ? "text-yellow-500 fill-yellow-500" : "text-gray-300"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-sm text-gray-600">
+                      ({(product.rating || 0).toFixed(1)} dari {product.reviewCount} ulasan)
+                    </span>
+                  </div>
+                ) : null}
+                
+                <div className="space-y-6">
+                  {/* Description */}
+                  <div>
+                    <h3 className="text-md font-semibold mb-2 text-gray-800">Deskripsi</h3>
+                    <div
+                      className="text-gray-600 mb-0 text-sm prose max-w-none"
                     dangerouslySetInnerHTML={displayDescriptionHtml}
                   />
                   {product.description && product.description.length > descriptionLimit && (
@@ -271,17 +304,56 @@ export default function ProductDetailPage() {
                       onClick={() =>
                         setIsDescriptionExpanded(!isDescriptionExpanded)
                       }
-                      className="text-blue-600 hover:underline text-sm font-medium"
+                        className="text-blue-600 hover:underline text-sm font-medium mt-2"
                     >
                       {isDescriptionExpanded ? "Tutup" : "Baca Selengkapnya"}
                     </button>
                   )}
-                  <p className="text-gray-600 mb-4 mt-6 text-sm">
+                  </div>
+
+                  {/* Processor */}
+                  <div>
+                    <h3 className="text-md font-semibold mb-2 text-gray-800">Processor</h3>
+                    <p className="text-gray-600 text-sm">
                     {product.processor}
                   </p>
+                  </div>
 
-                  <div className="space-y-1 text-xs">
-                    {product.specs && product.specs.map((spec: string, index: number) => {
+                  {/* RAM and SSD Options */}
+                  {(product.ramOptions && product.ramOptions.length > 0) || (product.ssdOptions && product.ssdOptions.length > 0) ? (
+                    <div>
+                      <h3 className="text-md font-semibold mb-2 text-gray-800">Opsi Konfigurasi</h3>
+                      <div className="space-y-3">
+                        {product.ramOptions && product.ramOptions.length > 0 && (
+                          <div className="flex items-start gap-2">
+                            <span className="text-sm font-medium w-16 pt-1">RAM:</span>
+                            <div className="flex flex-wrap gap-2">
+                              {product.ramOptions.map((ram: string, index: number) => (
+                                <Badge key={index} variant="outline" className="font-mono">{ram}</Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        {product.ssdOptions && product.ssdOptions.length > 0 && (
+                           <div className="flex items-start gap-2">
+                             <span className="text-sm font-medium w-16 pt-1">SSD:</span>
+                             <div className="flex flex-wrap gap-2">
+                              {product.ssdOptions.map((ssd: string, index: number) => (
+                                <Badge key={index} variant="outline" className="font-mono">{ssd}</Badge>
+                              ))}
+                             </div>
+                           </div>
+                        )}
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {/* Specifications */}
+                  {product.specs && product.specs.length > 0 && (
+                     <div>
+                       <h3 className="text-md font-semibold mb-2 text-gray-800">Spesifikasi Detail</h3>
+                        <div className="space-y-1 text-sm">
+                          {product.specs.map((spec: string, index: number) => {
                       const trimmedSpec = spec.trim()
                       const isSubItem =
                         trimmedSpec.match(/^(\d|\-|\s{2,})/) ||
@@ -290,7 +362,7 @@ export default function ProductDetailPage() {
                       return (
                         <p
                           key={index}
-                          className={`text-xs text-gray-600 ${
+                                className={`text-gray-600 ${
                             isSubItem ? "pl-4" : ""
                           }`}
                         >
@@ -301,6 +373,8 @@ export default function ProductDetailPage() {
                       )
                     })}
                   </div>
+                     </div>
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -332,8 +406,9 @@ export default function ProductDetailPage() {
           <Button
             className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-3 rounded-full shadow-lg"
             onClick={handleOrderNow}
+            disabled={totalStock === 0}
           >
-            Pesan Sekarang
+            {totalStock > 0 ? "Pesan Sekarang" : "Stok Habis"}
           </Button>
         </div>
       </div>

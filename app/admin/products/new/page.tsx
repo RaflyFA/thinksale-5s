@@ -29,6 +29,7 @@ interface ValidationErrors {
   ssdOptions?: string;
   variants?: string;
   specs?: string;
+  category?: string;
   discountPercentage?: string;
   discountDates?: string;
 }
@@ -198,7 +199,7 @@ export default function AddProductPage() {
     setErrors(newErrors);
     
     // Check if form is valid
-    const isValid = Object.keys(newErrors).length === 0 && formData.imageUrl;
+    const isValid = Object.keys(newErrors).length === 0 && !!formData.imageUrl;
     setIsFormValid(isValid);
   }, [formData, formData.imageUrl]);
 
