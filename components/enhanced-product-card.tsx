@@ -32,8 +32,13 @@ export default function EnhancedProductCard({
   showWishlist = true,
   className = "",
 }: EnhancedProductCardProps) {
+  // Handle both database fields and transformed fields
+  const priceRange = product.priceRange || product.price_range || "0"
+  const ramOptions = product.ramOptions || product.ram_options || []
+  const ssdOptions = product.ssdOptions || product.ssd_options || []
+  
   // Menghitung harga diskon (simulasi)
-  const originalPrice = Number.parseInt(product.priceRange.replace(/\./g, "")) + 1000000
+  const originalPrice = Number.parseInt(priceRange.replace(/\./g, "")) + 1000000
   const discountPercentage = Math.floor(Math.random() * 20) + 10 // 10-30% diskon
 
   return (
@@ -95,11 +100,11 @@ export default function EnhancedProductCard({
           <div className="text-xs text-gray-500 mb-3 space-y-1">
             <div className="flex justify-between">
               <span>RAM:</span>
-              <span className="font-medium">{product.ramOptions[0]}</span>
+              <span className="font-medium">{ramOptions[0] || "N/A"}</span>
             </div>
             <div className="flex justify-between">
               <span>SSD:</span>
-              <span className="font-medium">{product.ssdOptions[0]}</span>
+              <span className="font-medium">{ssdOptions[0] || "N/A"}</span>
             </div>
           </div>
 
@@ -117,12 +122,12 @@ export default function EnhancedProductCard({
           {/* Price */}
           <div className="mt-auto">
             <div className="flex items-baseline space-x-2">
-              <p className="font-bold text-blue-600 text-lg">Rp {product.priceRange}</p>
+              <p className="font-bold text-blue-600 text-lg">Rp {priceRange}</p>
               <p className="text-xs text-gray-500 line-through">Rp {originalPrice.toLocaleString("id-ID")}</p>
             </div>
             <p className="text-xs text-green-600 font-medium mt-1">
               Hemat Rp{" "}
-              {(originalPrice - Number.parseInt(product.priceRange.replace(/\./g, ""))).toLocaleString("id-ID")}
+              {(originalPrice - Number.parseInt(priceRange.replace(/\./g, ""))).toLocaleString("id-ID")}
             </p>
           </div>
         </div>

@@ -303,7 +303,7 @@ export default function AddProductPage() {
 
       if (ramOptions.length === 0) {
         throw new Error("Minimal satu opsi RAM harus diisi.");
-      }
+    }
 
     if (!formData.ssdOptions.trim()) {
         throw new Error("Opsi SSD wajib diisi.");
