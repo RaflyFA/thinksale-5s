@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -21,42 +21,153 @@ import {
   Database,
   Bell,
   Save,
+  Loader2,
 } from "lucide-react"
 import { toast } from "sonner"
+import ImageUpload from "@/components/ui/image-upload"
+
+interface SettingsData {
+  general: {
+    store_name: string
+    store_description: string
+    contact_email: string
+    contact_phone: string
+    store_logo: string
+    hero_image: string
+  }
+  notification: {
+    email_notifications: boolean
+    order_notifications: boolean
+    user_notifications: boolean
+    system_notifications: boolean
+  }
+  system: {
+    app_version: string
+    database_type: string
+    framework: string
+    authentication: string
+  }
+}
 
 export default function SettingsPage() {
-  const [generalSettings, setGeneralSettings] = useState({
-    storeName: "ThinkSale",
-    storeDescription: "Toko laptop terpercaya dengan kualitas terbaik",
-    contactEmail: "admin@thinksale.com",
-    contactPhone: "+62 812-3456-7890"
+  const [settings, setSettings] = useState<SettingsData>({
+    general: {
+      store_name: "",
+      store_description: "",
+      contact_email: "",
+      contact_phone: "",
+      store_logo: "",
+      hero_image: ""
+    },
+    notification: {
+      email_notifications: true,
+      order_notifications: true,
+      user_notifications: false,
+      system_notifications: true
+    },
+    system: {
+      app_version: "",
+      database_type: "",
+      framework: "",
+      authentication: ""
+    }
   })
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
 
-  const [notificationSettings, setNotificationSettings] = useState({
-    emailNotifications: true,
-    orderNotifications: true,
-    userNotifications: false,
-    systemNotifications: true
-  })
+  // Fetch settings from database
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const response = await fetch('/api/admin/settings')
+        if (response.ok) {
+          const data = await response.json()
+          setSettings(data)
+        } else {
+          toast.error("Gagal memuat pengaturan")
+        }
+      } catch (error) {
+        console.error('Error fetching settings:', error)
+        toast.error("Gagal memuat pengaturan")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchSettings()
+  }, [])
 
   const handleGeneralSettingsChange = (field: string, value: string) => {
-    setGeneralSettings(prev => ({
+    setSettings(prev => ({
       ...prev,
-      [field]: value
+      general: {
+        ...prev.general,
+        [field]: value
+      }
     }))
   }
 
   const handleNotificationSettingsChange = (field: string, value: boolean) => {
-    setNotificationSettings(prev => ({
+    setSettings(prev => ({
       ...prev,
-      [field]: value
+      notification: {
+        ...prev.notification,
+        [field]: value
+      }
     }))
   }
 
-  const handleSaveSettings = () => {
-    // TODO: Implement save to Supabase
-    console.log("Saving settings:", { generalSettings, notificationSettings })
-    toast.success("Pengaturan berhasil disimpan!")
+  const handleSaveSettings = async () => {
+    setSaving(true)
+    try {
+      // Prepare settings for API
+      const settingsToUpdate = {
+        ...settings.general,
+        ...settings.notification
+      }
+
+      const response = await fetch('/api/admin/settings', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ settings: settingsToUpdate }),
+      })
+
+      if (response.ok) {
+        toast.success("Pengaturan berhasil disimpan!")
+        // Refresh settings to update the cache
+        refreshSettings()
+      } else {
+        const error = await response.json()
+        toast.error(error.error || "Gagal menyimpan pengaturan")
+      }
+    } catch (error) {
+      console.error('Error saving settings:', error)
+      toast.error("Gagal menyimpan pengaturan")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const refreshSettings = async () => {
+    try {
+      const response = await fetch('/api/admin/settings')
+      if (response.ok) {
+        const data = await response.json()
+        setSettings(data)
+      }
+    } catch (error) {
+      console.error('Error refreshing settings:', error)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    )
   }
 
   return (
@@ -68,9 +179,13 @@ export default function SettingsPage() {
             Kelola pengaturan sistem dan preferensi
           </p>
         </div>
-        <Button onClick={handleSaveSettings}>
-          <Save className="mr-2 h-4 w-4" />
-          Simpan Pengaturan
+        <Button onClick={handleSaveSettings} disabled={saving}>
+          {saving ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="mr-2 h-4 w-4" />
+          )}
+          {saving ? "Menyimpan..." : "Simpan Pengaturan"}
         </Button>
       </div>
 
@@ -89,40 +204,63 @@ export default function SettingsPage() {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="storeName">Nama Toko</Label>
+                <Label htmlFor="store_name">Nama Toko</Label>
                 <Input
-                  id="storeName"
-                  value={generalSettings.storeName}
-                  onChange={(e) => handleGeneralSettingsChange("storeName", e.target.value)}
+                  id="store_name"
+                  value={settings.general.store_name}
+                  onChange={(e) => handleGeneralSettingsChange("store_name", e.target.value)}
                   placeholder="Masukkan nama toko"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="contactEmail">Email Kontak</Label>
+                <Label htmlFor="contact_email">Email Kontak</Label>
                 <Input
-                  id="contactEmail"
-                  value={generalSettings.contactEmail}
-                  onChange={(e) => handleGeneralSettingsChange("contactEmail", e.target.value)}
+                  id="contact_email"
+                  value={settings.general.contact_email}
+                  onChange={(e) => handleGeneralSettingsChange("contact_email", e.target.value)}
                   placeholder="admin@example.com"
                   type="email"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="contactPhone">Nomor Telepon</Label>
+                <Label htmlFor="contact_phone">Nomor Telepon</Label>
                 <Input
-                  id="contactPhone"
-                  value={generalSettings.contactPhone}
-                  onChange={(e) => handleGeneralSettingsChange("contactPhone", e.target.value)}
+                  id="contact_phone"
+                  value={settings.general.contact_phone}
+                  onChange={(e) => handleGeneralSettingsChange("contact_phone", e.target.value)}
                   placeholder="+62 812-3456-7890"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="storeDescription">Deskripsi Toko</Label>
+                <Label htmlFor="store_description">Deskripsi Toko</Label>
                 <Input
-                  id="storeDescription"
-                  value={generalSettings.storeDescription}
-                  onChange={(e) => handleGeneralSettingsChange("storeDescription", e.target.value)}
+                  id="store_description"
+                  value={settings.general.store_description}
+                  onChange={(e) => handleGeneralSettingsChange("store_description", e.target.value)}
                   placeholder="Deskripsi singkat tentang toko"
+                />
+              </div>
+            </div>
+            
+            {/* Image Uploads - Side by Side */}
+            <div className="pt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Logo Upload */}
+              <div>
+                <ImageUpload
+                  value={settings.general.store_logo}
+                  onChange={(value) => handleGeneralSettingsChange("store_logo", value)}
+                  label="Logo Toko"
+                  placeholder="Upload logo toko..."
+                />
+              </div>
+
+              {/* Hero Banner Upload */}
+              <div>
+                <ImageUpload
+                  value={settings.general.hero_image}
+                  onChange={(value) => handleGeneralSettingsChange("hero_image", value)}
+                  label="Gambar Banner Halaman Utama (Hero)"
+                  placeholder="Upload gambar banner..."
                 />
               </div>
             </div>
@@ -144,15 +282,15 @@ export default function SettingsPage() {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label htmlFor="emailNotifications">Notifikasi Email</Label>
+                  <Label htmlFor="email_notifications">Notifikasi Email</Label>
                   <p className="text-sm text-muted-foreground">
                     Terima notifikasi melalui email
                   </p>
                 </div>
                 <Switch
-                  id="emailNotifications"
-                  checked={notificationSettings.emailNotifications}
-                  onCheckedChange={(checked) => handleNotificationSettingsChange("emailNotifications", checked)}
+                  id="email_notifications"
+                  checked={settings.notification.email_notifications}
+                  onCheckedChange={(checked) => handleNotificationSettingsChange("email_notifications", checked)}
                 />
               </div>
               
@@ -160,15 +298,15 @@ export default function SettingsPage() {
               
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label htmlFor="orderNotifications">Notifikasi Pesanan</Label>
+                  <Label htmlFor="order_notifications">Notifikasi Pesanan</Label>
                   <p className="text-sm text-muted-foreground">
                     Notifikasi saat ada pesanan baru
                   </p>
                 </div>
                 <Switch
-                  id="orderNotifications"
-                  checked={notificationSettings.orderNotifications}
-                  onCheckedChange={(checked) => handleNotificationSettingsChange("orderNotifications", checked)}
+                  id="order_notifications"
+                  checked={settings.notification.order_notifications}
+                  onCheckedChange={(checked) => handleNotificationSettingsChange("order_notifications", checked)}
                 />
               </div>
               
@@ -176,15 +314,15 @@ export default function SettingsPage() {
               
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label htmlFor="userNotifications">Notifikasi Pengguna</Label>
+                  <Label htmlFor="user_notifications">Notifikasi Pengguna</Label>
                   <p className="text-sm text-muted-foreground">
                     Notifikasi saat ada user baru mendaftar
                   </p>
                 </div>
                 <Switch
-                  id="userNotifications"
-                  checked={notificationSettings.userNotifications}
-                  onCheckedChange={(checked) => handleNotificationSettingsChange("userNotifications", checked)}
+                  id="user_notifications"
+                  checked={settings.notification.user_notifications}
+                  onCheckedChange={(checked) => handleNotificationSettingsChange("user_notifications", checked)}
                 />
               </div>
               
@@ -192,15 +330,15 @@ export default function SettingsPage() {
               
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label htmlFor="systemNotifications">Notifikasi Sistem</Label>
+                  <Label htmlFor="system_notifications">Notifikasi Sistem</Label>
                   <p className="text-sm text-muted-foreground">
                     Notifikasi untuk update sistem dan maintenance
                   </p>
                 </div>
                 <Switch
-                  id="systemNotifications"
-                  checked={notificationSettings.systemNotifications}
-                  onCheckedChange={(checked) => handleNotificationSettingsChange("systemNotifications", checked)}
+                  id="system_notifications"
+                  checked={settings.notification.system_notifications}
+                  onCheckedChange={(checked) => handleNotificationSettingsChange("system_notifications", checked)}
                 />
               </div>
             </div>
@@ -222,19 +360,19 @@ export default function SettingsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1">
                 <Label className="text-sm font-medium">Versi Aplikasi</Label>
-                <p className="text-sm text-muted-foreground">1.0.0</p>
+                <p className="text-sm text-muted-foreground">{settings.system.app_version}</p>
               </div>
               <div className="space-y-1">
                 <Label className="text-sm font-medium">Database</Label>
-                <p className="text-sm text-muted-foreground">Supabase</p>
+                <p className="text-sm text-muted-foreground">{settings.system.database_type}</p>
               </div>
               <div className="space-y-1">
                 <Label className="text-sm font-medium">Framework</Label>
-                <p className="text-sm text-muted-foreground">Next.js 14</p>
+                <p className="text-sm text-muted-foreground">{settings.system.framework}</p>
               </div>
               <div className="space-y-1">
                 <Label className="text-sm font-medium">Authentication</Label>
-                <p className="text-sm text-muted-foreground">NextAuth.js</p>
+                <p className="text-sm text-muted-foreground">{settings.system.authentication}</p>
               </div>
             </div>
           </CardContent>

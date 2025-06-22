@@ -17,6 +17,8 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import Image from "next/image"
 import { Star, ShoppingCart, Heart } from "lucide-react"
+import { useCart } from "@/lib/cart/cart-context"
+import { toast } from "sonner"
 import type { Product } from "@/lib/types"
 
 interface EnhancedProductCardProps {
@@ -32,6 +34,8 @@ export default function EnhancedProductCard({
   showWishlist = true,
   className = "",
 }: EnhancedProductCardProps) {
+  const { addItem } = useCart()
+  
   // Handle both database fields and transformed fields
   const priceRange = product.priceRange || product.price_range || "0"
   const ramOptions = product.ramOptions || product.ram_options || []
@@ -40,6 +44,32 @@ export default function EnhancedProductCard({
   // Menghitung harga diskon (simulasi)
   const originalPrice = Number.parseInt(priceRange.replace(/\./g, "")) + 1000000
   const discountPercentage = Math.floor(Math.random() * 20) + 10 // 10-30% diskon
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    // Ambil varian pertama sebagai default
+    const defaultVariant = product.variants?.[0]
+    if (defaultVariant) {
+      addItem({
+        product,
+        ram: ramOptions[0] || "",
+        ssd: ssdOptions[0] || "",
+        price: defaultVariant.price || 0,
+      })
+      toast.success("Produk berhasil ditambahkan ke keranjang!")
+    } else {
+      // Fallback jika tidak ada varian
+      addItem({
+        product,
+        ram: ramOptions[0] || "",
+        ssd: ssdOptions[0] || "",
+        price: Number.parseInt(priceRange.replace(/\./g, "")) || 0,
+      })
+      toast.success("Produk berhasil ditambahkan ke keranjang!")
+    }
+  }
 
   return (
     <Card
@@ -75,13 +105,28 @@ export default function EnhancedProductCard({
             )}
           </div>
 
-          {/* Quick Actions - Muncul saat hover */}
-          <div className="absolute inset-x-3 bottom-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          {/* Quick Actions - Muncul saat hover dengan overlay gelap */}
+          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center z-10">
             {showAddToCart && (
-              <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-full" size="sm">
-                <ShoppingCart className="h-4 w-4 mr-2" />
-                Tambah ke Keranjang
-              </Button>
+              <div className="flex flex-col gap-3 w-full px-4">
+                <Button 
+                  onClick={handleAddToCart}
+                  className="bg-white hover:bg-gray-100 text-gray-900 border-0 shadow-lg transform scale-90 group-hover:scale-100 transition-all duration-300 px-6 py-3 rounded-full font-medium z-20 relative"
+                  size="lg"
+                >
+                  <ShoppingCart className="h-5 w-5 mr-2" />
+                  Tambah ke Keranjang
+                </Button>
+                <Link href={`/product/${product.id}`} className="w-full">
+                  <Button 
+                    variant="outline"
+                    className="bg-transparent hover:bg-white/10 text-white border-white hover:border-white shadow-lg transform scale-90 group-hover:scale-100 transition-all duration-300 px-6 py-3 rounded-full font-medium w-full z-20 relative"
+                    size="lg"
+                  >
+                    Lihat Detail
+                  </Button>
+                </Link>
+              </div>
             )}
           </div>
         </div>

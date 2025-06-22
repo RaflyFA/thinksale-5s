@@ -52,6 +52,9 @@ import {
 } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils/cn"
 import React from "react"
+import { useSettings } from "@/lib/providers/settings-provider"
+import Image from "next/image"
+import BrandLogo from "@/components/ui/brand-logo"
 
 const navigation = [
   { name: 'Dashboard', href: '/admin/dashboard', icon: Home },
@@ -110,8 +113,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { user, logout, isAuthenticated, isLoading } = useAuth()
   const router = useRouter()
   const pathname = usePathname()
+  const { settings } = useSettings()
   
-  const [isCollapsed, setIsCollapsed] = useState(true)
+  const [isCollapsed, setIsCollapsed] = useState(false)
   
   useEffect(() => {
     try {
@@ -150,6 +154,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     await logout()
     router.push('/')
   }
+  
+  const storeName = settings?.general?.store_name || "ThinkSale"
+  const storeLogo = settings?.general?.store_logo
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
@@ -159,8 +166,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       )}>
         <div className={cn("flex h-14 items-center border-b", isCollapsed ? "justify-center" : "px-4")}>
           <Link href="/" className="flex items-center gap-2 font-semibold text-primary">
-            <ShieldCheck className="h-6 w-6" />
-            <span className={cn(isCollapsed && "sr-only")}>ThinkSale</span>
+            <BrandLogo size="sm" showText={!isCollapsed} />
           </Link>
         </div>
         <nav className="flex-1 space-y-1 p-2">
@@ -202,7 +208,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <div className="flex h-14 items-center border-b px-4">
                   <Link href="/" className="flex items-center gap-2 font-semibold">
                     <ShieldCheck className="h-6 w-6 text-primary" />
-                    <span className="">ThinkSale Admin</span>
+                    <span className="">{storeName} Admin</span>
                   </Link>
                 </div>
                 <div className="flex-1 overflow-y-auto">

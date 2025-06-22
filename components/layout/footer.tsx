@@ -17,6 +17,8 @@ import {
   Clock,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { useSettings } from "@/lib/providers/settings-provider";
+import BrandLogo from "@/components/ui/brand-logo";
 
 interface FooterProps {
   className?: string;
@@ -24,6 +26,13 @@ interface FooterProps {
 
 export default function Footer({ className }: FooterProps) {
   const currentYear = new Date().getFullYear();
+  const { settings } = useSettings();
+
+  // Use settings data or fallback to defaults
+  const storeName = settings?.general?.store_name || "ThinkSale";
+  const storeDescription = settings?.general?.store_description || "Toko laptop terpercaya dengan koleksi lengkap untuk kebutuhan mahasiswa dan profesional. Kami berkomitmen memberikan produk berkualitas dengan harga terbaik.";
+  const contactEmail = settings?.general?.contact_email || "info@thinksale.com";
+  const contactPhone = settings?.general?.contact_phone || "+62 812-2408-6200";
 
   const quickLinks = [
     { href: "/", label: "Beranda" },
@@ -35,8 +44,6 @@ export default function Footer({ className }: FooterProps) {
     { href: "/shipping-info", label: "Informasi Pengiriman" },
   ];
 
-
-
   return (
     <footer className={cn("bg-gray-900 text-white", className)}>
       {/* Main Footer Content */}
@@ -44,17 +51,12 @@ export default function Footer({ className }: FooterProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Company Information */}
           <div className="lg:col-span-1">
-            <div className="flex items-center space-x-2 mb-6">
-              <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-xl">T</span>
-              </div>
-              <span className="text-2xl font-bold">ThinkSale</span>
+            <div className="mb-6">
+              <BrandLogo size="lg" showText={true} className="text-white" textClassName="text-white" />
             </div>
 
             <p className="text-gray-400 mb-6 leading-relaxed">
-              Toko laptop terpercaya dengan koleksi lengkap untuk kebutuhan
-              mahasiswa dan profesional. Kami berkomitmen memberikan produk
-              berkualitas dengan harga terbaik.
+              {storeDescription}
             </p>
           </div>
 
@@ -104,7 +106,7 @@ export default function Footer({ className }: FooterProps) {
               <div className="flex items-center space-x-3">
                 <Phone className="h-5 w-5 text-blue-400 flex-shrink-0" />
                 <div>
-                  <p className="text-gray-400">+62 812-2408-6200</p>
+                  <p className="text-gray-400">{contactPhone}</p>
                   <p className="text-gray-500 text-sm">WhatsApp & Telepon</p>
                 </div>
               </div>
@@ -113,7 +115,7 @@ export default function Footer({ className }: FooterProps) {
               <div className="flex items-center space-x-3">
                 <Mail className="h-5 w-5 text-blue-400 flex-shrink-0" />
                 <div>
-                  <p className="text-gray-400">info@thinksale.com</p>
+                  <p className="text-gray-400">{contactEmail}</p>
                   <p className="text-gray-500 text-sm">Email Support</p>
                 </div>
               </div>
@@ -142,10 +144,10 @@ export default function Footer({ className }: FooterProps) {
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <div className="text-center md:text-left">
               <p className="text-gray-400 text-sm">
-                © {currentYear} ThinkSale. Semua hak dilindungi undang-undang.
+                © {currentYear} {storeName}. Semua hak dilindungi undang-undang.
               </p>
               <p className="text-gray-500 text-xs mt-1">
-                Terdaftar sebagai CV. ThinkSale Indonesia
+                Terdaftar sebagai CV. {storeName} Indonesia
               </p>
             </div>
           </div>

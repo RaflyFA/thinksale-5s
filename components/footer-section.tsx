@@ -17,9 +17,18 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Facebook, Instagram, Twitter, Youtube, MapPin, Phone, Mail, Clock } from "lucide-react"
+import { useSettings } from "@/lib/providers/settings-provider"
+import BrandLogo from "@/components/ui/brand-logo"
 
 export default function FooterSection() {
   const currentYear = new Date().getFullYear()
+  const { settings, loading } = useSettings()
+
+  // Use settings data or fallback to defaults
+  const storeName = settings?.general?.store_name || "ThinkSale"
+  const storeDescription = settings?.general?.store_description || "Toko laptop terpercaya dengan koleksi lengkap untuk kebutuhan mahasiswa dan profesional. Kami berkomitmen memberikan produk berkualitas dengan harga terbaik."
+  const contactEmail = settings?.general?.contact_email || "info@thinksale.com"
+  const contactPhone = settings?.general?.contact_phone || "+62 812-3456-7890"
 
   return (
     <footer className="bg-gray-900 text-white">
@@ -28,16 +37,12 @@ export default function FooterSection() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Company Information */}
           <div className="lg:col-span-1">
-            <div className="flex items-center space-x-2 mb-6">
-              <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-xl">T</span>
-              </div>
-              <span className="text-2xl font-bold">ThinkSale</span>
+            <div className="mb-6">
+              <BrandLogo size="lg" showText={true} className="text-white" textClassName="text-white" />
             </div>
 
             <p className="text-gray-400 mb-6 leading-relaxed">
-              Toko laptop terpercaya dengan koleksi lengkap untuk kebutuhan mahasiswa dan profesional. Kami berkomitmen
-              memberikan produk berkualitas dengan harga terbaik.
+              {storeDescription}
             </p>
 
             {/* Social Media Links */}
@@ -136,7 +141,7 @@ export default function FooterSection() {
                   <p className="text-gray-400 leading-relaxed">
                     Jl. Teknologi Raya No. 123
                     <br />
-                    Gedung ThinkSale Center
+                    Gedung {storeName} Center
                     <br />
                     Jakarta Selatan, 12345
                   </p>
@@ -147,7 +152,7 @@ export default function FooterSection() {
               <div className="flex items-center space-x-3">
                 <Phone className="h-5 w-5 text-blue-400 flex-shrink-0" />
                 <div>
-                  <p className="text-gray-400">+62 812-3456-7890</p>
+                  <p className="text-gray-400">{contactPhone}</p>
                   <p className="text-gray-500 text-sm">WhatsApp & Telepon</p>
                 </div>
               </div>
@@ -156,7 +161,7 @@ export default function FooterSection() {
               <div className="flex items-center space-x-3">
                 <Mail className="h-5 w-5 text-blue-400 flex-shrink-0" />
                 <div>
-                  <p className="text-gray-400">info@thinksale.com</p>
+                  <p className="text-gray-400">{contactEmail}</p>
                   <p className="text-gray-500 text-sm">Email Support</p>
                 </div>
               </div>
@@ -198,30 +203,23 @@ export default function FooterSection() {
         </div>
       </div>
 
-      {/* Bottom Footer */}
+      {/* Copyright */}
       <div className="border-t border-gray-800">
         <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-            <div className="text-center md:text-left">
-              <p className="text-gray-400 text-sm">© {currentYear} ThinkSale. Semua hak dilindungi undang-undang.</p>
-              <p className="text-gray-500 text-xs mt-1">Terdaftar sebagai CV. ThinkSale Indonesia</p>
-            </div>
-
-            <div className="flex flex-wrap justify-center md:justify-end space-x-6">
-              {[
-                { href: "/privacy-policy", label: "Kebijakan Privasi" },
-                { href: "/terms-of-service", label: "Syarat & Ketentuan" },
-                { href: "/cookie-policy", label: "Kebijakan Cookie" },
-                { href: "/sitemap", label: "Peta Situs" },
-              ].map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className="text-gray-400 hover:text-white text-sm transition-colors duration-200"
-                >
-                  {link.label}
-                </Link>
-              ))}
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <p className="text-gray-400 text-sm">
+              © {currentYear} {storeName}. Semua hak dilindungi.
+            </p>
+            <div className="flex space-x-6 mt-4 md:mt-0">
+              <Link href="/privacy" className="text-gray-400 hover:text-white text-sm transition-colors">
+                Kebijakan Privasi
+              </Link>
+              <Link href="/terms" className="text-gray-400 hover:text-white text-sm transition-colors">
+                Syarat & Ketentuan
+              </Link>
+              <Link href="/cookies" className="text-gray-400 hover:text-white text-sm transition-colors">
+                Kebijakan Cookie
+              </Link>
             </div>
           </div>
         </div>

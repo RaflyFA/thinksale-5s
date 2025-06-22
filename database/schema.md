@@ -88,8 +88,29 @@ CREATE TABLE order_items (
   price int NOT NULL
 );
 
+-- Settings
+CREATE TABLE settings (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  key text UNIQUE NOT NULL,
+  value text,
+  type text NOT NULL DEFAULT 'string', -- 'string', 'boolean', 'number', 'json'
+  category text NOT NULL DEFAULT 'general', -- 'general', 'notification', 'system'
+  description text,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
+-- Catatan: Kunci (key) yang disarankan untuk kategori 'general'
+-- 'store_name': Nama Toko
+-- 'store_description': Deskripsi singkat toko
+-- 'contact_phone': Nomor telepon yang dapat dihubungi
+-- 'store_logo': URL gambar untuk logo toko
+-- 'hero_image': URL gambar utama (hero) di halaman depan
+
 -- Indexes untuk performa
 CREATE INDEX idx_products_category ON products(category_id);
 CREATE INDEX idx_products_featured ON products(is_featured);
 CREATE INDEX idx_products_best_seller ON products(is_best_seller);
 CREATE INDEX idx_variants_product ON product_variants(product_id);
+CREATE INDEX idx_settings_key ON settings(key);
+CREATE INDEX idx_settings_category ON settings(category);

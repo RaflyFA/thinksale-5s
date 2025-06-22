@@ -3,9 +3,10 @@ import { supabaseAdmin } from '@/lib/supabase/server'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const { data: product, error } = await supabaseAdmin
       .from('products')
       .select(`
@@ -13,7 +14,7 @@ export async function GET(
         category:categories(*),
         variants:product_variants(*)
       `)
-      .eq('id', params.id)
+      .eq('id', id)
       .single()
 
     if (error) {
@@ -36,9 +37,10 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const body = await request.json()
     
     // Only allow specific fields to be updated
@@ -54,7 +56,7 @@ export async function PATCH(
     const { data, error } = await supabaseAdmin
       .from('products')
       .update(updateData)
-      .eq('id', params.id)
+      .eq('id', id)
       .select()
       .single()
 
@@ -78,14 +80,15 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     // First delete related product variants
     const { error: variantsError } = await supabaseAdmin
       .from('product_variants')
       .delete()
-      .eq('product_id', params.id)
+      .eq('product_id', id)
 
     if (variantsError) {
       console.error('Error deleting product variants:', variantsError)
@@ -99,7 +102,7 @@ export async function DELETE(
     const { error } = await supabaseAdmin
       .from('products')
       .delete()
-      .eq('id', params.id)
+      .eq('id', id)
 
     if (error) {
       console.error('Error deleting product:', error)

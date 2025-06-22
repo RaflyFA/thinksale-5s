@@ -14,18 +14,13 @@ import ErrorState from "@/components/ui/error-state"
 import EmptyState from "@/components/ui/empty-state"
 import { useFeaturedProducts, useBestSellerProducts, useSearchProducts } from "@/lib/hooks/use-products"
 import { useCategories } from "@/lib/hooks/use-categories"
+import { useSettings } from "@/lib/providers/settings-provider"
 import { cn } from "@/lib/utils/cn"
-
-// Fallback data for hero section
-const featuredProduct = {
-  title: "Laptop Terpercaya untuk Kebutuhan Anda",
-  description: "Koleksi lengkap laptop ThinkPad dan Dell dengan kualitas terjamin dan harga terbaik. Dapatkan laptop impian Anda sekarang!",
-  image: "/lenovo hitam 1.png"
-}
 
 export default function HomePage() {
   const [searchTerm, setSearchTerm] = useState("")
   const router = useRouter()
+  const { settings } = useSettings()
 
   // Fetch data from database
   const { 
@@ -55,6 +50,16 @@ export default function HomePage() {
     error: searchError,
     refetch: refetchSearch 
   } = useSearchProducts(searchTerm)
+
+  // Dynamic hero content based on settings
+  const heroContent = useMemo(() => {
+    const storeName = settings?.general?.store_name || "ThinkSale"
+    return {
+      title: `Laptop Terpercaya dari ${storeName}`,
+      description: settings?.general?.store_description || "Koleksi lengkap laptop ThinkPad dan Dell dengan kualitas terjamin dan harga terbaik. Dapatkan laptop impian Anda sekarang!",
+      image: settings?.general?.hero_image || "/lenovo hitam 1.png"
+    }
+  }, [settings])
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId)
@@ -145,8 +150,8 @@ export default function HomePage() {
               <div className="bg-gradient-to-r from-blue-600 to-purple-700 rounded-2xl overflow-hidden">
                 <div className="flex flex-col lg:flex-row items-center">
                   <div className="flex-1 p-8 lg:p-12 text-white">
-                    <h1 className="text-3xl lg:text-5xl lg:leading-[1.2] font-bold mb-8">{featuredProduct.title}</h1>
-                    <p className="text-lg lg:text-xl mb-6 opacity-90 leading-relaxed">{featuredProduct.description}</p>
+                    <h1 className="text-3xl lg:text-5xl lg:leading-[1.2] font-bold mb-8">{heroContent.title}</h1>
+                    <p className="text-lg lg:text-xl mb-6 opacity-90 leading-relaxed">{heroContent.description}</p>
                     
                     
                     
@@ -162,8 +167,8 @@ export default function HomePage() {
                   </div>
                   <div className="flex-1 p-8">
                     <Image
-                      src={featuredProduct.image || "/placeholder.svg"}
-                      alt={featuredProduct.title}
+                      src={heroContent.image || "/placeholder.svg"}
+                      alt={heroContent.title}
                       width={600}
                       height={400}
                       className="w-full h-auto object-contain"

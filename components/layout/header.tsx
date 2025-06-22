@@ -9,7 +9,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useAuth } from "@/lib/auth/use-auth"
 import { useCart } from "@/lib/cart/cart-context"
+import { useSettings } from "@/lib/providers/settings-provider"
 import { cn } from "@/lib/utils/cn"
+import BrandLogo from "@/components/ui/brand-logo"
 
 interface HeaderProps {
   searchTerm?: string
@@ -25,7 +27,11 @@ export default function Header({ searchTerm = "", onSearchChange, className, car
 
   const { user } = useAuth()
   const { getTotalItems } = useCart()
+  const { settings } = useSettings()
   const router = useRouter()
+
+  // Use settings data or fallback to defaults
+  const contactPhone = settings?.general?.contact_phone || "+62 812-2408-6200"
 
   const handleCartClick = () => {
     if (!user) {
@@ -100,7 +106,7 @@ export default function Header({ searchTerm = "", onSearchChange, className, car
       {/* Top Bar - Scrolls with page */}
       <div className="bg-blue-600 text-white py-2 px-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center text-sm">
-          <span className="hidden sm:block">📞 Hubungi Kami: +62 812-2408-6200</span>
+          <span className="hidden sm:block">📞 Hubungi Kami: {contactPhone}</span>
           <span className="text-center sm:text-right">🚚 Gratis Ongkir untuk Pembelian di atas Rp 3.000.000</span>
         </div>
       </div>
@@ -110,11 +116,9 @@ export default function Header({ searchTerm = "", onSearchChange, className, car
         <nav className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             {/* Logo */}
-            <Link href="/" className="flex items-center space-x-2 flex-shrink-0">
-              <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-xl">T</span>
-              </div>
-              <span className="text-2xl font-bold text-gray-800 hidden sm:block">ThinkSale</span>
+            <Link href="/" className="flex-shrink-0">
+              <BrandLogo size="lg" showText={true} className="hidden sm:flex" />
+              <BrandLogo size="lg" showText={false} className="sm:hidden" />
             </Link>
 
             {/* Search Bar - Desktop */}

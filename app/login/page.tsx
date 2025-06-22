@@ -9,41 +9,61 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useAuth } from "@/lib/auth/use-auth"
 import { Chrome } from "lucide-react"
+import { signIn } from "next-auth/react"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Loader2, Eye, EyeOff } from "lucide-react"
+import { useSettings } from "@/lib/providers/settings-provider"
+import BrandLogo from "@/components/ui/brand-logo"
 
 export default function LoginPage() {
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
-
-  const { login, isLoading: authLoading } = useAuth()
+  const [showPassword, setShowPassword] = useState(false)
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { settings } = useSettings()
+
+  // Use settings data or fallback to defaults
+  const storeName = settings?.general?.store_name || "ThinkSale"
+
   const redirectTo = searchParams.get("redirect") || "/"
 
-  const handleGoogleLogin = async () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
     setIsLoading(true)
     setError("")
 
     try {
-      await login("google")
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      })
+
+      if (result?.error) {
+        setError("Email atau password salah")
+      } else {
+        router.push(redirectTo)
+      }
     } catch (error) {
-      setError("Gagal login dengan Google. Silakan coba lagi.")
-      console.error("Login error:", error)
+      setError("Terjadi kesalahan saat login")
     } finally {
       setIsLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-200 to-purple-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center space-x-2">
-            <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center">
-              <span className="text-white font-bold text-2xl">T</span>
-            </div>
-            <span className="text-3xl font-bold text-gray-800">ThinkSale</span>
-          </Link>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <div className="text-center">
+          <div className="flex justify-center mb-4">
+            <BrandLogo size="xl" showText={true} />
+          </div>
+          <p className="mt-2 text-sm text-gray-600">Masuk ke akun Anda</p>
         </div>
 
         <Card className="shadow-xl border-0">
@@ -60,12 +80,12 @@ export default function LoginPage() {
 
             <div className="space-y-4">
               <Button
-                onClick={handleGoogleLogin}
-                disabled={isLoading || authLoading}
+                onClick={handleSubmit}
+                disabled={isLoading}
                 className="w-full bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 py-3 rounded-xl font-semibold flex items-center justify-center space-x-2"
               >
-                <Chrome className="h-5 w-5" />
-                <span>{isLoading || authLoading ? "Memproses..." : "Masuk dengan Google"}</span>
+                <Loader2 className="h-5 w-5" />
+                <span>{isLoading ? "Memproses..." : "Masuk"}</span>
               </Button>
             </div>
 
