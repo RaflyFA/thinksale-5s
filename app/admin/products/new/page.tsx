@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import Link from "next/link";
 import Image from "next/image";
 import { toast } from "sonner";
@@ -28,6 +29,8 @@ interface ValidationErrors {
   ssdOptions?: string;
   variants?: string;
   specs?: string;
+  discountPercentage?: string;
+  discountDates?: string;
 }
 
 export default function AddProductPage() {
@@ -41,6 +44,10 @@ export default function AddProductPage() {
     variants: "",
     specs: "",
     imageUrl: "",
+    discount_percentage: 0,
+    discount_start_date: "",
+    discount_end_date: "",
+    is_discount_active: false,
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
@@ -164,6 +171,30 @@ export default function AddProductPage() {
       }
     }
 
+    // Validate discount
+    if (formData.is_discount_active) {
+      if (formData.discount_percentage <= 0 || formData.discount_percentage > 100) {
+        newErrors.discountPercentage = "Persentase diskon harus antara 1-100%";
+      }
+      
+      if (!formData.discount_start_date || !formData.discount_end_date) {
+        newErrors.discountDates = "Tanggal mulai dan berakhir diskon wajib diisi";
+      } else {
+        const startDate = new Date(formData.discount_start_date);
+        const endDate = new Date(formData.discount_end_date);
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()); // Set to start of day
+        
+        if (endDate <= startDate) {
+          newErrors.discountDates = "Tanggal berakhir harus setelah tanggal mulai";
+        }
+        
+        if (startDate < today) {
+          newErrors.discountDates = "Tanggal mulai tidak boleh di masa lalu";
+        }
+      }
+    }
+
     setErrors(newErrors);
     
     // Check if form is valid
@@ -171,7 +202,7 @@ export default function AddProductPage() {
     setIsFormValid(isValid);
   }, [formData, formData.imageUrl]);
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: string, value: string | number | boolean) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
@@ -337,7 +368,11 @@ export default function AddProductPage() {
         price_range: priceRange,
         specs: specs,
         rating: null,
-        review_count: 0
+        review_count: 0,
+        discount_percentage: formData.is_discount_active ? formData.discount_percentage : 0,
+        discount_start_date: formData.is_discount_active ? formData.discount_start_date : null,
+        discount_end_date: formData.is_discount_active ? formData.discount_end_date : null,
+        is_discount_active: formData.is_discount_active,
       };
 
       // Save to Supabase
@@ -389,6 +424,10 @@ export default function AddProductPage() {
       variants: "",
       specs: "",
       imageUrl: "",
+      discount_percentage: 0,
+      discount_start_date: "",
+      discount_end_date: "",
+      is_discount_active: false,
     });
       setImageFile(null);
       setPreviewUrl(null);
@@ -452,7 +491,7 @@ export default function AddProductPage() {
                 <span className="text-sm font-medium">
                   Form sudah valid dan siap disimpan
                 </span>
-                  </div>
+              </div>
             </CardContent>
           </Card>
         )}
@@ -466,7 +505,7 @@ export default function AddProductPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Nama Produk *</Label>
                 <Input
@@ -474,7 +513,7 @@ export default function AddProductPage() {
                   value={formData.name}
                   onChange={(e) => handleInputChange("name", e.target.value)}
                   placeholder="Contoh: Lenovo ThinkPad T470"
-                  className={errors.name ? "border-red-500 focus:border-red-500" : ""}
+                  className={errors.name ? "border-red-500" : ""}
                   required
                 />
                 {errors.name && (
@@ -510,7 +549,7 @@ export default function AddProductPage() {
                 value={formData.processor}
                 onChange={(e) => handleInputChange("processor", e.target.value)}
                 placeholder="Contoh: Intel Core i5-7300U"
-                className={errors.processor ? "border-red-500 focus:border-red-500" : ""}
+                className={errors.processor ? "border-red-500" : ""}
                 required
               />
               {errors.processor && (
@@ -608,7 +647,7 @@ export default function AddProductPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="ramOptions">Opsi RAM *</Label>
               <Input
@@ -616,7 +655,7 @@ export default function AddProductPage() {
                 value={formData.ramOptions}
                   onChange={(e) => handleInputChange("ramOptions", e.target.value)}
                   placeholder="Contoh: 4GB, 8GB, 16GB"
-                  className={errors.ramOptions ? "border-red-500 focus:border-red-500" : ""}
+                  className={errors.ramOptions ? "border-red-500" : ""}
                   required
                 />
                 {errors.ramOptions ? (
@@ -634,7 +673,7 @@ export default function AddProductPage() {
                 value={formData.ssdOptions}
                   onChange={(e) => handleInputChange("ssdOptions", e.target.value)}
                   placeholder="Contoh: 128GB, 256GB, 512GB"
-                  className={errors.ssdOptions ? "border-red-500 focus:border-red-500" : ""}
+                  className={errors.ssdOptions ? "border-red-500" : ""}
                   required
                 />
                 {errors.ssdOptions ? (
@@ -654,7 +693,7 @@ export default function AddProductPage() {
                 onChange={(e) => handleInputChange("specs", e.target.value)}
                 placeholder="Masukkan spesifikasi detail, satu per baris..."
                 rows={4}
-                className={errors.specs ? "border-red-500 focus:border-red-500" : ""}
+                className={errors.specs ? "border-red-500" : ""}
               />
               {errors.specs ? (
                 <p className="text-sm text-red-500">{errors.specs}</p>
@@ -684,7 +723,7 @@ export default function AddProductPage() {
                 onChange={(e) => handleInputChange("variants", e.target.value)}
                 placeholder="Format: RAM, SSD, Harga&#10;Contoh:&#10;4GB, 128GB, 8500000&#10;8GB, 256GB, 9500000&#10;16GB, 512GB, 11500000"
                 rows={6}
-                className={errors.variants ? "border-red-500 focus:border-red-500" : ""}
+                className={errors.variants ? "border-red-500" : ""}
                 required
               />
               {errors.variants ? (
@@ -695,6 +734,85 @@ export default function AddProductPage() {
                 </p>
               )}
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Discount Settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Pengaturan Diskon</CardTitle>
+            <CardDescription>
+              Atur diskon untuk produk ini (opsional)
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="discount-active">Aktifkan Diskon</Label>
+                <p className="text-sm text-muted-foreground">
+                  Aktifkan diskon untuk produk ini
+                </p>
+              </div>
+              <Switch
+                id="discount-active"
+                checked={formData.is_discount_active}
+                onCheckedChange={(checked) => handleInputChange("is_discount_active", checked)}
+              />
+            </div>
+
+            {formData.is_discount_active && (
+              <div className="space-y-4 pt-4 border-t">
+                <div className="space-y-2">
+                  <Label htmlFor="discount-percentage">Persentase Diskon (%)</Label>
+                  <Input
+                    id="discount-percentage"
+                    type="number"
+                    min="1"
+                    max="100"
+                    value={formData.discount_percentage}
+                    onChange={(e) => handleInputChange("discount_percentage", parseInt(e.target.value) || 0)}
+                    placeholder="Contoh: 15"
+                    className={errors.discountPercentage ? "border-red-500" : ""}
+                  />
+                  {errors.discountPercentage && (
+                    <p className="text-sm text-red-500">{errors.discountPercentage}</p>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="discount-start">Tanggal Mulai Diskon</Label>
+                    <Input
+                      id="discount-start"
+                      type="date"
+                      value={formData.discount_start_date}
+                      onChange={(e) => handleInputChange("discount_start_date", e.target.value)}
+                      className={errors.discountDates ? "border-red-500" : ""}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="discount-end">Tanggal Berakhir Diskon</Label>
+                    <Input
+                      id="discount-end"
+                      type="date"
+                      value={formData.discount_end_date}
+                      onChange={(e) => handleInputChange("discount_end_date", e.target.value)}
+                      className={errors.discountDates ? "border-red-500" : ""}
+                    />
+                  </div>
+                </div>
+                
+                {errors.discountDates && (
+                  <p className="text-sm text-red-500">{errors.discountDates}</p>
+                )}
+
+                <div className="p-3 bg-blue-50 rounded-lg">
+                  <p className="text-sm text-blue-700">
+                    <strong>Info:</strong> Diskon akan otomatis aktif pada tanggal mulai dan nonaktif setelah tanggal berakhir.
+                  </p>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 

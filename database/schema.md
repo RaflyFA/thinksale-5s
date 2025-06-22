@@ -23,6 +23,10 @@ CREATE TABLE products (
   review_count int,
   is_featured boolean DEFAULT false,        -- ✅ BARU
   is_best_seller boolean DEFAULT false,    -- ✅ BARU
+  discount_percentage integer DEFAULT 0,   -- ✅ DISKON: Persentase diskon produk (0-100)
+  discount_start_date timestamptz,         -- ✅ DISKON: Tanggal mulai diskon
+  discount_end_date timestamptz,           -- ✅ DISKON: Tanggal berakhir diskon
+  is_discount_active boolean DEFAULT false, -- ✅ DISKON: Status aktif diskon
   created_at timestamptz DEFAULT now(),
   updated_at timestamptz DEFAULT now()
 );
@@ -35,6 +39,10 @@ CREATE TABLE product_variants (
   ssd text,
   price int,
   stock integer DEFAULT 0,                 -- ✅ BARU
+  discount_percentage integer DEFAULT 0,   -- ✅ DISKON: Persentase diskon variant (0-100)
+  discount_start_date timestamptz,         -- ✅ DISKON: Tanggal mulai diskon variant
+  discount_end_date timestamptz,           -- ✅ DISKON: Tanggal berakhir diskon variant
+  is_discount_active boolean DEFAULT false, -- ✅ DISKON: Status aktif diskon variant
   created_at timestamptz DEFAULT now(),    -- ✅ BARU
   updated_at timestamptz DEFAULT now()     -- ✅ BARU
 );
@@ -111,6 +119,8 @@ CREATE TABLE settings (
 CREATE INDEX idx_products_category ON products(category_id);
 CREATE INDEX idx_products_featured ON products(is_featured);
 CREATE INDEX idx_products_best_seller ON products(is_best_seller);
+CREATE INDEX idx_products_discount ON products(is_discount_active, discount_end_date);
 CREATE INDEX idx_variants_product ON product_variants(product_id);
+CREATE INDEX idx_variants_discount ON product_variants(is_discount_active, discount_end_date);
 CREATE INDEX idx_settings_key ON settings(key);
 CREATE INDEX idx_settings_category ON settings(category);

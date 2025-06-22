@@ -8,11 +8,15 @@ import { Card, CardContent } from "@/components/ui/card"
 import Link from "next/link"
 import { ArrowLeft, ChevronLeft, ChevronRight, MessageCircle } from "lucide-react"
 import ScrollableProductList from "@/components/scrollable-product-list"
-import ConfigureProduct from "@/components/configure-product"
+import ConfigureProduct from "@/components/product/product-configuration"
 import { useCart } from "@/lib/cart/cart-context"
 import { cn } from "@/lib/utils/cn"
 import LoadingSpinner from "@/components/ui/loading-spinner"
 import ErrorState from "@/components/ui/error-state"
+import { Badge } from "@/components/ui/badge"
+import type { Product } from "@/lib/types"
+import { isDiscountActive, getBasePrice, getDiscountedPrice } from "@/lib/utils/product-helpers"
+import { getProducts } from "@/lib/services/product-service"
 
 export default function ProductDetailPage() {
   const { id } = useParams() as { id: string }
@@ -22,7 +26,7 @@ export default function ProductDetailPage() {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const [showConfigure, setShowConfigure] = useState(false)
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false)
-  const [product, setProduct] = useState<any>(null)
+  const [product, setProduct] = useState<Product | null>(null)
   const [recommendedProducts, setRecommendedProducts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -52,12 +56,11 @@ export default function ProductDetailPage() {
   useEffect(() => {
     const fetchRecommendedProducts = async () => {
       try {
-        const response = await fetch('/api/admin/products')
-        if (response.ok) {
-          const products = await response.json()
+        const products = await getProducts();
+        if (products) {
           const filtered = products
             .filter((p: any) => p.id !== productId)
-            .slice(0, 3)
+            .slice(0, 10)
           setRecommendedProducts(filtered)
         }
       } catch (err) {
@@ -65,7 +68,9 @@ export default function ProductDetailPage() {
       }
     }
 
-    fetchRecommendedProducts()
+    if (productId) {
+      fetchRecommendedProducts()
+    }
   }, [productId])
 
   if (loading) {
@@ -87,6 +92,10 @@ export default function ProductDetailPage() {
       </div>
     )
   }
+  
+  const hasDiscount = isDiscountActive(product);
+  const basePrice = getBasePrice(product);
+  const discountedPrice = getDiscountedPrice(product);
 
   const productImages = product.images && product.images.length > 0 
     ? product.images 
@@ -226,9 +235,31 @@ export default function ProductDetailPage() {
               {/* Product Info */}
               <div className="p-6">
                 <h1 className="text-lg font-bold mb-2">{product.name}</h1>
-                <p className="text-lg font-bold text-blue-600 mb-4">
-                  Rp {product.price_range || (product.variants && product.variants.length > 0 ? product.variants[0].price.toLocaleString() : "0")}
-                </p>
+                
+                {/* Price Display with Discount */}
+                <div className="mb-4">
+                  {hasDiscount ? (
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <p className="text-lg font-bold text-blue-600">
+                          Rp {discountedPrice.toLocaleString()}
+                        </p>
+                        {product.discount_percentage && (
+                          <Badge variant="destructive" className="text-xs">
+                            -{product.discount_percentage}%
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-500 line-through">
+                        Rp {basePrice.toLocaleString()}
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-lg font-bold text-blue-600 mb-4">
+                      Rp {basePrice.toLocaleString()}
+                    </p>
+                  )}
+                </div>
 
                 <div className="mb-6">
                   <div

@@ -3,7 +3,7 @@
 import { useRef, useState, useEffect } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import EnhancedProductCard from "./enhanced-product-card"
+import ProductCard from "@/components/ui/product-card"
 import type { Product } from "@/lib/types"
 
 interface ScrollableProductListProps {
@@ -151,7 +151,7 @@ export default function ScrollableProductList({ products, id }: ScrollableProduc
             className="flex-shrink-0 w-64 snap-start"
             style={{ pointerEvents: isDragging ? "none" : "auto" }}
           >
-            <EnhancedProductCard
+            <ProductCard
               product={product}
               showAddToCart={true}
               showWishlist={true}

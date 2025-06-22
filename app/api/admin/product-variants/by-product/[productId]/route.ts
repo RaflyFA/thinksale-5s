@@ -5,8 +5,8 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
 
-export async function DELETE(request: NextRequest, { params }: { params: { productId: string } }) {
-  const { productId } = params;
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ productId: string }> }) {
+  const { productId } = await params;
 
   if (!productId) {
     return NextResponse.json({ error: 'Product ID is required' }, { status: 400 });

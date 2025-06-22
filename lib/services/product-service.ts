@@ -17,6 +17,10 @@ export interface DatabaseProduct {
   review_count: number
   is_featured: boolean
   is_best_seller: boolean
+  discount_percentage: number | null
+  discount_start_date: string | null
+  discount_end_date: string | null
+  is_discount_active: boolean
   created_at: string
   updated_at: string
 }
@@ -78,6 +82,10 @@ export async function getProducts(): Promise<Product[]> {
       reviewCount: product.review_count || 0,
       is_featured: product.is_featured || false,
       is_best_seller: product.is_best_seller || false,
+      discount_percentage: product.discount_percentage || null,
+      discount_start_date: product.discount_start_date || null,
+      discount_end_date: product.discount_end_date || null,
+      is_discount_active: product.is_discount_active || false,
       created_at: product.created_at,
       updated_at: product.updated_at
     })) || []
@@ -135,6 +143,10 @@ export async function getFeaturedProducts(): Promise<Product[]> {
       reviewCount: product.review_count || 0,
       is_featured: product.is_featured || false,
       is_best_seller: product.is_best_seller || false,
+      discount_percentage: product.discount_percentage || null,
+      discount_start_date: product.discount_start_date || null,
+      discount_end_date: product.discount_end_date || null,
+      is_discount_active: product.is_discount_active || false,
       created_at: product.created_at,
       updated_at: product.updated_at
     })) || []
@@ -192,6 +204,10 @@ export async function getBestSellerProducts(): Promise<Product[]> {
       reviewCount: product.review_count || 0,
       is_featured: product.is_featured || false,
       is_best_seller: product.is_best_seller || false,
+      discount_percentage: product.discount_percentage || null,
+      discount_start_date: product.discount_start_date || null,
+      discount_end_date: product.discount_end_date || null,
+      is_discount_active: product.is_discount_active || false,
       created_at: product.created_at,
       updated_at: product.updated_at
     })) || []
@@ -248,6 +264,10 @@ export async function searchProducts(searchTerm: string): Promise<Product[]> {
       reviewCount: product.review_count || 0,
       is_featured: product.is_featured || false,
       is_best_seller: product.is_best_seller || false,
+      discount_percentage: product.discount_percentage || null,
+      discount_start_date: product.discount_start_date || null,
+      discount_end_date: product.discount_end_date || null,
+      is_discount_active: product.is_discount_active || false,
       created_at: product.created_at,
       updated_at: product.updated_at
     })) || []
@@ -307,6 +327,10 @@ export async function getTopRatedProducts(): Promise<Product[]> {
       reviewCount: product.review_count || 0,
       is_featured: product.is_featured || false,
       is_best_seller: product.is_best_seller || false,
+      discount_percentage: product.discount_percentage || null,
+      discount_start_date: product.discount_start_date || null,
+      discount_end_date: product.discount_end_date || null,
+      is_discount_active: product.is_discount_active || false,
       created_at: product.created_at,
       updated_at: product.updated_at
     })) || []
@@ -368,6 +392,10 @@ export async function getInStockProducts(): Promise<Product[]> {
       reviewCount: product.review_count || 0,
       is_featured: product.is_featured || false,
       is_best_seller: product.is_best_seller || false,
+      discount_percentage: product.discount_percentage || null,
+      discount_start_date: product.discount_start_date || null,
+      discount_end_date: product.discount_end_date || null,
+      is_discount_active: product.is_discount_active || false,
       created_at: product.created_at,
       updated_at: product.updated_at
     }))

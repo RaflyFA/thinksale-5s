@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils/cn"
 import type { Product } from "@/lib/types"
 import { useCart } from "@/lib/cart/cart-context"
 import { toast } from "sonner"
+import { isDiscountActive, getBasePrice, getDiscountedPrice } from "@/lib/utils/product-helpers"
 
 interface ProductCardProps {
   product: Product
@@ -47,19 +48,10 @@ export default function ProductCard({
 }: ProductCardProps) {
   const { addItem } = useCart()
 
-  // Ambil harga tertinggi dari semua varian untuk perhitungan harga coret
-  const highestPrice =
-    product.variants && product.variants.length > 0
-      ? Math.max(...product.variants.map((v) => v.price))
-      : Number.parseInt(product.priceRange.replace(/\./g, ""))
-
-  // Set originalPrice 15-25% lebih tinggi dari harga tertinggi
-  // Use product ID to generate deterministic value instead of Math.random()
-  const priceMultiplier = 1 + ((parseInt(product.id) % 10) * 0.01 + 0.15)
-  const originalPrice = Math.round(highestPrice * priceMultiplier)
-
-  // Calculate discount percentage based on product ID for consistency
-  const discountPercentage = 10 + (parseInt(product.id) % 20) // 10-29% discount
+  const hasDiscount = isDiscountActive(product)
+  const realDiscountPercentage = product.discount_percentage || 0
+  const basePrice = getBasePrice(product);
+  const discountedPrice = getDiscountedPrice(product);
 
   // Use real rating and review count from database, fallback to generated values
   const rating = product.rating || 4.8
@@ -78,12 +70,11 @@ export default function ProductCard({
     return `${options[0]} - ${options[options.length - 1]}`
   }
 
-  const formattedRamOptions = formatOptions(product.ramOptions)
-  const formattedSsdOptions = formatOptions(product.ssdOptions)
+  const ramOptions = product.ramOptions || product.ram_options || [];
+  const ssdOptions = product.ssdOptions || product.ssd_options || [];
 
-  // Perhitungan nilai hemat
-  const basePrice = product.variants?.[0]?.price || Number.parseInt(product.priceRange.replace(/\./g, ""))
-  const savingsAmount = originalPrice - basePrice
+  const formattedRamOptions = formatOptions(ramOptions);
+  const formattedSsdOptions = formatOptions(ssdOptions);
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -132,28 +123,36 @@ export default function ProductCard({
             />
           </Link>
 
-          {/* Badges */}
-          <div className="absolute top-3 left-3 right-3 flex justify-between">
-            <div className="flex gap-1">
-              {product.is_featured && (
-                <Badge variant="secondary" className="text-xs bg-yellow-100 text-yellow-800 border-yellow-200">
-                  <Star className="mr-1 h-3 w-3" />
-                  Unggulan
-                </Badge>
-              )}
-              {product.is_best_seller && (
-                <Badge variant="secondary" className="text-xs bg-orange-100 text-orange-800 border-orange-200">
-                  <TrendingUp className="mr-1 h-3 w-3" />
-                  Terlaris
-                </Badge>
-              )}
-            </div>
-            {showDiscount && (
-              <div className="bg-red-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
-                -{discountPercentage}%
-              </div>
+          {/* Badges Container */}
+          <div className="pointer-events-none absolute left-3 top-3 z-20 flex flex-col items-start gap-1">
+            {product.is_featured && (
+              <Badge
+                variant="secondary"
+                className="bg-gradient-to-r from-yellow-100 to-yellow-200 text-yellow-800 border-yellow-300 shadow-sm backdrop-blur-sm font-medium bg-opacity-95"
+              >
+                <Star className="mr-1 h-3 w-3" />
+                <span className="hidden sm:inline">Unggulan</span>
+                <span className="sm:hidden">⭐</span>
+              </Badge>
+            )}
+            {product.is_best_seller && (
+              <Badge
+                variant="secondary"
+                className="bg-gradient-to-r from-orange-100 to-orange-200 text-orange-800 border-orange-300 shadow-sm backdrop-blur-sm font-medium bg-opacity-95"
+              >
+                <TrendingUp className="mr-1 h-3 w-3" />
+                <span className="hidden sm:inline">Terlaris</span>
+                <span className="sm:hidden">🔥</span>
+              </Badge>
             )}
           </div>
+          {showDiscount && hasDiscount && (
+            <div className="pointer-events-none absolute right-3 top-3 z-20">
+              <Badge className="bg-gradient-to-r from-red-500 to-red-600 text-white border-0 font-bold shadow-lg px-2 sm:px-3 py-1 backdrop-blur-sm transform-gpu scale-105">
+                -{realDiscountPercentage}%
+              </Badge>
+            </div>
+          )}
 
           {/* Quick Actions - Muncul saat hover dengan overlay gelap */}
           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center z-10">
@@ -242,16 +241,24 @@ export default function ProductCard({
 
           {/* Price */}
           <div className="mt-auto">
-            <div className="flex items-baseline space-x-2">
-              <p className="font-bold text-blue-600 text-lg">Rp {product.priceRange}</p>
-              {showDiscount && originalPrice > basePrice && (
-                <p className="text-xs text-gray-500 line-through">Rp {originalPrice.toLocaleString("id-ID")}</p>
-              )}
-            </div>
-            {showDiscount && savingsAmount > 0 && (
-              <p className="text-xs text-green-600 font-medium mt-1">
-                Hemat Rp {savingsAmount.toLocaleString("id-ID")}
-              </p>
+            {hasDiscount ? (
+              <div className="space-y-1">
+                <div className="flex items-baseline space-x-2">
+                  <p className="font-bold text-blue-600 text-lg">
+                    Rp {discountedPrice.toLocaleString("id-ID")}
+                  </p>
+                  <p className="text-xs text-gray-500 line-through">
+                    Rp {basePrice.toLocaleString("id-ID")}
+                  </p>
+                </div>
+                <p className="text-xs text-green-600 font-medium">
+                  Hemat Rp {(basePrice - discountedPrice).toLocaleString("id-ID")}
+                </p>
+              </div>
+            ) : (
+              <div className="flex items-baseline space-x-2">
+                <p className="font-bold text-blue-600 text-lg">Rp {basePrice.toLocaleString("id-ID")}</p>
+              </div>
             )}
           </div>
         </div>

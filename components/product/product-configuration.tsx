@@ -11,6 +11,7 @@ import { useCart } from "@/lib/cart/cart-context"
 import CheckoutModal from "@/components/checkout/checkout-modal"
 import { cn } from "@/lib/utils/cn"
 import type { Product } from "@/lib/types"
+import { isDiscountActive } from "@/lib/utils/product-helpers"
 
 interface ProductConfigurationProps {
   product: Product
@@ -92,7 +93,14 @@ export default function ProductConfiguration({ product, isOpen, onClose }: Produ
     (variant) => variant.ram === selectedRam && variant.ssd === selectedSsd,
   )
 
-  const currentPrice = selectedVariant ? selectedVariant.price : 0
+  const hasDiscount = isDiscountActive(product);
+  const basePrice = selectedVariant ? selectedVariant.price : 0;
+  
+  const discountedPrice = hasDiscount && product.discount_percentage
+    ? Math.round(basePrice * (1 - product.discount_percentage / 100))
+    : basePrice;
+
+  const currentPrice = discountedPrice;
 
   // Get unique RAM and SSD options
   const ramOptions = product.variants ? [...new Set(product.variants.map((v) => v.ram))].sort() : []
@@ -176,7 +184,16 @@ export default function ProductConfiguration({ product, isOpen, onClose }: Produ
                 <div className="flex-1 ml-5">
                   <h3 className="font-semibold text-gray-900 text-lg lg:text-xl leading-tight">{product.name}</h3>
                   <p className="text-gray-600 text-sm mt-1">{product.processor}</p>
-                  <p className="text-blue-600 font-bold text-lg mt-2">Rp {formatPrice(currentPrice)}</p>
+                  {/* --- Start: Price Display --- */}
+                  <div className="mt-2">
+                    <p className="text-blue-600 font-bold text-lg">Rp {formatPrice(currentPrice)}</p>
+                    {hasDiscount && (
+                      <p className="text-gray-500 text-sm line-through">
+                        Rp {formatPrice(basePrice)}
+                      </p>
+                    )}
+                  </div>
+                  {/* --- End: Price Display --- */}
                 </div>
               </div>
 
@@ -226,7 +243,14 @@ export default function ProductConfiguration({ product, isOpen, onClose }: Produ
               <div className="flex items-center justify-between pt-4 border-t">
                 <div>
                   <p className="text-xs text-gray-600">Total Harga</p>
-                  <p className="text-lg font-bold text-gray-900">Rp {formatPrice(currentPrice)}</p>
+                  {/* --- Start: Total Price Display --- */}
+                  <div className="flex items-baseline gap-2">
+                    <p className="text-lg font-bold text-gray-900">Rp {formatPrice(currentPrice)}</p>
+                    {hasDiscount && (
+                       <p className="text-sm font-medium text-gray-500 line-through">Rp {formatPrice(basePrice)}</p>
+                    )}
+                  </div>
+                   {/* --- End: Total Price Display --- */}
                 </div>
                 <Button
                   onClick={handleCheckout}

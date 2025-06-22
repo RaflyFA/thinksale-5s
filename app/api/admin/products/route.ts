@@ -1,32 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getProducts, searchProducts } from '@/lib/supabase/admin'
 import { createClient } from '@supabase/supabase-js'
+import { supabase } from '@/lib/supabase/client'
+import { type Product } from '@/lib/types'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    const { searchParams } = new URL(request.url)
-    const query = searchParams.get('query') || ''
-    const category = searchParams.get('category') || ''
+    const { data: products, error } = await supabase
+      .from('products')
+      .select(`
+        *,
+        category:categories(*),
+        product_variants(*)
+      `)
+      .order('created_at', { ascending: false });
 
-    let products
-
-    if (query || (category && category !== 'all')) {
-      products = await searchProducts(query, category)
-    } else {
-      products = await getProducts()
+    if (error) {
+      console.error('Error fetching products:', error);
+      return NextResponse.json({ error: 'Failed to fetch products', details: error.message }, { status: 500 });
     }
 
-    return NextResponse.json(products)
-  } catch (error) {
-    console.error('Error fetching products:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch products' },
-      { status: 500 }
-    )
+    return NextResponse.json(products);
+  } catch (err) {
+    console.error('Unexpected error in GET /api/admin/products:', err);
+    return NextResponse.json({ error: 'An unexpected error occurred' }, { status: 500 });
   }
 }
 
