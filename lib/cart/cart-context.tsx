@@ -1,6 +1,7 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
+import { useSession, signOut } from "next-auth/react"
 import type { Product } from "@/lib/types"
 
 interface CartItem {
@@ -25,19 +26,44 @@ const CartContext = createContext<CartContextType | undefined>(undefined)
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([])
+  const { data: session, status } = useSession()
+
+  // Generate unique cart key based on user session
+  const getCartKey = () => {
+    if (session?.user?.email) {
+      return `cart_${session.user.email}`
+    }
+    return "cart_guest"
+  }
 
   useEffect(() => {
-    // Load cart from localStorage
-    const savedCart = localStorage.getItem("cart")
+    // Load cart from localStorage based on user session
+    const cartKey = getCartKey()
+    const savedCart = localStorage.getItem(cartKey)
     if (savedCart) {
-      setItems(JSON.parse(savedCart))
+      try {
+        setItems(JSON.parse(savedCart))
+      } catch (error) {
+        console.error("Error parsing cart data:", error)
+        setItems([])
+      }
+    } else {
+      setItems([])
     }
-  }, [])
+  }, [session?.user?.email]) // Reload cart when user changes
 
   useEffect(() => {
     // Save cart to localStorage whenever items change
-    localStorage.setItem("cart", JSON.stringify(items))
-  }, [items])
+    const cartKey = getCartKey()
+    localStorage.setItem(cartKey, JSON.stringify(items))
+  }, [items, session?.user?.email])
+
+  // Clear cart when user logs out
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      setItems([])
+    }
+  }, [status])
 
   const addItem = (newItem: Omit<CartItem, "quantity">) => {
     setItems((prevItems) => {

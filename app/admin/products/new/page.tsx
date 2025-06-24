@@ -2,7 +2,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ArrowLeft, Upload, Plus, X } from "lucide-react";
+import { useRouter } from 'next/navigation';
+import { ArrowLeft, Upload, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,19 +15,16 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
 import Link from "next/link";
 import Image from "next/image";
 import { toast } from "sonner";
 import { useCategories } from "@/lib/hooks/use-categories";
+import { Switch } from "@/components/ui/switch";
+import { VariantManagementSection, ProductVariant } from "@/components/variant-management-section";
 
 interface ValidationErrors {
   name?: string;
   processor?: string;
-  ramOptions?: string;
-  ssdOptions?: string;
   variants?: string;
   specs?: string;
   category?: string;
@@ -35,21 +33,23 @@ interface ValidationErrors {
 }
 
 export default function AddProductPage() {
+  const router = useRouter();
+  
   const [formData, setFormData] = useState({
     name: "",
     category_id: "",
     processor: "",
     description: "",
-    ramOptions: "",
-    ssdOptions: "",
-    variants: "",
     specs: "",
     imageUrl: "",
     discount_percentage: 0,
     discount_start_date: "",
     discount_end_date: "",
     is_discount_active: false,
+    is_featured: false,
+    is_best_seller: false,
   });
+  const [variants, setVariants] = useState<ProductVariant[]>([]);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -64,101 +64,16 @@ export default function AddProductPage() {
     error: categoriesError 
   } = useCategories()
 
-  // Set default category when categories are loaded
-  useEffect(() => {
-    if (categories.length > 0 && !formData.category_id) {
-      setFormData(prev => ({ ...prev, category_id: categories[0].id }))
-    }
-  }, [categories, formData.category_id])
-
   // Real-time validation
   useEffect(() => {
     const newErrors: ValidationErrors = {};
-
-    // Validate name
-    if (!formData.name.trim()) {
-      newErrors.name = "Nama Produk wajib diisi";
-    } else if (formData.name.trim().length < 3) {
-      newErrors.name = "Nama Produk minimal 3 karakter";
-    }
-
-    // Validate category
-    if (!formData.category_id) {
-      newErrors.category = "Kategori wajib dipilih";
-    }
-
-    // Validate processor
-    if (!formData.processor.trim()) {
-      newErrors.processor = "Processor wajib diisi";
-    } else if (formData.processor.trim().length < 5) {
-      newErrors.processor = "Processor minimal 5 karakter";
-    }
-
-    // Validate RAM options
-    if (!formData.ramOptions.trim()) {
-      newErrors.ramOptions = "Opsi RAM wajib diisi";
-    } else {
-      const ramOptions = formData.ramOptions
-        .split(",")
-        .map(ram => ram.trim())
-        .filter(ram => ram);
-      
-      if (ramOptions.length === 0) {
-        newErrors.ramOptions = "Minimal satu opsi RAM harus diisi";
-      } else if (ramOptions.some(ram => ram.length < 2)) {
-        newErrors.ramOptions = "Format RAM tidak valid (contoh: 8GB, 16GB)";
-      }
-    }
-
-    // Validate SSD options
-    if (!formData.ssdOptions.trim()) {
-      newErrors.ssdOptions = "Opsi SSD wajib diisi";
-    } else {
-      const ssdOptions = formData.ssdOptions
-        .split(",")
-        .map(ssd => ssd.trim())
-        .filter(ssd => ssd);
-      
-      if (ssdOptions.length === 0) {
-        newErrors.ssdOptions = "Minimal satu opsi SSD harus diisi";
-      } else if (ssdOptions.some(ssd => ssd.length < 3)) {
-        newErrors.ssdOptions = "Format SSD tidak valid (contoh: 256GB, 512GB)";
-      }
-    }
-
+    if (!formData.name.trim()) newErrors.name = "Nama Produk wajib diisi";
+    if (!formData.category_id) newErrors.category = "Kategori wajib dipilih";
+    if (!formData.processor.trim()) newErrors.processor = "Processor wajib diisi";
+    
     // Validate variants
-    if (!formData.variants.trim()) {
-      newErrors.variants = "Varian dan Harga wajib diisi";
-    } else {
-      const variants = formData.variants
-        .split("\n")
-        .filter(line => line.trim());
-      
-      if (variants.length === 0) {
-        newErrors.variants = "Minimal satu varian harus diisi";
-      } else {
-        for (let i = 0; i < variants.length; i++) {
-          const variant = variants[i];
-          const parts = variant.split(",").map(v => v.trim());
-          
-          if (parts.length < 3) {
-            newErrors.variants = `Format varian baris ${i + 1} tidak valid. Gunakan format: RAM, SSD, Harga`;
-            break;
-          }
-          
-          const [ram, ssd, price] = parts;
-          if (!ram || !ssd || !price) {
-            newErrors.variants = `Data varian baris ${i + 1} tidak lengkap`;
-            break;
-          }
-          
-          const parsedPrice = parseInt(price.replace(/\D/g, ""), 10);
-          if (isNaN(parsedPrice) || parsedPrice <= 0) {
-            newErrors.variants = `Format harga di varian baris ${i + 1} tidak valid`;
-            break;
-          }
-        }
-      }
+    if (variants.length === 0) {
+      newErrors.variants = "Minimal satu varian harus diisi";
     }
 
     // Validate specs (optional but if filled, should be valid)
@@ -184,7 +99,7 @@ export default function AddProductPage() {
         const startDate = new Date(formData.discount_start_date);
         const endDate = new Date(formData.discount_end_date);
         const now = new Date();
-        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()); // Set to start of day
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         
         if (endDate <= startDate) {
           newErrors.discountDates = "Tanggal berakhir harus setelah tanggal mulai";
@@ -201,7 +116,7 @@ export default function AddProductPage() {
     // Check if form is valid
     const isValid = Object.keys(newErrors).length === 0 && !!formData.imageUrl;
     setIsFormValid(isValid);
-  }, [formData, formData.imageUrl]);
+  }, [formData, formData.imageUrl, variants]);
 
   const handleInputChange = (field: string, value: string | number | boolean) => {
     setFormData((prev) => ({
@@ -213,9 +128,22 @@ export default function AddProductPage() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      // Validasi tipe file
+      if (!file.type.startsWith('image/')) {
+        setUploadError('File harus berupa gambar.');
+        setImageFile(null);
+        setPreviewUrl(null);
+        return;
+      }
+      // Validasi ukuran file (maks 2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        setUploadError('Ukuran gambar maksimal 2MB.');
+        setImageFile(null);
+        setPreviewUrl(null);
+        return;
+      }
       setImageFile(file);
       setUploadError(null);
-      
       // Create preview URL
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
@@ -282,163 +210,93 @@ export default function AddProductPage() {
       toast.error("Processor wajib diisi.");
       return;
     }
+    // Validasi varian
+    const validVariants = variants.filter(v => v.ram && v.ssd && typeof v.price === 'number' && v.price > 0 && typeof v.stock === 'number' && v.stock >= 0);
+    if (validVariants.length === 0) {
+      toast.error('Minimal satu varian valid harus diisi. (RAM, SSD, harga > 0, stok >= 0)');
+      return;
+    }
 
     setLoading(true);
 
     try {
-      // Parse variants with better validation
-      if (!formData.variants.trim()) {
-        throw new Error("Varian dan Harga wajib diisi.");
-      }
-
-      const variants = formData.variants
-        .split("\n")
-        .filter(line => line.trim())
-        .map((variant, index) => {
-          const parts = variant.split(",").map((v) => v.trim());
-          if (parts.length < 3) {
-            throw new Error(`Format varian baris ${index + 1} tidak valid. Gunakan format: RAM, SSD, Harga`);
-          }
-          
-          const [ram, ssd, price] = parts;
-          if (!ram || !ssd || !price) {
-            throw new Error(`Data varian baris ${index + 1} tidak lengkap. Pastikan RAM, SSD, dan Harga terisi.`);
-          }
-          
-          const parsedPrice = parseInt(price.replace(/\D/g, ""), 10);
-          if (isNaN(parsedPrice) || parsedPrice <= 0) {
-            throw new Error(`Format harga di varian baris ${index + 1} tidak valid. Harap masukkan angka yang valid.`);
-          }
-          
-          return { ram, ssd, price: parsedPrice };
-        });
-
-      if (variants.length === 0) {
-        throw new Error("Minimal satu varian harus diisi.");
-      }
-
-      // Parse specs with validation
+      // Parse specs
       const specs = formData.specs
         .split("\n")
-        .filter(line => line.trim())
-        .map(spec => spec.trim());
+        .map(spec => spec.trim())
+        .filter(spec => spec);
 
-      // Parse RAM and SSD options with validation
-    if (!formData.ramOptions.trim()) {
-        throw new Error("Opsi RAM wajib diisi.");
-      }
-      
-      const ramOptions = formData.ramOptions
-        .split(",")
-        .map(ram => ram.trim())
-        .filter(ram => ram);
-
-      if (ramOptions.length === 0) {
-        throw new Error("Minimal satu opsi RAM harus diisi.");
-    }
-
-    if (!formData.ssdOptions.trim()) {
-        throw new Error("Opsi SSD wajib diisi.");
-      }
-      
-      const ssdOptions = formData.ssdOptions
-    .split(",")
-        .map(ssd => ssd.trim())
-        .filter(ssd => ssd);
-
-      if (ssdOptions.length === 0) {
-        throw new Error("Minimal satu opsi SSD harus diisi.");
-      }
+      // Generate RAM and SSD options from variants
+      const ramOptions = [...new Set(validVariants.map(v => v.ram))];
+      const ssdOptions = [...new Set(validVariants.map(v => v.ssd))];
 
       // Calculate price range
-      const prices = variants.map(v => v.price);
-      const minPrice = Math.min(...prices);
-      const maxPrice = Math.max(...prices);
-      const priceRange = minPrice === maxPrice ? `${minPrice}` : `${minPrice} - ${maxPrice}`;
+      const prices = validVariants.map(v => v.price).filter(p => typeof p === 'number' && p > 0);
+      let priceRange = '';
+      if (prices.length === 0) {
+        priceRange = 'N/A';
+      } else {
+        const minPrice = Math.min(...prices);
+        const maxPrice = Math.max(...prices);
+        priceRange = minPrice === maxPrice
+          ? `Rp ${minPrice.toLocaleString("id-ID")}`
+          : `Rp ${minPrice.toLocaleString("id-ID")} - Rp ${maxPrice.toLocaleString("id-ID")}`;
+      }
 
-      // Prepare product data for Supabase
+      // Prepare product data
       const productData = {
-        name: formData.name.trim(),
+        name: formData.name,
         category_id: formData.category_id,
-        processor: formData.processor.trim(),
-        description: formData.description.trim() || null,
-        image: formData.imageUrl,
-        images: [formData.imageUrl],
-        ram_options: ramOptions,
-        ssd_options: ssdOptions,
+        processor: formData.processor,
+        description: formData.description,
+        imageUrl: formData.imageUrl,
+        ramOptions,
+        ssdOptions,
         price_range: priceRange,
-        specs: specs,
-        rating: null,
-        review_count: 0,
-        discount_percentage: formData.is_discount_active ? formData.discount_percentage : 0,
-        discount_start_date: formData.is_discount_active ? formData.discount_start_date : null,
-        discount_end_date: formData.is_discount_active ? formData.discount_end_date : null,
+        variants: validVariants.map(v => ({
+          ram: v.ram,
+          ssd: v.ssd,
+          price: v.price,
+          stock: v.stock,
+        })),
+        specs,
+        discount_percentage: formData.discount_percentage,
         is_discount_active: formData.is_discount_active,
+        is_featured: formData.is_featured,
+        is_best_seller: formData.is_best_seller,
+        ...(formData.discount_start_date ? { discount_start_date: formData.discount_start_date } : {}),
+        ...(formData.discount_end_date ? { discount_end_date: formData.discount_end_date } : {}),
       };
 
-      // Save to Supabase
-      const response = await fetch('/api/admin/products', {
-        method: 'POST',
+      // Create product
+      const response = await fetch("/api/admin/products", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(productData),
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Gagal menyimpan produk');
-      }
-
-      const savedProduct = await response.json();
-
-      // Save variants
-      for (const variant of variants) {
-        const variantResponse = await fetch('/api/admin/product-variants', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            product_id: savedProduct.id,
-            ram: variant.ram,
-            ssd: variant.ssd,
-            price: variant.price
-          }),
-        });
-
-        if (!variantResponse.ok) {
-          console.warn('Failed to save variant:', variant);
+        let errorMessage = 'Gagal membuat produk.';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch (parseError) {
+          errorMessage = `HTTP ${response.status}: ${response.statusText}`;
         }
+        throw new Error(errorMessage);
       }
 
-      toast.success("Produk berhasil ditambahkan!");
-      
-      // Reset form
-    setFormData({
-      name: "",
-        category_id: "",
-      processor: "",
-      description: "",
-      ramOptions: "",
-      ssdOptions: "",
-      variants: "",
-      specs: "",
-      imageUrl: "",
-      discount_percentage: 0,
-      discount_start_date: "",
-      discount_end_date: "",
-      is_discount_active: false,
-    });
-      setImageFile(null);
-      setPreviewUrl(null);
-
-      // Redirect to products list
-      window.location.href = '/admin/products';
-
+      const result = await response.json();
+      if (!result || !result.id) {
+        throw new Error('Gagal mendapatkan ID produk setelah pembuatan.');
+      }
+      toast.success("Produk berhasil dibuat!");
+      router.push('/admin/products');
     } catch (error: any) {
-      console.error("Error saving product:", error);
-      toast.error(error.message || "Terjadi kesalahan saat menyimpan produk.");
+      console.error("Error creating product:", error);
+      toast.error(error.message || "Terjadi kesalahan saat membuat produk.");
     } finally {
       setLoading(false);
     }
@@ -447,18 +305,40 @@ export default function AddProductPage() {
   const removeImage = () => {
     setImageFile(null);
     setPreviewUrl(null);
-    setFormData(prev => ({ ...prev, imageUrl: "" }));
-    setUploadError(null);
+    setFormData((prev) => ({
+      ...prev,
+      imageUrl: "",
+    }));
   };
+
+  if (categoriesLoading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (categoriesError) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-center">
+          <p className="text-red-500 mb-4">Gagal memuat kategori</p>
+          <Button onClick={() => window.location.reload()}>
+            Coba Lagi
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Tambah Produk Baru</h2>
           <p className="text-muted-foreground">
-            Tambahkan produk baru ke dalam sistem
+            Buat produk baru dengan varian dan spesifikasi yang lengkap
           </p>
         </div>
         <Button variant="outline" asChild>
@@ -502,32 +382,23 @@ export default function AddProductPage() {
           <CardHeader>
             <CardTitle>Informasi Dasar</CardTitle>
             <CardDescription>
-              Informasi utama produk yang akan ditambahkan
+              Informasi utama produk yang akan dibuat
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Nama Produk *</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => handleInputChange("name", e.target.value)}
-                  placeholder="Contoh: Lenovo ThinkPad T470"
-                  className={errors.name ? "border-red-500" : ""}
-                  required
-                />
-                {errors.name && (
-                  <p className="text-sm text-red-500">{errors.name}</p>
-                )}
+                <Input id="name" value={formData.name} onChange={(e) => handleInputChange("name", e.target.value)} placeholder="Contoh: Lenovo ThinkPad T470" className={errors.name ? "border-red-500" : ""} required />
+                {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="category">Kategori *</Label>
-                <select
-                  id="category"
-                  value={formData.category_id}
-                  onChange={(e) => handleInputChange("category_id", e.target.value)}
-                  className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                <select 
+                  id="category" 
+                  value={formData.category_id} 
+                  onChange={(e) => handleInputChange("category_id", e.target.value)} 
+                  className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                   disabled={categoriesLoading}
                   required
                 >
@@ -538,34 +409,17 @@ export default function AddProductPage() {
                     </option>
                   ))}
                 </select>
-                {errors.category && (
-                  <p className="text-sm text-red-500">{errors.category}</p>
-                )}
+                {errors.category && <p className="text-sm text-red-500">{errors.category}</p>}
               </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="processor">Processor *</Label>
-              <Input
-                id="processor"
-                value={formData.processor}
-                onChange={(e) => handleInputChange("processor", e.target.value)}
-                placeholder="Contoh: Intel Core i5-7300U"
-                className={errors.processor ? "border-red-500" : ""}
-                required
-              />
-              {errors.processor && (
-                <p className="text-sm text-red-500">{errors.processor}</p>
-              )}
+              <Input id="processor" value={formData.processor} onChange={(e) => handleInputChange("processor", e.target.value)} placeholder="Contoh: Intel Core i5-7300U" className={errors.processor ? "border-red-500" : ""} required />
+              {errors.processor && <p className="text-sm text-red-500">{errors.processor}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="description">Deskripsi</Label>
-              <Textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) => handleInputChange("description", e.target.value)}
-                placeholder="Deskripsi produk..."
-                rows={3}
-              />
+              <Textarea id="description" value={formData.description} onChange={(e) => handleInputChange("description", e.target.value)} placeholder="Deskripsi produk..." rows={3} />
             </div>
           </CardContent>
         </Card>
@@ -574,67 +428,56 @@ export default function AddProductPage() {
         <Card>
           <CardHeader>
             <CardTitle>Gambar Produk</CardTitle>
-            <CardDescription>
-              Unggah gambar utama produk
-            </CardDescription>
+            <CardDescription>Unggah gambar utama produk</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {!previewUrl ? (
               <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center">
-                <Upload className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <Label htmlFor="image" className="cursor-pointer">
-                  <span className="text-primary hover:text-primary/80 font-medium">
-                    Pilih gambar
-                  </span>
+                 <Label htmlFor="image" className="cursor-pointer">
+                  <Upload className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <span className="text-primary hover:text-primary/80 font-medium">Pilih gambar</span>
                   <span className="text-muted-foreground"> atau drag and drop</span>
-              </Label>
-                <input
-                  id="image"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-                <p className="text-sm text-muted-foreground mt-2">
-                  PNG, JPG, GIF hingga 10MB
-                </p>
+                </Label>
+                <input id="image" type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
               </div>
             ) : (
-              <div className="relative">
-                <div className="w-32 h-32 relative rounded-lg overflow-hidden">
-                  <Image
-                    src={previewUrl}
-                    alt="Preview"
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-                <Button
-                  type="button"
-                  variant="destructive"
-                  size="sm"
-                  onClick={removeImage}
-                  className="absolute -top-2 -right-2"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
+              <div className="relative w-32 h-32 rounded-lg overflow-hidden">
+                <Image src={previewUrl} alt="Preview" fill className="object-cover" />
+                <Button type="button" variant="destructive" size="sm" onClick={removeImage} className="absolute -top-2 -right-2">×</Button>
               </div>
             )}
-            
             {imageFile && !formData.imageUrl && (
               <div className="space-y-2">
                 <Button
                   type="button"
                   onClick={handleImageUpload}
-                  disabled={loading}
-                  className="w-full"
+                  disabled={!imageFile || loading}
+                  variant="outline"
                 >
-                  {loading ? "Mengunggah..." : "Unggah Gambar"}
+                  <Upload className="mr-2 h-4 w-4" />
+                  {loading ? 'Mengunggah...' : 'Upload Gambar'}
                 </Button>
                 {uploadError && (
-                  <p className="text-destructive text-sm">{uploadError}</p>
+                  <div className="text-red-500 text-sm mt-2">{uploadError}</div>
                 )}
               </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Variants Management */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Varian dan Harga</CardTitle>
+            <CardDescription>Kelola varian produk dengan interface yang mudah</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <VariantManagementSection
+              variants={variants}
+              onVariantsChange={setVariants}
+            />
+            {errors.variants && (
+              <p className="text-sm text-red-500 mt-2">{errors.variants}</p>
             )}
           </CardContent>
         </Card>
@@ -642,98 +485,48 @@ export default function AddProductPage() {
         {/* Specifications */}
         <Card>
           <CardHeader>
-            <CardTitle>Spesifikasi</CardTitle>
-            <CardDescription>
-              Konfigurasi RAM, SSD, dan spesifikasi detail produk
-            </CardDescription>
+            <CardTitle>Spesifikasi Detail</CardTitle>
+            <CardDescription>Spesifikasi tambahan produk (display, port, dll)</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="ramOptions">Opsi RAM *</Label>
-              <Input
-                id="ramOptions"
-                value={formData.ramOptions}
-                  onChange={(e) => handleInputChange("ramOptions", e.target.value)}
-                  placeholder="Contoh: 4GB, 8GB, 16GB"
-                  className={errors.ramOptions ? "border-red-500" : ""}
-                  required
-                />
-                {errors.ramOptions ? (
-                  <p className="text-sm text-red-500">{errors.ramOptions}</p>
-                ) : (
-                  <p className="text-sm text-muted-foreground">
-                    Pisahkan dengan koma
-                  </p>
-                )}
-            </div>
-              <div className="space-y-2">
-                <Label htmlFor="ssdOptions">Opsi SSD *</Label>
-              <Input
-                id="ssdOptions"
-                value={formData.ssdOptions}
-                  onChange={(e) => handleInputChange("ssdOptions", e.target.value)}
-                  placeholder="Contoh: 128GB, 256GB, 512GB"
-                  className={errors.ssdOptions ? "border-red-500" : ""}
-                  required
-                />
-                {errors.ssdOptions ? (
-                  <p className="text-sm text-red-500">{errors.ssdOptions}</p>
-                ) : (
-                  <p className="text-sm text-muted-foreground">
-                    Pisahkan dengan koma
-                  </p>
-                )}
-              </div>
-            </div>
             <div className="space-y-2">
               <Label htmlFor="specs">Spesifikasi Detail</Label>
-              <Textarea
-                id="specs"
-                value={formData.specs}
-                onChange={(e) => handleInputChange("specs", e.target.value)}
-                placeholder="Masukkan spesifikasi detail, satu per baris..."
-                rows={4}
-                className={errors.specs ? "border-red-500" : ""}
-              />
-              {errors.specs ? (
-                <p className="text-sm text-red-500">{errors.specs}</p>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  Satu spesifikasi per baris
-                </p>
-              )}
+              <Textarea id="specs" value={formData.specs} onChange={(e) => handleInputChange("specs", e.target.value)} placeholder="Satu spesifikasi per baris...&#10;Contoh:&#10;Display: 14 inch FHD&#10;Port: USB-C, HDMI&#10;OS: Windows 11" rows={4} />
+              <p className="text-sm text-muted-foreground">Spesifikasi seperti display, port, operating system, dll</p>
             </div>
           </CardContent>
         </Card>
 
-        {/* Variants and Pricing */}
+        {/* Product Flags */}
         <Card>
           <CardHeader>
-            <CardTitle>Varian dan Harga</CardTitle>
-            <CardDescription>
-              Konfigurasi varian produk dan harga masing-masing
-            </CardDescription>
+            <CardTitle>Pengaturan Produk</CardTitle>
+            <CardDescription>Atur flag dan status produk</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <Label htmlFor="variants">Varian dan Harga *</Label>
-              <Textarea
-                id="variants"
-                value={formData.variants}
-                onChange={(e) => handleInputChange("variants", e.target.value)}
-                placeholder="Format: RAM, SSD, Harga&#10;Contoh:&#10;4GB, 128GB, 8500000&#10;8GB, 256GB, 9500000&#10;16GB, 512GB, 11500000"
-                rows={6}
-                className={errors.variants ? "border-red-500" : ""}
-                required
-              />
-              {errors.variants ? (
-                <p className="text-sm text-red-500">{errors.variants}</p>
-              ) : (
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Produk Unggulan</Label>
                 <p className="text-sm text-muted-foreground">
-                  Format: RAM, SSD, Harga (satu varian per baris)
+                  Tampilkan di halaman utama sebagai produk unggulan
                 </p>
-              )}
+              </div>
+              <Switch
+                checked={formData.is_featured}
+                onCheckedChange={(checked) => handleInputChange("is_featured", checked)}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Best Seller</Label>
+                <p className="text-sm text-muted-foreground">
+                  Tandai sebagai produk best seller
+                </p>
+              </div>
+              <Switch
+                checked={formData.is_best_seller}
+                onCheckedChange={(checked) => handleInputChange("is_best_seller", checked)}
+              />
             </div>
           </CardContent>
         </Card>
@@ -743,36 +536,35 @@ export default function AddProductPage() {
           <CardHeader>
             <CardTitle>Pengaturan Diskon</CardTitle>
             <CardDescription>
-              Atur diskon untuk produk ini (opsional)
+              Atur diskon untuk produk ini
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label htmlFor="discount-active">Aktifkan Diskon</Label>
+                <Label>Aktifkan Diskon</Label>
                 <p className="text-sm text-muted-foreground">
                   Aktifkan diskon untuk produk ini
                 </p>
               </div>
               <Switch
-                id="discount-active"
                 checked={formData.is_discount_active}
                 onCheckedChange={(checked) => handleInputChange("is_discount_active", checked)}
               />
             </div>
 
             {formData.is_discount_active && (
-              <div className="space-y-4 pt-4 border-t">
+              <>
                 <div className="space-y-2">
-                  <Label htmlFor="discount-percentage">Persentase Diskon (%)</Label>
+                  <Label htmlFor="discount_percentage">Persentase Diskon (%)</Label>
                   <Input
-                    id="discount-percentage"
+                    id="discount_percentage"
                     type="number"
                     min="1"
                     max="100"
                     value={formData.discount_percentage}
                     onChange={(e) => handleInputChange("discount_percentage", parseInt(e.target.value) || 0)}
-                    placeholder="Contoh: 15"
+                    placeholder="10"
                     className={errors.discountPercentage ? "border-red-500" : ""}
                   />
                   {errors.discountPercentage && (
@@ -782,9 +574,9 @@ export default function AddProductPage() {
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="discount-start">Tanggal Mulai Diskon</Label>
+                    <Label htmlFor="discount_start_date">Tanggal Mulai Diskon</Label>
                     <Input
-                      id="discount-start"
+                      id="discount_start_date"
                       type="date"
                       value={formData.discount_start_date}
                       onChange={(e) => handleInputChange("discount_start_date", e.target.value)}
@@ -792,9 +584,9 @@ export default function AddProductPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="discount-end">Tanggal Berakhir Diskon</Label>
+                    <Label htmlFor="discount_end_date">Tanggal Berakhir Diskon</Label>
                     <Input
-                      id="discount-end"
+                      id="discount_end_date"
                       type="date"
                       value={formData.discount_end_date}
                       onChange={(e) => handleInputChange("discount_end_date", e.target.value)}
@@ -802,24 +594,15 @@ export default function AddProductPage() {
                     />
                   </div>
                 </div>
-                
                 {errors.discountDates && (
                   <p className="text-sm text-red-500">{errors.discountDates}</p>
                 )}
-
-                <div className="p-3 bg-blue-50 rounded-lg">
-                  <p className="text-sm text-blue-700">
-                    <strong>Info:</strong> Diskon akan otomatis aktif pada tanggal mulai dan nonaktif setelah tanggal berakhir.
-                  </p>
-                </div>
-              </div>
+              </>
             )}
           </CardContent>
         </Card>
 
-        <Separator />
-
-            {/* Submit Button */}
+        {/* Submit Button */}
         <div className="flex justify-end gap-4">
           <Button type="button" variant="outline" asChild>
             <Link href="/admin/products">
@@ -827,11 +610,17 @@ export default function AddProductPage() {
             </Link>
           </Button>
           <Button type="submit" disabled={!isFormValid || loading}>
-            <Plus className="mr-2 h-4 w-4" />
-            {loading ? "Menyimpan..." : "Tambah Produk"}
-              </Button>
-            </div>
-          </form>
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Membuat Produk...
+              </>
+            ) : (
+              "Buat Produk"
+            )}
+          </Button>
+        </div>
+      </form>
     </div>
   );
 }

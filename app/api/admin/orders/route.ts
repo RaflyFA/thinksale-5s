@@ -1,26 +1,50 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getOrders, searchOrders } from '@/lib/supabase/admin'
+import { z } from 'zod'
+import { requireAdmin } from '@/lib/utils/auth'
+import { fetchOrders } from '@/lib/services/fetchOrders'
+
+// Validation schema for search
+const searchSchema = z.object({
+  query: z.string().optional(),
+  status: z.enum(['all', 'pending', 'processing', 'shipped', 'delivered', 'cancelled']).optional(),
+})
 
 export async function GET(request: NextRequest) {
   try {
+    // Check admin access
+    await requireAdmin()
+    
     const { searchParams } = new URL(request.url)
-    const query = searchParams.get('query') || ''
-    const status = searchParams.get('status') || ''
-
-    let orders
-
-    if (query || (status && status !== 'all')) {
-      orders = await searchOrders(query, status)
-    } else {
-      orders = await getOrders()
-    }
-
+    const limit = parseInt(searchParams.get('limit') || '20', 10)
+    const offset = parseInt(searchParams.get('offset') || '0', 10)
+    
+    // Validate search params
+    const searchData = searchSchema.parse({
+      query: searchParams.get('query'),
+      status: searchParams.get('status') || 'all',
+    })
+    
+    const orders = await fetchOrders({ limit, offset, ...searchData })
     return NextResponse.json(orders)
   } catch (error) {
-    console.error('Error fetching orders:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch orders' },
-      { status: 500 }
-    )
+    console.error('Error in GET /api/admin/orders:', error)
+    
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ 
+        error: 'Invalid search parameters', 
+        details: error.errors 
+      }, { status: 400 })
+    }
+    
+    if (error instanceof Error) {
+      if (error.message.includes('Unauthorized')) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      }
+      if (error.message.includes('Forbidden')) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      }
+    }
+    
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 } 

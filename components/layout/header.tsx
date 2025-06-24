@@ -4,10 +4,12 @@
 import { useState, useRef, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Search, ShoppingCart, User, X } from "lucide-react"
+import { Search, ShoppingCart, User, X, LogIn, LogOut, Settings } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { useAuth } from "@/lib/auth/use-auth"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { useSession, signOut } from "next-auth/react"
 import { useCart } from "@/lib/cart/cart-context"
 import { useSettings } from "@/lib/providers/settings-provider"
 import { cn } from "@/lib/utils/cn"
@@ -25,7 +27,7 @@ export default function Header({ searchTerm = "", onSearchChange, className, car
   const mobileSearchInputRef = useRef<HTMLInputElement>(null)
   const mobileSearchContainerRef = useRef<HTMLDivElement>(null)
 
-  const { user } = useAuth()
+  const { data: session, status } = useSession()
   const { getTotalItems } = useCart()
   const { settings } = useSettings()
   const router = useRouter()
@@ -34,20 +36,19 @@ export default function Header({ searchTerm = "", onSearchChange, className, car
   const contactPhone = settings?.general?.contact_phone || "+62 812-2408-6200"
 
   const handleCartClick = () => {
-    if (!user) {
-      router.push("/login?redirect=/keranjang")
+    if (!session?.user) {
+      router.push("/login?callbackUrl=/keranjang")
     } else {
       router.push("/keranjang")
     }
   }
 
-  const handleProfileClick = () => {
-    if (!user) {
-      // Jika belum login, arahkan langsung ke halaman login
-      router.push("/login")
-    } else {
-      router.push("/profil")
-    }
+  const handleLoginClick = () => {
+    router.push("/login")
+  }
+
+  const handleLogout = async () => {
+    await signOut({ callbackUrl: '/' })
   }
 
   const toggleMobileSearch = () => {
@@ -166,14 +167,78 @@ export default function Header({ searchTerm = "", onSearchChange, className, car
                 </Button>
               </div>
 
-              {/* User Button */}
-              <Button variant="ghost" size="icon" onClick={handleProfileClick}>
-                <User className="h-5 w-5" />
-              </Button>
+              {/* User/Login Button */}
+              {status === "loading" ? (
+                // Loading state
+                <Button variant="ghost" size="icon" disabled>
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600"></div>
+                </Button>
+              ) : session?.user ? (
+                // User is logged in - Show dropdown menu
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="relative">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={session.user.image || ""} alt={session.user.name || "User"} />
+                        <AvatarFallback className="bg-blue-100 text-blue-600">
+                          {session.user.name?.charAt(0) || "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel>
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">{session.user.name}</p>
+                        <p className="text-xs leading-none text-muted-foreground">{session.user.email}</p>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => router.push('/profil')}>
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Profil Saya</span>
+                    </DropdownMenuItem>
+                    {session.user.role === "admin" && (
+                      <DropdownMenuItem onClick={() => router.push('/admin/dashboard')}>
+                        <Settings className="mr-2 h-4 w-4" />
+                        <span>Admin Panel</span>
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleLogout} className="text-red-600">
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Keluar</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                // User is not logged in - Show login button
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleLoginClick}
+                  className="hidden sm:flex items-center gap-2"
+                >
+                  <LogIn className="h-4 w-4" />
+                  <span>Login</span>
+                </Button>
+              )}
 
-              {/* Admin Button */}
-              {user && user.role === "admin" && (
-                 <Button variant="ghost" size="icon" onClick={() => router.push('/admin/dashboard')}>
+              {/* Mobile Login Button */}
+              {!session?.user && status !== "loading" && (
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={handleLoginClick}
+                  className="sm:hidden"
+                >
+                  <LogIn className="h-5 w-5" />
+                </Button>
+              )}
+
+              {/* Admin Button - Only show if user is admin and not in dropdown */}
+              {session?.user && session.user.role === "admin" && (
+                 <Button variant="ghost" size="icon" onClick={() => router.push('/admin/dashboard')} className="hidden lg:flex">
                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
                  </Button>
               )}

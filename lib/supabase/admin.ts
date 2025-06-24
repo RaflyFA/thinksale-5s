@@ -4,7 +4,12 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
 // Admin client with service role key for full access
-export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
+export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false
+  }
+})
 
 // Types based on database schema
 export interface Category {
@@ -12,6 +17,31 @@ export interface Category {
   name: string
   slug: string
   image: string
+  created_at?: string
+  updated_at?: string
+}
+
+export interface ProductVariant {
+  id: string
+  product_id: string
+  ram: string
+  ssd: string
+  price: number
+  discount_percentage?: number
+  discount_start_date?: string
+  discount_end_date?: string
+  is_discount_active?: boolean
+  created_at?: string
+  updated_at?: string
+}
+
+export interface Stock {
+  id: number
+  product_id: string
+  variant_id?: string
+  quantity: number
+  created_at?: string
+  updated_at?: string
 }
 
 export interface Product {
@@ -19,48 +49,53 @@ export interface Product {
   name: string
   category_id: string
   processor: string
-  description: string | null
-  image: string | null
-  images: string[] | null
-  ram_options: string[] | null
-  ssd_options: string[] | null
-  price_range: string | null
-  specs: string[] | null
-  is_featured: boolean
-  is_best_seller: boolean
-  rating: number | null
-  review_count: number | null
-  created_at: string
-  updated_at: string
+  description?: string
+  image?: string
+  images?: string[]
+  ram_options?: string[]
+  ssd_options?: string[]
+  price_range?: string
+  specs?: string[]
+  rating?: number
+  review_count?: number
+  is_featured?: boolean
+  is_best_seller?: boolean
+  discount_percentage?: number
+  discount_start_date?: string
+  discount_end_date?: string
+  is_discount_active?: boolean
+  created_at?: string
+  updated_at?: string
   category?: Category
   variants?: ProductVariant[]
-}
-
-export interface ProductVariant {
-  id: string
-  product_id: string
-  ram: string | null
-  ssd: string | null
-  price: number | null
+  stock?: Stock[]
 }
 
 export interface User {
   id: string
   name: string
   email: string
-  image: string | null
+  image?: string
   role: string
-  created_at: string
-  updated_at: string
+  created_at?: string
+  updated_at?: string
 }
 
 export interface Order {
   id: string
-  user_id: string
-  total: number | null
-  status: string | null
-  created_at: string
-  updated_at: string
+  order_number: string
+  user_id?: string
+  customer_name: string
+  customer_phone?: string
+  customer_address: string
+  delivery_option: string
+  total_amount: number
+  status: string
+  whatsapp_message?: string
+  admin_notes?: string
+  payment_status?: string
+  created_at?: string
+  updated_at?: string
   user?: User
   items?: OrderItem[]
 }
@@ -69,271 +104,101 @@ export interface OrderItem {
   id: string
   order_id: string
   product_id: string
-  variant_id: string
+  variant_id?: string
   quantity: number
-  price: number
+  unit_price: number
+  total_price: number
+  ram?: string
+  ssd?: string
+  created_at?: string
   product?: Product
   variant?: ProductVariant
 }
 
-// Products
-export async function getProducts() {
-  const { data, error } = await supabaseAdmin
-    .from('products')
-    .select(`
-      *,
-      category:categories(*),
-      variants:product_variants(*)
-    `)
-    .order('created_at', { ascending: false })
-
-  if (error) {
-    console.error('Error fetching products:', error)
-    throw error
-  }
-
-  return data as Product[]
-}
-
-export async function getProductById(id: string) {
-  const { data, error } = await supabaseAdmin
-    .from('products')
-    .select(`
-      *,
-      category:categories(*),
-      variants:product_variants(*)
-    `)
-    .eq('id', id)
-    .single()
-
-  if (error) {
-    console.error('Error fetching product:', error)
-    throw error
-  }
-
-  return data as Product
-}
-
-// Categories
-export async function getCategories() {
-  const { data, error } = await supabaseAdmin
-    .from('categories')
-    .select('*')
-    .order('name')
-
-  if (error) {
-    console.error('Error fetching categories:', error)
-    throw error
-  }
-
-  return data as Category[]
-}
-
-// Users
-export async function getUsers() {
-  const { data, error } = await supabaseAdmin
-    .from('users')
-    .select('*')
-    .order('created_at', { ascending: false })
-
-  if (error) {
-    console.error('Error fetching users:', error)
-    throw error
-  }
-
-  return data as User[]
-}
-
-export async function getUserById(id: string) {
-  const { data, error } = await supabaseAdmin
-    .from('users')
-    .select('*')
-    .eq('id', id)
-    .single()
-
-  if (error) {
-    console.error('Error fetching user:', error)
-    throw error
-  }
-
-  return data as User
-}
-
-// Orders
-export async function getOrders() {
-  const { data, error } = await supabaseAdmin
-    .from('orders')
-    .select(`
-      *,
-      user:users(*),
-      items:order_items(
-        *,
-        product:products(*),
-        variant:product_variants(*)
-      )
-    `)
-    .order('created_at', { ascending: false })
-
-  if (error) {
-    console.error('Error fetching orders:', error)
-    throw error
-  }
-
-  return data as Order[]
-}
-
-export async function getOrderById(id: string) {
-  const { data, error } = await supabaseAdmin
-    .from('orders')
-    .select(`
-      *,
-      user:users(*),
-      items:order_items(
-        *,
-        product:products(*),
-        variant:product_variants(*)
-      )
-    `)
-    .eq('id', id)
-    .single()
-
-  if (error) {
-    console.error('Error fetching order:', error)
-    throw error
-  }
-
-  return data as Order
+export interface Settings {
+  id: string
+  key: string
+  value?: string
+  type: string
+  category: string
+  description?: string
+  created_at?: string
+  updated_at?: string
 }
 
 // Statistics
 export async function getDashboardStats() {
-  // Get counts
-  const [productsCount, usersCount, ordersCount] = await Promise.all([
-    supabaseAdmin.from('products').select('*', { count: 'exact', head: true }),
-    supabaseAdmin.from('users').select('*', { count: 'exact', head: true }),
-    supabaseAdmin.from('orders').select('*', { count: 'exact', head: true })
-  ])
-
-  // Get total revenue
-  const { data: revenueData } = await supabaseAdmin
-    .from('orders')
-    .select('total')
-    .not('total', 'is', null)
-
-  const totalRevenue = revenueData?.reduce((sum, order) => sum + (order.total || 0), 0) || 0
-
-  // Get recent orders for dashboard
-  const { data: recentOrders } = await supabaseAdmin
-    .from('orders')
-    .select(`
-      *,
-      user:users(name, email)
-    `)
-    .order('created_at', { ascending: false })
-    .limit(5)
-
-  return {
-    totalProducts: productsCount.count || 0,
-    totalUsers: usersCount.count || 0,
-    totalOrders: ordersCount.count || 0,
-    totalRevenue,
-    recentOrders: recentOrders || []
-  }
-}
-
-// Search and filter functions
-export async function searchProducts(query: string, category?: string) {
   try {
-    let queryBuilder = supabaseAdmin
-      .from('products')
-      .select(`
-        *,
-        category:categories(*),
-        variants:product_variants(*)
-      `)
+    // Get counts
+    const [productsCount, usersCount, ordersCount, stockCount] = await Promise.all([
+      supabaseAdmin.from('products').select('*', { count: 'exact', head: true }),
+      supabaseAdmin.from('users').select('*', { count: 'exact', head: true }),
+      supabaseAdmin.from('orders').select('*', { count: 'exact', head: true }),
+      supabaseAdmin.from('stock').select('*', { count: 'exact', head: true })
+    ])
 
-    if (query && query.trim()) {
-      queryBuilder = queryBuilder.or(`name.ilike.%${query.trim()}%,processor.ilike.%${query.trim()}%`)
-    }
+    // Get total revenue
+    const { data: revenueData } = await supabaseAdmin
+      .from('orders')
+      .select('total_amount')
+      .not('total_amount', 'is', null)
 
-    if (category && category !== 'all') {
-      queryBuilder = queryBuilder.eq('category_id', category)
-    }
+    const totalRevenue = revenueData?.reduce((sum, order) => sum + (order.total_amount || 0), 0) || 0
 
-    const { data, error } = await queryBuilder.order('created_at', { ascending: false })
-
-    if (error) {
-      console.error('Error searching products:', error)
-      throw error
-    }
-
-    return data as Product[]
-  } catch (error) {
-    console.error('Error in searchProducts:', error)
-    throw error
-  }
-}
-
-export async function searchOrders(query: string, status?: string) {
-  try {
-    let queryBuilder = supabaseAdmin
+    // Get recent orders for dashboard
+    const { data: recentOrders } = await supabaseAdmin
       .from('orders')
       .select(`
-        *,
-        user:users(*),
-        items:order_items(
-          *,
-          product:products(*),
-          variant:product_variants(*)
-        )
+        id,
+        order_number,
+        total_amount,
+        status,
+        customer_name,
+        payment_status,
+        created_at
       `)
+      .order('created_at', { ascending: false })
+      .limit(10)
 
-    if (query && query.trim()) {
-      queryBuilder = queryBuilder.or(`id.ilike.%${query.trim()}%`)
+    // Get low stock alerts
+    const { data: lowStockItems } = await supabaseAdmin
+      .from('stock')
+      .select(`
+        id,
+        quantity,
+        product:products(id, name),
+        variant:product_variants(id, ram, ssd)
+      `)
+      .lte('quantity', 10)
+      .order('quantity', { ascending: true })
+      .limit(10)
+
+    // Transform low stock items to alerts
+    const stockAlerts = lowStockItems?.map(item => ({
+      id: item.id,
+      product_id: item.product?.id || '',
+      variant_id: item.variant?.id,
+      quantity: item.quantity,
+      product_name: item.product?.name || 'Unknown Product',
+      variant_info: item.variant ? `${item.variant.ram} | ${item.variant.ssd}` : undefined,
+      alert_level: item.quantity === 0 ? 'critical' : item.quantity <= 5 ? 'low' : 'warning'
+    })) || []
+
+    // Count low stock items
+    const lowStockCount = stockAlerts.length
+
+    return {
+      totalProducts: productsCount.count || 0,
+      totalUsers: usersCount.count || 0,
+      totalOrders: ordersCount.count || 0,
+      totalRevenue,
+      totalStock: stockCount.count || 0,
+      lowStockItems: lowStockCount,
+      recentOrders: recentOrders || [],
+      stockAlerts
     }
-
-    if (status && status !== 'all') {
-      queryBuilder = queryBuilder.eq('status', status)
-    }
-
-    const { data, error } = await queryBuilder.order('created_at', { ascending: false })
-
-    if (error) {
-      console.error('Error searching orders:', error)
-      throw error
-    }
-
-    return data as Order[]
   } catch (error) {
-    console.error('Error in searchOrders:', error)
-    throw error
-  }
-}
-
-export async function searchUsers(query: string, role?: string) {
-  try {
-    let queryBuilder = supabaseAdmin
-      .from('users')
-      .select('*')
-
-    if (query && query.trim()) {
-      queryBuilder = queryBuilder.or(`name.ilike.%${query.trim()}%,email.ilike.%${query.trim()}%`)
-    }
-
-    if (role && role !== 'all') {
-      queryBuilder = queryBuilder.eq('role', role)
-    }
-
-    const { data, error } = await queryBuilder.order('created_at', { ascending: false })
-
-    if (error) {
-      console.error('Error searching users:', error)
-      throw error
-    }
-
-    return data as User[]
-  } catch (error) {
-    console.error('Error in searchUsers:', error)
+    console.error('Error fetching dashboard stats:', error)
     throw error
   }
 } 

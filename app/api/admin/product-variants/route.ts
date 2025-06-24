@@ -1,29 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
+import { supabaseAdmin } from '@/lib/supabase/admin'
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    
-    // Validate required fields
     if (!body.product_id) {
       return NextResponse.json(
         { error: 'Product ID is required' },
         { status: 400 }
       )
     }
-
+    if (!body.ram || !body.ssd || typeof body.price !== 'number' || typeof body.stock !== 'number') {
+      return NextResponse.json(
+        { error: 'Field ram, ssd, price, stock wajib diisi' },
+        { status: 400 }
+      )
+    }
     const { data, error } = await supabaseAdmin
       .from('product_variants')
       .insert({
         product_id: body.product_id,
         ram: body.ram,
         ssd: body.ssd,
-        price: body.price
+        price: body.price,
+        stock: body.stock,
       })
       .select()
       .single()

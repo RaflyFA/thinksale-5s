@@ -3,11 +3,18 @@ export interface ProductVariant {
   ram: string;
   ssd: string;
   price: number;
-  stock?: number;
   created_at?: string;
   updated_at?: string;
 }
 
+export interface Stock {
+  id: number;
+  product_id: string;
+  variant_id?: string;
+  quantity: number;
+  created_at?: string;
+  updated_at?: string;
+}
 
 export interface Product {
   id: string;
@@ -30,6 +37,7 @@ export interface Product {
   discount_start_date?: string | null;
   discount_end_date?: string | null;
   is_discount_active?: boolean;
+  stock?: Stock[]; // Stock information
   created_at?: string;
   updated_at?: string;
 }

@@ -57,7 +57,7 @@ export default function HomePage() {
     return {
       title: `Laptop Terpercaya dari ${storeName}`,
       description: settings?.general?.store_description || "Koleksi lengkap laptop ThinkPad dan Dell dengan kualitas terjamin dan harga terbaik. Dapatkan laptop impian Anda sekarang!",
-      image: settings?.general?.hero_image || "/lenovo hitam 1.png"
+      image: settings?.general?.hero_image
     }
   }, [settings])
 

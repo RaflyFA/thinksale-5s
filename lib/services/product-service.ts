@@ -1,51 +1,22 @@
 import { supabase } from '../supabase/client'
-import type { Product } from '../types'
+import type { ProductListItem } from '../types/index'
+import type { Product, ProductVariant } from '../supabase/admin'
 
-export interface DatabaseProduct {
-  id: string
-  name: string
-  description: string
-  processor: string
-  category_id: string
-  image: string
-  images: string[]
-  ram_options: string[]
-  ssd_options: string[]
-  price_range: string
-  specs: string[]
-  rating: number
-  review_count: number
-  is_featured: boolean
-  is_best_seller: boolean
-  discount_percentage: number | null
-  discount_start_date: string | null
-  discount_end_date: string | null
-  is_discount_active: boolean
-  created_at: string
-  updated_at: string
-}
+// Base product query with common fields
+const baseProductQuery = `
+  id, name, image, price_range, category:categories(id, name, slug)
+`
 
-export interface DatabaseVariant {
-  id: string
-  product_id: string
-  ram: string
-  ssd: string
-  price: number
-  stock: number
-  created_at: string
-  updated_at: string
-}
-
-export async function getProducts(): Promise<Product[]> {
+/**
+ * Get all products with pagination
+ */
+export async function fetchProducts({ limit = 20, offset = 0 } = {}): Promise<ProductListItem[]> {
   try {
     const { data: products, error } = await supabase
       .from('products')
-      .select(`
-        *,
-        category:categories(*),
-        product_variants (*)
-      `)
+      .select(baseProductQuery)
       .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1)
 
     if (error) {
       console.error('Error fetching products:', error)
@@ -55,58 +26,27 @@ export async function getProducts(): Promise<Product[]> {
     return products?.map((product: any) => ({
       id: product.id,
       name: product.name,
-      category: {
-        id: product.category.id,
-        name: product.category.name,
-        slug: product.category.slug,
-        image: product.category.image
-      },
-      processor: product.processor,
-      description: product.description,
       image: product.image,
-      images: product.images || [],
-      ramOptions: product.ram_options || [],
-      ssdOptions: product.ssd_options || [],
       priceRange: product.price_range,
-      specs: product.specs || [],
-      variants: product.product_variants?.map((variant: DatabaseVariant) => ({
-        id: variant.id,
-        ram: variant.ram,
-        ssd: variant.ssd,
-        price: variant.price,
-        stock: variant.stock,
-        created_at: variant.created_at,
-        updated_at: variant.updated_at
-      })) || [],
-      rating: product.rating || 0,
-      reviewCount: product.review_count || 0,
-      is_featured: product.is_featured || false,
-      is_best_seller: product.is_best_seller || false,
-      discount_percentage: product.discount_percentage || null,
-      discount_start_date: product.discount_start_date || null,
-      discount_end_date: product.discount_end_date || null,
-      is_discount_active: product.is_discount_active || false,
-      created_at: product.created_at,
-      updated_at: product.updated_at
+      category: product.category || null,
     })) || []
   } catch (error) {
-    console.error('Error in getProducts:', error)
+    console.error('Error in fetchProducts:', error)
     return []
   }
 }
 
-export async function getFeaturedProducts(): Promise<Product[]> {
+/**
+ * Get featured products
+ */
+export async function fetchFeaturedProducts({ limit = 8, offset = 0 } = {}): Promise<ProductListItem[]> {
   try {
     const { data: products, error } = await supabase
       .from('products')
-      .select(`
-        *,
-        category:categories(*),
-        product_variants (*)
-      `)
+      .select(baseProductQuery)
       .eq('is_featured', true)
       .order('created_at', { ascending: false })
-      .limit(8)
+      .range(offset, offset + limit - 1)
 
     if (error) {
       console.error('Error fetching featured products:', error)
@@ -116,58 +56,27 @@ export async function getFeaturedProducts(): Promise<Product[]> {
     return products?.map((product: any) => ({
       id: product.id,
       name: product.name,
-      category: {
-        id: product.category.id,
-        name: product.category.name,
-        slug: product.category.slug,
-        image: product.category.image
-      },
-      processor: product.processor,
-      description: product.description,
       image: product.image,
-      images: product.images || [],
-      ramOptions: product.ram_options || [],
-      ssdOptions: product.ssd_options || [],
       priceRange: product.price_range,
-      specs: product.specs || [],
-      variants: product.product_variants?.map((variant: DatabaseVariant) => ({
-        id: variant.id,
-        ram: variant.ram,
-        ssd: variant.ssd,
-        price: variant.price,
-        stock: variant.stock,
-        created_at: variant.created_at,
-        updated_at: variant.updated_at
-      })) || [],
-      rating: product.rating || 0,
-      reviewCount: product.review_count || 0,
-      is_featured: product.is_featured || false,
-      is_best_seller: product.is_best_seller || false,
-      discount_percentage: product.discount_percentage || null,
-      discount_start_date: product.discount_start_date || null,
-      discount_end_date: product.discount_end_date || null,
-      is_discount_active: product.is_discount_active || false,
-      created_at: product.created_at,
-      updated_at: product.updated_at
+      category: product.category || null,
     })) || []
   } catch (error) {
-    console.error('Error in getFeaturedProducts:', error)
+    console.error('Error in fetchFeaturedProducts:', error)
     return []
   }
 }
 
-export async function getBestSellerProducts(): Promise<Product[]> {
+/**
+ * Get best seller products
+ */
+export async function fetchBestSellerProducts({ limit = 8, offset = 0 } = {}): Promise<ProductListItem[]> {
   try {
     const { data: products, error } = await supabase
       .from('products')
-      .select(`
-        *,
-        category:categories(*),
-        product_variants (*)
-      `)
+      .select(baseProductQuery)
       .eq('is_best_seller', true)
       .order('created_at', { ascending: false })
-      .limit(8)
+      .range(offset, offset + limit - 1)
 
     if (error) {
       console.error('Error fetching best seller products:', error)
@@ -177,120 +86,27 @@ export async function getBestSellerProducts(): Promise<Product[]> {
     return products?.map((product: any) => ({
       id: product.id,
       name: product.name,
-      category: {
-        id: product.category.id,
-        name: product.category.name,
-        slug: product.category.slug,
-        image: product.category.image
-      },
-      processor: product.processor,
-      description: product.description,
       image: product.image,
-      images: product.images || [],
-      ramOptions: product.ram_options || [],
-      ssdOptions: product.ssd_options || [],
       priceRange: product.price_range,
-      specs: product.specs || [],
-      variants: product.product_variants?.map((variant: DatabaseVariant) => ({
-        id: variant.id,
-        ram: variant.ram,
-        ssd: variant.ssd,
-        price: variant.price,
-        stock: variant.stock,
-        created_at: variant.created_at,
-        updated_at: variant.updated_at
-      })) || [],
-      rating: product.rating || 0,
-      reviewCount: product.review_count || 0,
-      is_featured: product.is_featured || false,
-      is_best_seller: product.is_best_seller || false,
-      discount_percentage: product.discount_percentage || null,
-      discount_start_date: product.discount_start_date || null,
-      discount_end_date: product.discount_end_date || null,
-      is_discount_active: product.is_discount_active || false,
-      created_at: product.created_at,
-      updated_at: product.updated_at
+      category: product.category || null,
     })) || []
   } catch (error) {
-    console.error('Error in getBestSellerProducts:', error)
+    console.error('Error in fetchBestSellerProducts:', error)
     return []
   }
 }
 
-export async function searchProducts(searchTerm: string): Promise<Product[]> {
+/**
+ * Get top rated products
+ */
+export async function fetchTopRatedProducts({ limit = 8, offset = 0 } = {}): Promise<ProductListItem[]> {
   try {
     const { data: products, error } = await supabase
       .from('products')
-      .select(`
-        *,
-        category:categories(*),
-        product_variants (*)
-      `)
-      .or(`name.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,processor.ilike.%${searchTerm}%`)
-      .order('created_at', { ascending: false })
-
-    if (error) {
-      console.error('Error searching products:', error)
-      return []
-    }
-
-    return products?.map((product: any) => ({
-      id: product.id,
-      name: product.name,
-      category: {
-        id: product.category.id,
-        name: product.category.name,
-        slug: product.category.slug,
-        image: product.category.image
-      },
-      processor: product.processor,
-      description: product.description,
-      image: product.image,
-      images: product.images || [],
-      ramOptions: product.ram_options || [],
-      ssdOptions: product.ssd_options || [],
-      priceRange: product.price_range,
-      specs: product.specs || [],
-      variants: product.product_variants?.map((variant: DatabaseVariant) => ({
-        id: variant.id,
-        ram: variant.ram,
-        ssd: variant.ssd,
-        price: variant.price,
-        stock: variant.stock,
-        created_at: variant.created_at,
-        updated_at: variant.updated_at
-      })) || [],
-      rating: product.rating || 0,
-      reviewCount: product.review_count || 0,
-      is_featured: product.is_featured || false,
-      is_best_seller: product.is_best_seller || false,
-      discount_percentage: product.discount_percentage || null,
-      discount_start_date: product.discount_start_date || null,
-      discount_end_date: product.discount_end_date || null,
-      is_discount_active: product.is_discount_active || false,
-      created_at: product.created_at,
-      updated_at: product.updated_at
-    })) || []
-  } catch (error) {
-    console.error('Error in searchProducts:', error)
-    return []
-  }
-}
-
-export async function getTopRatedProducts(): Promise<Product[]> {
-  try {
-    const { data: products, error } = await supabase
-      .from('products')
-      .select(`
-        *,
-        category:categories(*),
-        product_variants (*)
-      `)
+      .select(baseProductQuery)
       .not('rating', 'is', null)
-      .gte('rating', 4.5)
       .order('rating', { ascending: false })
-      .order('review_count', { ascending: false })
-      .limit(8)
+      .range(offset, offset + limit - 1)
 
     if (error) {
       console.error('Error fetching top rated products:', error)
@@ -300,146 +116,118 @@ export async function getTopRatedProducts(): Promise<Product[]> {
     return products?.map((product: any) => ({
       id: product.id,
       name: product.name,
-      category: {
-        id: product.category.id,
-        name: product.category.name,
-        slug: product.category.slug,
-        image: product.category.image
-      },
-      processor: product.processor,
-      description: product.description,
       image: product.image,
-      images: product.images || [],
-      ramOptions: product.ram_options || [],
-      ssdOptions: product.ssd_options || [],
       priceRange: product.price_range,
-      specs: product.specs || [],
-      variants: product.product_variants?.map((variant: DatabaseVariant) => ({
-        id: variant.id,
-        ram: variant.ram,
-        ssd: variant.ssd,
-        price: variant.price,
-        stock: variant.stock,
-        created_at: variant.created_at,
-        updated_at: variant.updated_at
-      })) || [],
-      rating: product.rating || 0,
-      reviewCount: product.review_count || 0,
-      is_featured: product.is_featured || false,
-      is_best_seller: product.is_best_seller || false,
-      discount_percentage: product.discount_percentage || null,
-      discount_start_date: product.discount_start_date || null,
-      discount_end_date: product.discount_end_date || null,
-      is_discount_active: product.is_discount_active || false,
-      created_at: product.created_at,
-      updated_at: product.updated_at
+      category: product.category || null,
     })) || []
   } catch (error) {
-    console.error('Error in getTopRatedProducts:', error)
-    return []
-  }
-}
-
-export async function getInStockProducts(): Promise<Product[]> {
-  try {
-    const { data: products, error } = await supabase
-      .from('products')
-      .select(`
-        *,
-        category:categories(*),
-        product_variants (*)
-      `)
-      .order('created_at', { ascending: false })
-      .limit(8)
-
-    if (error) {
-      console.error('Error fetching in-stock products:', error)
-      return []
-    }
-
-    // Filter products that have at least one variant with stock > 0
-    const inStockProducts = products?.filter((product: any) => {
-      return product.product_variants?.some((variant: DatabaseVariant) => variant.stock > 0)
-    }) || []
-
-    return inStockProducts.map((product: any) => ({
-      id: product.id,
-      name: product.name,
-      category: {
-        id: product.category.id,
-        name: product.category.name,
-        slug: product.category.slug,
-        image: product.category.image
-      },
-      processor: product.processor,
-      description: product.description,
-      image: product.image,
-      images: product.images || [],
-      ramOptions: product.ram_options || [],
-      ssdOptions: product.ssd_options || [],
-      priceRange: product.price_range,
-      specs: product.specs || [],
-      variants: product.product_variants?.map((variant: DatabaseVariant) => ({
-        id: variant.id,
-        ram: variant.ram,
-        ssd: variant.ssd,
-        price: variant.price,
-        stock: variant.stock,
-        created_at: variant.created_at,
-        updated_at: variant.updated_at
-      })) || [],
-      rating: product.rating || 0,
-      reviewCount: product.review_count || 0,
-      is_featured: product.is_featured || false,
-      is_best_seller: product.is_best_seller || false,
-      discount_percentage: product.discount_percentage || null,
-      discount_start_date: product.discount_start_date || null,
-      discount_end_date: product.discount_end_date || null,
-      is_discount_active: product.is_discount_active || false,
-      created_at: product.created_at,
-      updated_at: product.updated_at
-    }))
-  } catch (error) {
-    console.error('Error in getInStockProducts:', error)
+    console.error('Error in fetchTopRatedProducts:', error)
     return []
   }
 }
 
 /**
- * Retrieves a single product by its ID.
- * @param productId The ID of the product to fetch.
- * @returns A single product object, or null if not found.
+ * Get in-stock products (products with available stock)
  */
-export async function getProductById(productId: string): Promise<Product | null> {
+export async function fetchInStockProducts({ limit = 8, offset = 0 } = {}): Promise<ProductListItem[]> {
+  try {
+    // Get products that have stock > 0
+    const { data: stockData, error: stockError } = await supabase
+      .from('stock')
+      .select('product_id')
+      .gt('quantity', 0)
+
+    if (stockError) {
+      console.error('Error fetching stock data:', stockError)
+      return []
+    }
+
+    const productIds = [...new Set(stockData?.map(s => s.product_id) || [])]
+
+    if (productIds.length === 0) {
+      return []
+    }
+
+    const { data: products, error } = await supabase
+      .from('products')
+      .select(baseProductQuery)
+      .in('id', productIds)
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1)
+
+    if (error) {
+      console.error('Error fetching in stock products:', error)
+      return []
+    }
+
+    return products?.map((product: any) => ({
+      id: product.id,
+      name: product.name,
+      image: product.image,
+      priceRange: product.price_range,
+      category: product.category || null,
+    })) || []
+  } catch (error) {
+    console.error('Error in fetchInStockProducts:', error)
+    return []
+  }
+}
+
+/**
+ * Search products
+ */
+export async function searchProducts(searchTerm: string, { limit = 20, offset = 0 } = {}): Promise<ProductListItem[]> {
+  try {
+    const { data: products, error } = await supabase
+      .from('products')
+      .select(baseProductQuery)
+      .or(`name.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,processor.ilike.%${searchTerm}%`)
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1)
+
+    if (error) {
+      console.error('Error searching products:', error)
+      return []
+    }
+
+    return products?.map((product: any) => ({
+      id: product.id,
+      name: product.name,
+      image: product.image,
+      priceRange: product.price_range,
+      category: product.category || null,
+    })) || []
+  } catch (error) {
+    console.error('Error in searchProducts:', error)
+    return []
+  }
+}
+
+/**
+ * Get product detail by ID
+ */
+export async function fetchProductDetail(id: string): Promise<Product | null> {
   try {
     const { data: product, error } = await supabase
       .from('products')
       .select(`
-        *,
-        category:categories(*),
-        product_variants (*)
+        id, name, processor, description, image, images, ram_options, ssd_options, price_range, specs, rating, review_count, is_featured, is_best_seller, discount_percentage, discount_start_date, discount_end_date, is_discount_active, created_at, updated_at,
+        category:categories(id, name, slug, image),
+        variants:product_variants(id, ram, ssd, price, created_at, updated_at)
       `)
-      .eq('id', productId)
-      .single();
+      .eq('id', id)
+      .single()
 
     if (error) {
-      console.error(`Error fetching product with ID ${productId}:`, error);
-      return null;
+      console.error('Error fetching product detail:', error)
+      return null
     }
-    
-    if (!product) {
-      return null;
-    }
+
+    if (!product) return null
 
     return {
       id: product.id,
       name: product.name,
-      category: {
-        id: product.category.id,
-        name: product.category.name,
-        slug: product.category.slug,
-        image: product.category.image
-      },
       processor: product.processor,
       description: product.description,
       image: product.image,
@@ -448,15 +236,6 @@ export async function getProductById(productId: string): Promise<Product | null>
       ssdOptions: product.ssd_options || [],
       priceRange: product.price_range,
       specs: product.specs || [],
-      variants: product.product_variants?.map((variant: any) => ({
-        id: variant.id,
-        ram: variant.ram,
-        ssd: variant.ssd,
-        price: variant.price,
-        stock: variant.stock,
-        created_at: variant.created_at,
-        updated_at: variant.updated_at
-      })) || [],
       rating: product.rating || 0,
       reviewCount: product.review_count || 0,
       is_featured: product.is_featured || false,
@@ -466,10 +245,12 @@ export async function getProductById(productId: string): Promise<Product | null>
       discount_end_date: product.discount_end_date || null,
       is_discount_active: product.is_discount_active || false,
       created_at: product.created_at,
-      updated_at: product.updated_at
-    };
+      updated_at: product.updated_at,
+      category: product.category || null,
+      variants: product.variants || [],
+    }
   } catch (error) {
-    console.error(`Error in getProductById for ID ${productId}:`, error);
-    return null;
+    console.error('Error in fetchProductDetail:', error)
+    return null
   }
 } 

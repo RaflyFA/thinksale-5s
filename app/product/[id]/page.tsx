@@ -40,6 +40,12 @@ export default function ProductDetailPage() {
       .slice(0, 10)
   }, [allProducts, productId])
 
+  // --- Memoized Total Stock Calculation ---
+  const totalStock = useMemo(() => {
+    if (!product?.variants) return 0;
+    return product.variants.reduce((acc: number, variant: any) => acc + (variant.stock || 0), 0);
+  }, [product?.variants]);
+
   // --- Effect to set default variant ---
   useEffect(() => {
     if (product && product.variants && product.variants.length > 0) {
@@ -73,11 +79,6 @@ export default function ProductDetailPage() {
   const hasDiscount = isDiscountActive(product);
   const basePrice = getBasePrice(product);
   const discountedPrice = getDiscountedPrice(product);
-
-  const totalStock = useMemo(() => {
-    if (!product?.variants) return 0;
-    return product.variants.reduce((acc: number, variant: any) => acc + (variant.stock || 0), 0);
-  }, [product?.variants]);
 
   const productImages = product.images && product.images.length > 0 
     ? product.images 
@@ -256,6 +257,9 @@ export default function ProductDetailPage() {
                       </div>
                       <p className="text-sm text-gray-500 line-through">
                         Rp {basePrice.toLocaleString()}
+                      </p>
+                      <p className="text-sm text-green-600 font-medium">
+                        Hemat Rp {(basePrice - discountedPrice).toLocaleString("id-ID")}
                       </p>
                       {product.discount_end_date && (
                         <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">

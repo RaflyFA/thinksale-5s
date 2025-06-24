@@ -6,7 +6,7 @@ import { X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import Image from "next/image"
-import { useAuth } from "@/lib/auth/use-auth"
+import { useSession } from "next-auth/react"
 import { useCart } from "@/lib/cart/cart-context"
 import CheckoutModal from "@/components/checkout/checkout-modal"
 import { cn } from "@/lib/utils/cn"
@@ -28,7 +28,7 @@ export default function ProductConfiguration({ product, isOpen, onClose }: Produ
   const modalRef = useRef<HTMLDivElement>(null)
   const overlayRef = useRef<HTMLDivElement>(null)
 
-  const { user } = useAuth()
+  const { data: session } = useSession()
   const { addItem } = useCart()
   const router = useRouter()
 
@@ -111,9 +111,9 @@ export default function ProductConfiguration({ product, isOpen, onClose }: Produ
   }
 
   const handleCheckout = () => {
-    if (!user) {
+    if (!session?.user) {
       const currentUrl = window.location.pathname + window.location.search
-      router.push(`/login?redirect=${encodeURIComponent(currentUrl)}`)
+      router.push(`/login?callbackUrl=${encodeURIComponent(currentUrl)}`)
       onClose()
       return
     }
@@ -198,18 +198,19 @@ export default function ProductConfiguration({ product, isOpen, onClose }: Produ
               </div>
 
               {/* RAM Selection */}
-              <div className="space-y-3 ">
-                <label className="block text-sm font-semibold text-gray-900">RAM</label>
-                <div className="flex flex-wrap gap-2">
+              <div className="space-y-3">
+                <label className="block text-sm font-semibold text-gray-900">Pilih RAM</label>
+                <div className="grid grid-cols-2 gap-3">
                   {ramOptions.map((ram) => (
                     <button
                       key={ram}
+                      type="button"
                       onClick={() => setSelectedRam(ram)}
                       className={cn(
-                        "px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
+                        "p-3 rounded-xl text-left transition-all duration-300 font-semibold",
                         selectedRam === ram
-                          ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white"
-                          : "bg-gray-100 text-gray-700 hover:bg-gray-200",
+                          ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
+                          : "border-2 border-gray-200 hover:border-gray-300 text-gray-900",
                       )}
                     >
                       {ram}
@@ -219,18 +220,19 @@ export default function ProductConfiguration({ product, isOpen, onClose }: Produ
               </div>
 
               {/* SSD Selection */}
-              <div className="space-y-3 ">
-                <label className="block text-sm font-semibold text-gray-900">SSD</label>
-                <div className="flex flex-wrap gap-2">
+              <div className="space-y-3">
+                <label className="block text-sm font-semibold text-gray-900">Pilih SSD</label>
+                <div className="grid grid-cols-2 gap-3">
                   {ssdOptions.map((ssd) => (
                     <button
                       key={ssd}
+                      type="button"
                       onClick={() => setSelectedSsd(ssd)}
                       className={cn(
-                        "px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 mb-16",
+                        "p-3 rounded-xl text-left transition-all duration-300 font-semibold",
                         selectedSsd === ssd
-                          ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white"
-                          : "bg-gray-100 text-gray-700 hover:bg-gray-200",
+                          ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
+                          : "border-2 border-gray-200 hover:border-gray-300 text-gray-900",
                       )}
                     >
                       {ssd}
@@ -239,25 +241,33 @@ export default function ProductConfiguration({ product, isOpen, onClose }: Produ
                 </div>
               </div>
 
-              {/* Footer with Total and Checkout Button */}
-              <div className="flex items-center justify-between pt-4 border-t">
-                <div>
-                  <p className="text-xs text-gray-600">Total Harga</p>
-                  {/* --- Start: Total Price Display --- */}
-                  <div className="flex items-baseline gap-2">
-                    <p className="text-lg font-bold text-gray-900">Rp {formatPrice(currentPrice)}</p>
-                    {hasDiscount && (
-                       <p className="text-sm font-medium text-gray-500 line-through">Rp {formatPrice(basePrice)}</p>
-                    )}
+              {/* Selected Configuration Summary */}
+              {selectedRam && selectedSsd && (
+                <div className="bg-gray-50 p-4 rounded-xl">
+                  <h4 className="font-semibold text-gray-900 mb-2">Konfigurasi yang Dipilih:</h4>
+                  <div className="space-y-1 text-sm">
+                    <p><span className="font-medium">RAM:</span> {selectedRam}</p>
+                    <p><span className="font-medium">SSD:</span> {selectedSsd}</p>
+                    <p><span className="font-medium">Harga:</span> Rp {formatPrice(currentPrice)}</p>
                   </div>
-                   {/* --- End: Total Price Display --- */}
                 </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="space-y-3 pt-4">
                 <Button
                   onClick={handleCheckout}
-                  disabled={isProcessing || !selectedVariant}
-                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-2 rounded-lg font-medium"
+                  disabled={!selectedRam || !selectedSsd || isProcessing}
+                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-4 text-sm lg:text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
                 >
-                  {isProcessing ? "Processing..." : "Checkout"}
+                  {isProcessing ? "Memproses..." : "Beli Sekarang"}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={onClose}
+                  className="w-full py-4 text-sm lg:text-lg font-semibold rounded-xl"
+                >
+                  Batal
                 </Button>
               </div>
             </CardContent>
@@ -266,7 +276,20 @@ export default function ProductConfiguration({ product, isOpen, onClose }: Produ
       </div>
 
       {/* Checkout Modal */}
-      <CheckoutModal isOpen={showCheckout} onClose={() => setShowCheckout(false)} />
+      <CheckoutModal
+        isOpen={showCheckout}
+        onClose={() => setShowCheckout(false)}
+        items={[
+          {
+            product,
+            ram: selectedRam,
+            ssd: selectedSsd,
+            price: currentPrice,
+            quantity: 1,
+          },
+        ]}
+        totalPrice={currentPrice}
+      />
     </>
   )
 }

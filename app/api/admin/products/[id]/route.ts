@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase/server'
+import { supabaseAdmin } from '@/lib/supabase/admin'
 
 export async function GET(
   request: NextRequest,
@@ -12,7 +12,8 @@ export async function GET(
       .select(`
         *,
         category:categories(*),
-        variants:product_variants(*)
+        variants:product_variants(*),
+        stock:stock(*)
       `)
       .eq('id', id)
       .single()
@@ -25,6 +26,11 @@ export async function GET(
       )
     }
 
+    // Pastikan ram_options dan ssd_options tidak null
+    if (product) {
+      if (!product.ram_options) product.ram_options = [];
+      if (!product.ssd_options) product.ssd_options = [];
+    }
     return NextResponse.json(product)
   } catch (error) {
     console.error('Error:', error)
@@ -61,6 +67,7 @@ export async function PUT(
       is_discount_active: body.is_discount_active || false,
     }
 
+    // Update product data
     const { data, error } = await supabaseAdmin
       .from('products')
       .update(updateData)
@@ -75,6 +82,78 @@ export async function PUT(
         { status: 400 }
       )
     }
+
+    // --- VARIANT UPDATE LOGIC (SAFE) ---
+    // Ambil semua varian lama dari database
+    const { data: oldVariants, error: fetchOldVariantsError } = await supabaseAdmin
+      .from('product_variants')
+      .select('id')
+      .eq('product_id', id)
+    if (fetchOldVariantsError) {
+      console.error('Error fetching old variants:', fetchOldVariantsError)
+      return NextResponse.json(
+        { error: 'Gagal mengambil varian lama.' },
+        { status: 500 }
+      )
+    }
+    const oldIds = (oldVariants || []).map((v: any) => v.id)
+    const newIds = (body.variants || []).filter((v: any) => v.id).map((v: any) => v.id)
+
+    // 1. Update varian yang ada
+    for (const v of (body.variants || [])) {
+      if (v.id) {
+        const { error: updateVariantError } = await supabaseAdmin
+          .from('product_variants')
+          .update({
+            ram: v.ram,
+            ssd: v.ssd,
+            price: v.price,
+            stock: v.stock,
+          })
+          .eq('id', v.id)
+        if (updateVariantError) {
+          console.error('Error updating variant:', updateVariantError)
+          return NextResponse.json(
+            { error: 'Gagal mengupdate varian.' },
+            { status: 500 }
+          )
+        }
+      }
+    }
+    // 2. Insert varian baru
+    const variantsToInsert = (body.variants || []).filter((v: any) => !v.id).map((v: any) => ({
+      product_id: id,
+      ram: v.ram,
+      ssd: v.ssd,
+      price: v.price,
+      stock: v.stock,
+    }))
+    if (variantsToInsert.length > 0) {
+      const { error: insertVariantsError } = await supabaseAdmin
+        .from('product_variants')
+        .insert(variantsToInsert)
+      if (insertVariantsError) {
+        console.error('Error inserting new variants:', insertVariantsError)
+        return NextResponse.json(
+          { error: 'Gagal menyimpan varian baru.' },
+          { status: 500 }
+        )
+      }
+    }
+    // 3. Hapus varian lama yang tidak ada di data baru (jika tidak ada constraint)
+    const idsToDelete = oldIds.filter((oid: string) => !newIds.includes(oid))
+    if (idsToDelete.length > 0) {
+      // Coba hapus, jika gagal, abaikan (bisa jadi ada constraint)
+      const { error: deleteVariantsError } = await supabaseAdmin
+        .from('product_variants')
+        .delete()
+        .in('id', idsToDelete)
+      if (deleteVariantsError) {
+        console.warn('Warning: Gagal menghapus varian lama (mungkin ada constraint):', deleteVariantsError)
+        // Tidak return error, lanjutkan proses
+      }
+    }
+    // --- END VARIANT UPDATE LOGIC (SAFE) ---
 
     return NextResponse.json(data)
   } catch (error) {

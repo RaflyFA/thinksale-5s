@@ -38,13 +38,23 @@ CREATE TABLE product_variants (
   ram text,
   ssd text,
   price int,
-  stock integer DEFAULT 0,                 -- ✅ BARU
   discount_percentage integer DEFAULT 0,   -- ✅ DISKON: Persentase diskon variant (0-100)
   discount_start_date timestamptz,         -- ✅ DISKON: Tanggal mulai diskon variant
   discount_end_date timestamptz,           -- ✅ DISKON: Tanggal berakhir diskon variant
   is_discount_active boolean DEFAULT false, -- ✅ DISKON: Status aktif diskon variant
   created_at timestamptz DEFAULT now(),    -- ✅ BARU
   updated_at timestamptz DEFAULT now()     -- ✅ BARU
+);
+
+-- Stock Management (Terpisah dari product_variants untuk fleksibilitas lebih)
+-- Memungkinkan tracking history, stock movements, dan fitur admin yang lebih detail
+CREATE TABLE stock (
+  id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  product_id uuid NOT NULL REFERENCES products(id),
+  variant_id uuid NULL REFERENCES product_variants(id),
+  quantity integer NOT NULL DEFAULT 0,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
 );
 
 -- User
@@ -79,9 +89,17 @@ CREATE TABLE cart_items (
 -- Order
 CREATE TABLE orders (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid REFERENCES users(id),
-  total int,
-  status text,
+  order_number text UNIQUE NOT NULL,        -- ✅ ORDER: Nomor order unik (ORD-2025-001)
+  user_id uuid REFERENCES users(id),        -- ✅ ORDER: Optional, untuk user yang login
+  customer_name text NOT NULL,              -- ✅ ORDER: Nama customer
+  customer_phone text,                      -- ✅ ORDER: Nomor telepon customer
+  customer_address text NOT NULL,           -- ✅ ORDER: Alamat customer
+  delivery_option text NOT NULL,            -- ✅ ORDER: 'cod' atau 'delivery'
+  total_amount int NOT NULL,                -- ✅ ORDER: Total harga pesanan
+  status text NOT NULL DEFAULT 'pending',   -- ✅ ORDER: pending, confirmed, processing, shipped, delivered, cancelled
+  whatsapp_message text,                    -- ✅ ORDER: Pesan yang dikirim ke WhatsApp
+  admin_notes text,                         -- ✅ ORDER: Catatan internal admin
+  payment_status text DEFAULT 'pending',    -- ✅ ORDER: pending, paid, failed
   created_at timestamptz DEFAULT now(),
   updated_at timestamptz DEFAULT now()
 );
@@ -93,7 +111,21 @@ CREATE TABLE order_items (
   product_id uuid REFERENCES products(id),
   variant_id uuid REFERENCES product_variants(id),
   quantity int NOT NULL,
-  price int NOT NULL
+  unit_price int NOT NULL,                  -- ✅ ORDER: Harga per unit
+  total_price int NOT NULL,                 -- ✅ ORDER: Total harga item (unit_price * quantity)
+  ram text,                                 -- ✅ ORDER: Konfigurasi RAM yang dipilih
+  ssd text,                                 -- ✅ ORDER: Konfigurasi SSD yang dipilih
+  created_at timestamptz DEFAULT now()
+);
+
+-- Order Status History
+CREATE TABLE order_status_history (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_id uuid REFERENCES orders(id),
+  status text NOT NULL,                     -- ✅ ORDER: Status yang diubah
+  notes text,                               -- ✅ ORDER: Catatan perubahan status
+  changed_by uuid REFERENCES users(id),     -- ✅ ORDER: Admin yang mengubah status
+  created_at timestamptz DEFAULT now()
 );
 
 -- Settings
@@ -122,5 +154,30 @@ CREATE INDEX idx_products_best_seller ON products(is_best_seller);
 CREATE INDEX idx_products_discount ON products(is_discount_active, discount_end_date);
 CREATE INDEX idx_variants_product ON product_variants(product_id);
 CREATE INDEX idx_variants_discount ON product_variants(is_discount_active, discount_end_date);
+CREATE INDEX idx_stock_product ON stock(product_id);
+CREATE INDEX idx_stock_variant ON stock(variant_id);
 CREATE INDEX idx_settings_key ON settings(key);
 CREATE INDEX idx_settings_category ON settings(category);
+
+-- Indexes untuk Order Management
+CREATE INDEX idx_orders_number ON orders(order_number);
+CREATE INDEX idx_orders_status ON orders(status);
+CREATE INDEX idx_orders_customer ON orders(customer_name, customer_phone);
+CREATE INDEX idx_orders_created ON orders(created_at);
+CREATE INDEX idx_order_items_order ON order_items(order_id);
+CREATE INDEX idx_order_items_product ON order_items(product_id);
+CREATE INDEX idx_order_status_history_order ON order_status_history(order_id);
+CREATE INDEX idx_order_status_history_created ON order_status_history(created_at);
+
+-- RLS Policies untuk Stock
+CREATE POLICY "Users can view stock" 
+ON public.stock 
+FOR SELECT 
+TO authenticated 
+USING (true);
+
+CREATE POLICY "Admins can manage stock" 
+ON public.stock 
+FOR ALL 
+TO public 
+USING (EXISTS (SELECT 1 FROM users WHERE (users.id = auth.uid()) AND (users.role = 'admin'::text)));

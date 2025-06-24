@@ -1,99 +1,76 @@
 "use client"
 
+import React, { useState, useEffect } from "react"
 import { useAuth } from "@/lib/auth/use-auth"
 import { useRouter, usePathname } from "next/navigation"
-import { useEffect, useState } from "react"
 import Link from "next/link"
-import {
-  Bell,
-  Home,
-  LineChart,
-  Package,
-  ShoppingCart,
-  Users,
-  PanelLeft,
-  PanelRight,
-  Search,
-  Settings,
-  ShieldCheck,
-  Shapes,
-} from "lucide-react"
-
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
 import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Input } from "@/components/ui/input"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils/cn"
-import React from "react"
 import { useSettings } from "@/lib/providers/settings-provider"
-import Image from "next/image"
 import BrandLogo from "@/components/ui/brand-logo"
+import { 
+  PanelLeft, 
+  PanelRight, 
+  ShieldCheck, 
+  BarChart3, 
+  Package, 
+  Users, 
+  ShoppingCart, 
+  Settings, 
+  FileText,
+  Home,
+  Warehouse
+} from "lucide-react"
+import { useSession, signOut } from "next-auth/react"
 
 const navigation = [
-  { name: 'Dashboard', href: '/admin/dashboard', icon: Home },
-  { name: 'Produk', href: '/admin/products', icon: Package },
-  { name: 'Kategori', href: '/admin/categories', icon: Shapes },
-  { name: 'Pesanan', href: '/admin/orders', icon: ShoppingCart },
-  { name: 'Pengguna', href: '/admin/users', icon: Users },
-  { name: 'Analitik', href: '/admin/analytics', icon: LineChart },
+  {
+    name: "Dashboard",
+    href: "/admin/dashboard",
+    icon: BarChart3,
+  },
+  {
+    name: "Produk",
+    href: "/admin/products",
+    icon: Package,
+  },
+  {
+    name: "Kategori",
+    href: "/admin/categories",
+    icon: FileText,
+  },
+  {
+    name: "Pesanan",
+    href: "/admin/orders",
+    icon: ShoppingCart,
+  },
+  {
+    name: "Pengguna",
+    href: "/admin/users",
+    icon: Users,
+  },
 ]
 
 const settingsNavigation = [
-  { name: 'Pengaturan', href: '/admin/settings', icon: Settings },
+  {
+    name: "Pengaturan",
+    href: "/admin/settings",
+    icon: Settings,
+  },
+  {
+    name: "Kembali ke Situs",
+    href: "/",
+    icon: Home,
+  },
 ]
 
 function NavItem({ item, pathname, isCollapsed }: { item: { name: string, href: string, icon: React.ElementType }, pathname: string, isCollapsed: boolean }) {
   const isActive = pathname === item.href || (item.href !== '/admin/dashboard' && pathname.startsWith(item.href))
   const Icon = item.icon
-
-  if (isCollapsed) {
-    return (
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Link
-              href={item.href}
-              className={cn(
-                "flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8",
-                isActive && "bg-accent text-accent-foreground"
-              )}
-            >
-              <Icon className="h-5 w-5" />
-              <span className="sr-only">{item.name}</span>
-            </Link>
-          </TooltipTrigger>
-          <TooltipContent side="right">{item.name}</TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-    )
-  }
 
   return (
     <Link
@@ -110,7 +87,7 @@ function NavItem({ item, pathname, isCollapsed }: { item: { name: string, href: 
 }
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { user, logout, isAuthenticated, isLoading } = useAuth()
+  const { data: session, status } = useSession()
   const router = useRouter()
   const pathname = usePathname()
   const { settings } = useSettings()
@@ -135,14 +112,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const breadcrumbItems = pathname.split('/').filter(Boolean)
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push('/login?redirect=/admin/dashboard')
-    } else if (!isLoading && user?.role !== 'admin') {
+    if (status === "unauthenticated") {
+      router.push('/login?callbackUrl=/admin/dashboard')
+    } else if (status === "authenticated" && session?.user?.role !== 'admin') {
       router.push('/')
     }
-  }, [isAuthenticated, isLoading, user, router])
+  }, [status, session?.user?.role, router])
 
-  if (isLoading || !isAuthenticated || user?.role !== 'admin') {
+  if (status === "loading" || status === "unauthenticated" || session?.user?.role !== 'admin') {
     return (
       <div className="flex min-h-screen w-full items-center justify-center bg-muted/40">
         <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary"></div>
@@ -151,8 +128,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   const handleLogout = async () => {
-    await logout()
-    router.push('/')
+    await signOut({ callbackUrl: '/' })
   }
   
   const storeName = settings?.general?.store_name || "ThinkSale"
@@ -256,12 +232,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     <DropdownMenuTrigger asChild>
                       <Button variant="outline" className="w-full justify-start gap-3">
                         <Avatar className="h-8 w-8">
-                          <AvatarImage src={user?.image || ""} alt={user?.name || "Admin"} />
-                          <AvatarFallback>{user?.name?.charAt(0) || "A"}</AvatarFallback>
+                          <AvatarImage src={session?.user?.image || ""} alt={session?.user?.name || "Admin"} />
+                          <AvatarFallback>{session?.user?.name?.charAt(0) || "A"}</AvatarFallback>
                         </Avatar>
                         <div className="flex flex-col items-start">
-                          <span className="font-medium leading-none">{user?.name}</span>
-                          <span className="text-xs text-muted-foreground leading-none">{user?.email}</span>
+                          <span className="font-medium leading-none">{session?.user?.name}</span>
+                          <span className="text-xs text-muted-foreground leading-none">{session?.user?.email}</span>
                         </div>
                       </Button>
                     </DropdownMenuTrigger>
@@ -303,38 +279,32 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               ))}
             </BreadcrumbList>
           </Breadcrumb>
-          <div className="relative ml-auto flex-1 md:grow-0">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Cari..."
-              className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[336px]"
-            />
+          <div className="ml-auto flex items-center gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="hidden sm:flex gap-3">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={session?.user?.image || ""} alt={session?.user?.name || "Admin"} />
+                    <AvatarFallback>{session?.user?.name?.charAt(0) || "A"}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex flex-col items-start">
+                    <span className="font-medium leading-none">{session?.user?.name}</span>
+                    <span className="text-xs text-muted-foreground leading-none">{session?.user?.email}</span>
+                  </div>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Akun Saya</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => router.push('/admin/settings')}>Pengaturan</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push('/')}>Kembali ke Situs</DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout}>Keluar</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                className="overflow-hidden rounded-full"
-              >
-                <Avatar>
-                  <AvatarImage src={user?.image || ""} alt={user?.name || "Admin"} />
-                  <AvatarFallback>{user?.name?.charAt(0) || "A"}</AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Akun Saya</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => router.push('/admin/settings')}>Pengaturan</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => router.push('/')}>Kembali ke Situs</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout}>Keluar</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </header>
-        <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
+        <main className="flex-1 space-y-4 p-4 sm:p-6">
           {children}
         </main>
       </div>

@@ -2,29 +2,28 @@
 
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { useAuth } from "@/lib/auth/use-auth"
+import { useSession, signOut } from "next-auth/react"
 import { useCart } from "@/lib/cart/cart-context"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { User, ShoppingCart, Package, LogOut } from "lucide-react"
 
 export default function ProfilPage() {
-  const { user, logout, isAuthenticated, isLoading } = useAuth()
+  const { data: session, status } = useSession()
   const { getTotalItems } = useCart()
   const router = useRouter()
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push("/login?redirect=/profil")
+    if (status === "unauthenticated") {
+      router.push("/login?callbackUrl=/profil")
     }
-  }, [isAuthenticated, isLoading, router])
+  }, [status, router])
 
   const handleLogout = async () => {
-    await logout()
-    router.push("/")
+    await signOut({ callbackUrl: "/" })
   }
 
-  if (isLoading) {
+  if (status === "loading") {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -35,7 +34,7 @@ export default function ProfilPage() {
     )
   }
 
-  if (!isAuthenticated || !user) {
+  if (status === "unauthenticated" || !session?.user) {
     return null
   }
 
@@ -53,10 +52,10 @@ export default function ProfilPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-3">
               <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
-                {user.image ? (
+                {session.user.image ? (
                   <img 
-                    src={user.image} 
-                    alt={user.name || 'User'} 
+                    src={session.user.image} 
+                    alt={session.user.name || 'User'} 
                     className="w-12 h-12 rounded-full object-cover"
                   />
                 ) : (
@@ -64,8 +63,8 @@ export default function ProfilPage() {
                 )}
               </div>
               <div>
-                <h2 className="text-xl font-semibold">{user.name}</h2>
-                <p className="text-gray-600 text-sm">{user.email}</p>
+                <h2 className="text-xl font-semibold">{session.user.name}</h2>
+                <p className="text-gray-600 text-sm">{session.user.email}</p>
               </div>
             </CardTitle>
           </CardHeader>
