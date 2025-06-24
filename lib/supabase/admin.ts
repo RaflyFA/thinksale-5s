@@ -130,11 +130,11 @@ export interface Settings {
 export async function getDashboardStats() {
   try {
     // Get counts
-    const [productsCount, usersCount, ordersCount, stockCount] = await Promise.all([
+    const [productsCount, usersCount, ordersCount, variantsCount] = await Promise.all([
       supabaseAdmin.from('products').select('*', { count: 'exact', head: true }),
       supabaseAdmin.from('users').select('*', { count: 'exact', head: true }),
       supabaseAdmin.from('orders').select('*', { count: 'exact', head: true }),
-      supabaseAdmin.from('stock').select('*', { count: 'exact', head: true })
+      supabaseAdmin.from('product_variants').select('*', { count: 'exact', head: true })
     ])
 
     // Get total revenue
@@ -160,40 +160,74 @@ export async function getDashboardStats() {
       .order('created_at', { ascending: false })
       .limit(10)
 
-    // Get low stock alerts
-    const { data: lowStockItems } = await supabaseAdmin
-      .from('stock')
+    // Get all product variants with product info for stock calculation
+    const { data: variantsData } = await supabaseAdmin
+      .from('product_variants')
       .select(`
         id,
-        quantity,
-        product:products(id, name),
-        variant:product_variants(id, ram, ssd)
+        product_id,
+        ram,
+        ssd,
+        price,
+        stock,
+        product:products(id, name)
       `)
-      .lte('quantity', 10)
-      .order('quantity', { ascending: true })
-      .limit(10)
 
-    // Transform low stock items to alerts
-    const stockAlerts = lowStockItems?.map(item => ({
-      id: item.id,
-      product_id: item.product?.id || '',
-      variant_id: item.variant?.id,
-      quantity: item.quantity,
-      product_name: item.product?.name || 'Unknown Product',
-      variant_info: item.variant ? `${item.variant.ram} | ${item.variant.ssd}` : undefined,
-      alert_level: item.quantity === 0 ? 'critical' : item.quantity <= 5 ? 'low' : 'warning'
-    })) || []
+    // Buat map: product_id -> array stok varian
+    const productVariantStockMap: Record<string, number[]> = {}
+    for (const v of variantsData || []) {
+      if (!productVariantStockMap[v.product_id]) {
+        productVariantStockMap[v.product_id] = []
+      }
+      productVariantStockMap[v.product_id].push(v.stock ?? 0)
+    }
 
-    // Count low stock items
-    const lowStockCount = stockAlerts.length
+    // Produk stok tersedia: minimal 1 varian stock > 0
+    const inStockProductCount = Object.values(productVariantStockMap).filter(
+      (stockArr) => stockArr.length > 0 && stockArr.some(s => s > 0)
+    ).length
+    // Produk stok kosong: semua varian stock === 0 atau tidak ada varian
+    const outOfStockProductCount = Object.values(productVariantStockMap).filter(
+      (stockArr) => stockArr.length === 0 || stockArr.every(s => s === 0)
+    ).length
+    // Total stok: jumlah seluruh stock dari semua varian
+    const totalStock = (variantsData?.reduce((sum, v) => sum + (v.stock || 0), 0)) || 0
+
+    // Get out-of-stock variants (stock === 0)
+    const outOfStockVariants = (variantsData || []).filter(v => (v.stock ?? 0) === 0)
+      .sort((a, b) => (a.stock ?? 0) - (b.stock ?? 0))
+      .slice(0, 10)
+
+    // Transform out-of-stock variants to alerts
+    const stockAlerts = outOfStockVariants.map(v => {
+      let productId = ''
+      let productName = 'Unknown Product'
+      if (v.product && Array.isArray(v.product) && v.product.length > 0) {
+        productId = v.product[0]?.id || ''
+        productName = v.product[0]?.name || 'Unknown Product'
+      } else if (v.product && typeof v.product === 'object' && !Array.isArray(v.product)) {
+        productId = (v.product as any).id || ''
+        productName = (v.product as any).name || 'Unknown Product'
+      }
+      return {
+        id: v.id,
+        product_id: productId,
+        variant_id: v.id,
+        quantity: v.stock ?? 0,
+        product_name: productName,
+        variant_info: `${v.ram || ''} | ${v.ssd || ''}`,
+        alert_level: 'critical'
+      }
+    })
 
     return {
       totalProducts: productsCount.count || 0,
       totalUsers: usersCount.count || 0,
       totalOrders: ordersCount.count || 0,
       totalRevenue,
-      totalStock: stockCount.count || 0,
-      lowStockItems: lowStockCount,
+      totalStock,
+      inStockProductCount,
+      outOfStockProductCount,
       recentOrders: recentOrders || [],
       stockAlerts
     }

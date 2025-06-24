@@ -67,8 +67,7 @@ export async function getAllProductsWithStock(): Promise<ProductWithStock[]> {
       .select(`
         *,
         category:categories(*),
-        variants:product_variants(*),
-        stock:stock(*)
+        variants:product_variants(*)
       `)
       .order('created_at', { ascending: false })
 
@@ -77,19 +76,15 @@ export async function getAllProductsWithStock(): Promise<ProductWithStock[]> {
       throw error
     }
 
-    // Process stock information
+    // Map variants, stock hanya dari product_variants.stock
     const productsWithStock = (data as ProductDB[])?.map((product: ProductDB) => {
-      const variants = product.variants?.map((variant: ProductVariantDB) => {
-        const variantStock = product.stock?.find((s: StockDB) => s.variant_id === variant.id)
-        return {
-          ...variant,
-          stock_quantity: variantStock?.quantity || 0,
-          stock_status: getStockStatus(variantStock?.quantity || 0)
-        }
-      })
-
-      const totalStock = product.stock?.reduce((sum: number, s: StockDB) => sum + s.quantity, 0) || 0
-
+      const variants = product.variants?.map((variant: ProductVariantDB) => ({
+        ...variant,
+        stock_quantity: variant.stock || 0,
+        stock_status: getStockStatus(variant.stock || 0)
+      }))
+      // total_stock = sum dari variant.stock
+      const totalStock = variants?.reduce((sum, v) => sum + (v.stock || 0), 0) || 0
       return {
         ...product,
         category: product.category || { id: '', name: '', slug: '', image: '' },
@@ -97,7 +92,6 @@ export async function getAllProductsWithStock(): Promise<ProductWithStock[]> {
         total_stock: totalStock
       } as ProductWithStock
     })
-
     return productsWithStock || []
   } catch (error) {
     console.error('Error in getAllProductsWithStock:', error)
@@ -115,8 +109,7 @@ export async function getProductWithStockById(id: string): Promise<ProductWithSt
       .select(`
         *,
         category:categories(*),
-        variants:product_variants(*),
-        stock:stock(*)
+        variants:product_variants(*)
       `)
       .eq('id', id)
       .single()
@@ -125,23 +118,14 @@ export async function getProductWithStockById(id: string): Promise<ProductWithSt
       console.error('Error fetching product with stock:', error)
       throw error
     }
-
     if (!data) return null
-
     const productData = data as ProductDB
-
-    // Process stock information
-    const variants = productData.variants?.map((variant: ProductVariantDB) => {
-      const variantStock = productData.stock?.find((s: StockDB) => s.variant_id === variant.id)
-      return {
-        ...variant,
-        stock_quantity: variantStock?.quantity || 0,
-        stock_status: getStockStatus(variantStock?.quantity || 0)
-      }
-    })
-
-    const totalStock = productData.stock?.reduce((sum: number, s: StockDB) => sum + s.quantity, 0) || 0
-
+    const variants = productData.variants?.map((variant: ProductVariantDB) => ({
+      ...variant,
+      stock_quantity: variant.stock || 0,
+      stock_status: getStockStatus(variant.stock || 0)
+    }))
+    const totalStock = variants?.reduce((sum, v) => sum + (v.stock || 0), 0) || 0
     return {
       ...productData,
       category: productData.category || { id: '', name: '', slug: '', image: '' },
@@ -159,7 +143,6 @@ export async function getProductWithStockById(id: string): Promise<ProductWithSt
  */
 export async function createProductWithVariants(productData: ProductFormData): Promise<ProductWithStock> {
   try {
-    // Start transaction
     const { data: product, error: productError } = await supabaseAdmin
       .from('products')
       .insert({
@@ -169,6 +152,9 @@ export async function createProductWithVariants(productData: ProductFormData): P
         description: productData.description,
         image: productData.imageUrl,
         images: [productData.imageUrl],
+        ram_options: productData.ramOptions,
+        ssd_options: productData.ssdOptions,
+        price_range: productData.price_range,
         specs: productData.specs,
         discount_percentage: productData.discount_percentage,
         discount_start_date: productData.discount_start_date,
@@ -179,50 +165,24 @@ export async function createProductWithVariants(productData: ProductFormData): P
       })
       .select()
       .single()
-
-    if (productError) {
-      console.error('Error creating product:', productError)
-      throw productError
-    }
-
-    if (!product) {
-      throw new Error('Failed to create product')
-    }
-
-    // Create variants with all fields
-    const variantPromises = productData.variants.map(variant =>
-      supabaseAdmin
-        .from('product_variants')
-        .insert({
-          product_id: product.id,
-          ram: variant.ram,
-          ssd: variant.ssd,
-          price: variant.price,
-          stock: variant.stock || 0
-        })
-        .select()
-        .single()
+    if (productError) throw productError
+    if (!product) throw new Error('Failed to create product')
+    // Insert ke tabel product_variants
+    await Promise.all(
+      productData.variants.map(variant =>
+        supabaseAdmin
+          .from('product_variants')
+          .insert({
+            product_id: product.id,
+            ram: variant.ram,
+            ssd: variant.ssd,
+            price: variant.price,
+            stock: variant.stock || 0
+          })
+          .select()
+          .single()
+      )
     )
-
-    const variantResults = await Promise.all(variantPromises)
-    const variants = variantResults.map(result => {
-      if (result.error) throw result.error
-      return result.data
-    })
-
-    // Create stock records for each variant (sesuai schema)
-    const stockPromises = variants.map(variant =>
-      supabaseAdmin
-        .from('stock')
-        .insert({
-          product_id: product.id,
-          variant_id: variant.id,
-          quantity: variant.stock || 0
-        })
-    )
-    await Promise.all(stockPromises)
-
-    // Return the complete product with stock
     return await getProductWithStockById(product.id) as ProductWithStock
   } catch (error) {
     console.error('Error in createProductWithVariants:', error)
@@ -238,7 +198,6 @@ export async function updateProductWithVariants(
   productData: ProductFormData
 ): Promise<ProductWithStock> {
   try {
-    // Update product
     const { error: productError } = await supabaseAdmin
       .from('products')
       .update({
@@ -248,7 +207,9 @@ export async function updateProductWithVariants(
         description: productData.description,
         image: productData.imageUrl,
         images: [productData.imageUrl],
-        price_range: calculatePriceRange(productData.variants),
+        ram_options: productData.ramOptions,
+        ssd_options: productData.ssdOptions,
+        price_range: productData.price_range,
         specs: productData.specs,
         discount_percentage: productData.discount_percentage,
         discount_start_date: productData.discount_start_date,
@@ -259,58 +220,28 @@ export async function updateProductWithVariants(
         updated_at: new Date().toISOString()
       })
       .eq('id', productId)
-
-    if (productError) {
-      console.error('Error updating product:', productError)
-      throw productError
-    }
-
-    // Delete existing variants and stock
+    if (productError) throw productError
+    // Delete existing variants
     await supabaseAdmin
       .from('product_variants')
       .delete()
       .eq('product_id', productId)
-
-    await supabaseAdmin
-      .from('stock')
-      .delete()
-      .eq('product_id', productId)
-
-    // Create new variants with all fields
-    const variantPromises = productData.variants.map(variant =>
-      supabaseAdmin
-        .from('product_variants')
-        .insert({
-          product_id: productId,
-          ram: variant.ram,
-          ssd: variant.ssd,
-          price: variant.price,
-          stock: variant.stock || 0
-        })
-        .select()
-        .single()
+    // Create new variants
+    await Promise.all(
+      productData.variants.map(variant =>
+        supabaseAdmin
+          .from('product_variants')
+          .insert({
+            product_id: productId,
+            ram: variant.ram,
+            ssd: variant.ssd,
+            price: variant.price,
+            stock: variant.stock || 0
+          })
+          .select()
+          .single()
+      )
     )
-
-    const variantResults = await Promise.all(variantPromises)
-    const variants = variantResults.map(result => {
-      if (result.error) throw result.error
-      return result.data
-    })
-
-    // Create stock records for each variant
-    const stockPromises = variants.map(variant =>
-      supabaseAdmin
-        .from('stock')
-        .insert({
-          product_id: productId,
-          variant_id: variant.id,
-          quantity: variant.stock || 0
-        })
-    )
-
-    await Promise.all(stockPromises)
-
-    // Return the updated product with stock
     return await getProductWithStockById(productId) as ProductWithStock
   } catch (error) {
     console.error('Error in updateProductWithVariants:', error)

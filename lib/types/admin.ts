@@ -5,6 +5,8 @@ export interface DashboardStats {
   totalOrders: number
   totalRevenue: number
   totalStock: number
+  inStockProductCount: number
+  outOfStockProductCount: number
   lowStockItems: number
   recentOrders: RecentOrder[]
   stockAlerts: StockAlert[]
@@ -38,6 +40,9 @@ export interface ProductFormData {
   processor: string
   description: string
   imageUrl: string
+  ramOptions: string[]
+  ssdOptions: string[]
+  price_range: string
   variants: ProductVariantForm[]
   specs: string[]
   discount_percentage: number

@@ -306,7 +306,11 @@ export default function ProductsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Stok Tersedia</p>
-                <p className="text-2xl font-bold text-green-600">{products.filter(p => (p.total_stock || 0) > 0).length}</p>
+                <p className="text-2xl font-bold text-green-600">{
+                  products.filter(p =>
+                    p.variants && p.variants.some(v => (v.stock_quantity ?? 0) > 0)
+                  ).length
+                }</p>
               </div>
               <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
                 <span className="text-green-600 text-sm font-bold">✔</span>
@@ -319,7 +323,11 @@ export default function ProductsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Stok Kosong</p>
-                <p className="text-2xl font-bold text-red-600">{products.filter(p => (p.total_stock || 0) === 0).length}</p>
+                <p className="text-2xl font-bold text-red-600">{
+                  products.filter(p =>
+                    !p.variants || p.variants.every(v => (v.stock_quantity ?? 0) === 0)
+                  ).length
+                }</p>
               </div>
               <div className="h-8 w-8 rounded-full bg-red-100 flex items-center justify-center">
                 <span className="text-red-600 text-sm font-bold">✖</span>

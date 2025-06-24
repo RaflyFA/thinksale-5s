@@ -72,152 +72,163 @@ export default function AdminDashboardPage() {
       if (!contentType || !contentType.includes('application/json')) {
         const text = await response.text()
         console.error('Non-JSON response:', text)
-        throw new Error('Invalid response format from server')
+        throw new Error('Format respons dari server tidak valid')
       }
       
       const data = await response.json()
       setStats(data)
     } catch (err) {
-      console.error('Error fetching dashboard stats:', err)
-      const errorMessage = err instanceof Error ? err.message : 'An error occurred'
+      console.error('Gagal mengambil data dashboard:', err)
+      const errorMessage = err instanceof Error ? err.message : 'Terjadi kesalahan'
       setLoadingState({ isLoading: false, error: errorMessage })
-      toast.error('Failed to load dashboard data')
+      toast.error('Gagal memuat data dashboard')
     } finally {
       setLoadingState({ isLoading: false, error: null })
     }
   }
 
-  // Show loading or error state
+  // Tampilkan loading atau error
   if (loadingState.isLoading || loadingState.error || !stats) {
     return (
       <LoadingState
         isLoading={loadingState.isLoading}
         error={loadingState.error}
         onRetry={fetchDashboardStats}
-        loadingText="Loading dashboard..."
-        errorText="Failed to load dashboard data"
+        loadingText="Memuat dashboard..."
+        errorText="Gagal memuat data dashboard"
       />
     )
   }
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Page Header */}
+      {/* Header Halaman */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
           <p className="text-muted-foreground">
-            Overview of your store's performance and recent activities
+            Ringkasan performa toko dan aktivitas terbaru
           </p>
         </div>
         <div className="flex items-center space-x-2">
           <Button variant="outline" size="sm">
             <TrendingUp className="mr-2 h-4 w-4" />
-            View Analytics
+            Lihat Analitik
           </Button>
         </div>
       </div>
 
-      {/* Stats Cards */}
+      {/* Kartu Statistik */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Total Revenue
+              Total Pendapatan
             </CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrency(stats.totalRevenue)}</div>
             <p className="text-xs text-muted-foreground">
-              Total from all orders
+              Total dari semua pesanan
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Users</CardTitle>
+            <CardTitle className="text-sm font-medium">Pengguna</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalUsers}</div>
             <p className="text-xs text-muted-foreground">
-              Registered users
+              Pengguna terdaftar
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Products</CardTitle>
+            <CardTitle className="text-sm font-medium">Produk</CardTitle>
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalProducts}</div>
             <p className="text-xs text-muted-foreground">
-              Available products
+              Produk tersedia
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Orders</CardTitle>
+            <CardTitle className="text-sm font-medium">Pesanan</CardTitle>
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalOrders}</div>
             <p className="text-xs text-muted-foreground">
-              Total orders received
+              Total pesanan masuk
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Stock Overview */}
-      <div className="grid gap-4 md:grid-cols-2">
+      {/* Ringkasan Stok */}
+      <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Stock</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Stok</CardTitle>
             <Package2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalStock}</div>
             <p className="text-xs text-muted-foreground">
-              Total inventory items
+              Total item inventaris
             </p>
           </CardContent>
         </Card>
-
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Low Stock Alerts</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Stok Tersedia</CardTitle>
+            <Package className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">{stats.lowStockItems}</div>
+            <div className="text-2xl font-bold text-green-600">{stats.inStockProductCount}</div>
             <p className="text-xs text-muted-foreground">
-              Items needing attention
+              Jumlah produk yang punya minimal 1 varian stok &gt; 0
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Stok Kosong</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-red-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-600">{stats.outOfStockProductCount}</div>
+            <p className="text-xs text-muted-foreground">
+              Jumlah produk yang semua variannya stoknya 0
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Main Content Grid */}
+      {/* Grid Konten Utama */}
       <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
-        {/* Recent Orders */}
+        {/* Pesanan Terbaru */}
         <Card className="xl:col-span-2">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle>Recent Orders</CardTitle>
+              <CardTitle>Pesanan Terbaru</CardTitle>
               <CardDescription>
-                Latest transactions from your store
+                Transaksi terbaru dari toko Anda
               </CardDescription>
             </div>
             <Button asChild size="sm" variant="outline">
               <Link href="/admin/orders">
-                View All
+                Lihat Semua
                 <ArrowUpRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
@@ -226,11 +237,11 @@ export default function AdminDashboardPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Amount</TableHead>
+                  <TableHead>Pelanggan</TableHead>
+                  <TableHead>Jumlah</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Payment</TableHead>
-                  <TableHead>Date</TableHead>
+                  <TableHead>Pembayaran</TableHead>
+                  <TableHead>Tanggal</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -239,7 +250,7 @@ export default function AdminDashboardPage() {
                     <TableCell colSpan={5} className="text-center py-8">
                       <div className="flex flex-col items-center space-y-2">
                         <ShoppingCart className="h-8 w-8 text-muted-foreground" />
-                        <p className="text-muted-foreground">No orders yet</p>
+                        <p className="text-muted-foreground">Belum ada pesanan</p>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -274,59 +285,59 @@ export default function AdminDashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Quick Actions */}
+        {/* Aksi Cepat */}
         <Card>
           <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
+            <CardTitle>Aksi Cepat</CardTitle>
             <CardDescription>
-              Common admin tasks
+              Tugas admin yang sering dilakukan
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <Button asChild className="w-full justify-start">
               <Link href="/admin/products/new">
                 <Package className="mr-2 h-4 w-4" />
-                Add Product
+                Tambah Produk
               </Link>
             </Button>
             <Button asChild variant="outline" className="w-full justify-start">
               <Link href="/admin/products">
                 <Package2 className="mr-2 h-4 w-4" />
-                Manage Products
+                Kelola Produk
               </Link>
             </Button>
             <Button asChild variant="outline" className="w-full justify-start">
               <Link href="/admin/stock">
                 <Package2 className="mr-2 h-4 w-4" />
-                Manage Stock
+                Kelola Stok
               </Link>
             </Button>
             <Button asChild variant="outline" className="w-full justify-start">
               <Link href="/admin/orders">
                 <CreditCard className="mr-2 h-4 w-4" />
-                View Orders
+                Lihat Pesanan
               </Link>
             </Button>
             <Button asChild variant="outline" className="w-full justify-start">
               <Link href="/admin/users">
                 <Users className="mr-2 h-4 w-4" />
-                Manage Users
+                Kelola Pengguna
               </Link>
             </Button>
           </CardContent>
         </Card>
       </div>
 
-      {/* Stock Alerts */}
+      {/* Stok Habis */}
       {stats.stockAlerts.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-orange-600" />
-              Stock Alerts
+              Stok Habis
             </CardTitle>
             <CardDescription>
-              Items that need attention
+              Daftar varian produk yang stoknya habis
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -346,13 +357,13 @@ export default function AdminDashboardPage() {
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-bold text-orange-600">
-                      {alert.quantity} left
+                      {alert.quantity} tersisa
                     </p>
                     <Badge
-                      variant={alert.alert_level === 'critical' ? 'destructive' : 'secondary'}
+                      variant="destructive"
                       className="text-xs"
                     >
-                      {alert.alert_level === 'critical' ? 'Critical' : 'Low Stock'}
+                      Stok Habis
                     </Badge>
                   </div>
                 </div>
@@ -362,7 +373,7 @@ export default function AdminDashboardPage() {
               <div className="mt-4 text-center">
                 <Button asChild variant="outline" size="sm">
                   <Link href="/admin/stock">
-                    View All Alerts ({stats.stockAlerts.length})
+                    Lihat Semua Stok Habis ({stats.stockAlerts.length})
                   </Link>
                 </Button>
               </div>
