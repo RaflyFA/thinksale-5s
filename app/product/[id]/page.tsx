@@ -1,67 +1,76 @@
 // pages/product/[id].tsx
-"use client"
+"use client";
 
-import { useState } from "react"
-import { ArrowLeft, ChevronLeft, ChevronRight, MessageCircle } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import Link from "next/link"
-import Image from "next/image"
-import PageLayout from "@/components/layout/page-layout"
-import ProductCard from "@/components/ui/product-card"
-import SectionHeader from "@/components/ui/section-header"
-import ProductConfiguration from "@/components/product/product-configuration"
-import { products } from "@/lib/data"
-import { useParams, useRouter } from "next/navigation"
-import { useAuth } from "@/lib/auth/auth-context"
-import { cn } from "@/lib/utils/cn"
+import { useState } from "react";
+import {
+  ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
+  MessageCircle,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import Image from "next/image";
+import PageLayout from "@/components/layout/page-layout";
+import ProductCard from "@/components/ui/product-card";
+import SectionHeader from "@/components/ui/section-header";
+import ProductConfiguration from "@/components/product/product-configuration";
+import { products } from "@/lib/data";
+import { useParams, useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth/auth-context";
+import { cn } from "@/lib/utils/cn";
 
 export default function ProductDetailPage() {
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0)
-  const [showConfiguration, setShowConfiguration] = useState(false)
-  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false)
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [showConfiguration, setShowConfiguration] = useState(false);
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
-  const { id } = useParams()
-  const { user } = useAuth()
-  const router = useRouter()
+  const { id } = useParams();
+  const { user } = useAuth();
+  const router = useRouter();
 
-  const productId = Array.isArray(id) ? id[0] : id
-  const product = products.find((p) => p.id === productId) || products[0]
+  const productId = Array.isArray(id) ? id[0] : id;
+  const product = products.find((p) => p.id === productId) || products[0];
 
-  const recommendedProducts = products.filter((p) => p.id !== productId).slice(0, 4)
+  const recommendedProducts = products
+    .filter((p) => p.id !== productId)
+    .slice(0, 4);
 
   const nextImage = () => {
-    setSelectedImageIndex((prev) => (prev + 1) % product.images.length)
-  }
+    setSelectedImageIndex((prev) => (prev + 1) % product.images.length);
+  };
 
   const prevImage = () => {
-    setSelectedImageIndex((prev) => (prev - 1 + product.images.length) % product.images.length)
-  }
+    setSelectedImageIndex(
+      (prev) => (prev - 1 + product.images.length) % product.images.length
+    );
+  };
 
   const handleOrderNow = () => {
     // Cek status autentikasi pengguna
     if (!user) {
       // Jika belum login, redirect ke halaman login dengan parameter redirect
-      const currentUrl = `/product/${productId}`
-      router.push(`/login?redirect=${encodeURIComponent(currentUrl)}`)
-      return
+      const currentUrl = `/product/${productId}`;
+      router.push(`/login?redirect=${encodeURIComponent(currentUrl)}`);
+      return;
     }
 
     // Jika sudah login, tampilkan modal konfigurasi produk
-    setShowConfiguration(true)
-  }
+    setShowConfiguration(true);
+  };
 
   const handleAskAdmin = () => {
     const message = encodeURIComponent(
-      `Halo, saya ingin bertanya tentang produk ${product.name}\n\n(isi pesan kamu disini)`,
-    )
-    window.open(`https://wa.me/6281224086200?text=${message}`, "_blank")
-  }
+      `Halo, saya ingin bertanya tentang produk ${product.name}\n\n(isi pesan kamu disini)`
+    );
+    window.open(`https://wa.me/6281224086200?text=${message}`, "_blank");
+  };
 
-  const descriptionLimit = 150
+  const descriptionLimit = 150;
   const shortDescription =
     product.description.length > descriptionLimit
       ? product.description.substring(0, descriptionLimit) + "..."
-      : product.description
+      : product.description;
 
   return (
     <PageLayout>
@@ -74,7 +83,9 @@ export default function ProductDetailPage() {
                 <ArrowLeft className="h-5 w-5" />
               </Button>
             </Link>
-            <h1 className="text-lg font-semibold text-gray-900">Detail Produk</h1>
+            <h1 className="text-lg font-semibold text-gray-900">
+              Detail Produk
+            </h1>
           </div>
         </div>
       </div>
@@ -123,7 +134,7 @@ export default function ProductDetailPage() {
                     "w-20 h-20 rounded-lg overflow-hidden border-2 transition-all duration-200",
                     selectedImageIndex === index
                       ? "border-blue-500 ring-2 ring-blue-200"
-                      : "border-gray-200 hover:border-gray-300",
+                      : "border-gray-200 hover:border-gray-300"
                   )}
                 >
                   <Image
@@ -141,19 +152,27 @@ export default function ProductDetailPage() {
           {/* Product Information */}
           <div className="space-y-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-3">{product.name}</h1>
-              <p className="text-2xl font-bold text-blue-600 mb-4">Rp {product.priceRange}</p>
+              <h1 className="text-3xl font-bold text-gray-900 mb-3">
+                {product.name}
+              </h1>
+              <p className="text-2xl font-bold text-blue-600 mb-4">
+                Rp {product.priceRange}
+              </p>
               <p className="text-lg text-gray-600 mb-4">{product.processor}</p>
             </div>
 
             {/* Description */}
             <div className="space-y-3">
-              <h3 className="text-lg font-semibold text-gray-900">Deskripsi Produk</h3>
+              <h3 className="text-lg font-semibold text-gray-900">
+                Deskripsi Produk
+              </h3>
               <div className="text-gray-600 leading-relaxed">
                 {isDescriptionExpanded ? product.description : shortDescription}
                 {product.description.length > descriptionLimit && (
                   <button
-                    onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+                    onClick={() =>
+                      setIsDescriptionExpanded(!isDescriptionExpanded)
+                    }
                     className="text-blue-600 hover:text-blue-700 font-medium ml-2 transition-colors"
                   >
                     {isDescriptionExpanded ? "Tutup" : "Baca Selengkapnya"}
@@ -164,20 +183,28 @@ export default function ProductDetailPage() {
 
             {/* Specifications */}
             <div className="space-y-3">
-              <h3 className="text-lg font-semibold text-gray-900">Spesifikasi</h3>
+              <h3 className="text-lg font-semibold text-gray-900">
+                Spesifikasi
+              </h3>
               <div className="bg-gray-50 rounded-xl p-4 space-y-2">
                 {product.specs.map((spec, index) => {
-                  const trimmedSpec = spec.trim()
-                  const isSubItem = trimmedSpec.match(/^(\d|-|\s{2,})/) || trimmedSpec.startsWith("-")
+                  const trimmedSpec = spec.trim();
+                  const isSubItem =
+                    /^[-•]/.test(trimmedSpec) || /^\d/.test(trimmedSpec);
 
                   return (
                     <p
                       key={index}
-                      className={cn("text-sm text-gray-700", isSubItem ? "pl-4 text-gray-600" : "font-medium")}
+                      className={cn(
+                        "text-sm text-gray-700",
+                        isSubItem ? "pl-4 text-gray-600" : "font-medium"
+                      )}
                     >
-                      {isSubItem ? `• ${trimmedSpec.replace(/^(\s*[-\d])?\s*/, "")}` : trimmedSpec}
+                      {isSubItem
+                        ? `• ${trimmedSpec.replace(/^[-•]?\s*/, "")}`
+                        : trimmedSpec}
                     </p>
-                  )
+                  );
                 })}
               </div>
             </div>
@@ -222,7 +249,11 @@ export default function ProductDetailPage() {
       </main>
 
       {/* Product Configuration Modal */}
-      <ProductConfiguration product={product} isOpen={showConfiguration} onClose={() => setShowConfiguration(false)} />
+      <ProductConfiguration
+        product={product}
+        isOpen={showConfiguration}
+        onClose={() => setShowConfiguration(false)}
+      />
     </PageLayout>
-  )
+  );
 }

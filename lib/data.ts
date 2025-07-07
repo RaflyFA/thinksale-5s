@@ -193,6 +193,7 @@ export const products: Product[] = [
     ssdOptions: ["128 GB", "256 GB"],
     priceRange: "4.1 JT & 4.2 JT",
     specs: ["RAM : 8GB >", "SSD :", "- 128GB 4.1jt", "- 256GB 4.2jt"],
+    
     variants: [
       { ram: "8 GB", ssd: "128 GB", price: 4400000 },
       { ram: "8 GB", ssd: "256 GB", price: 4500000 },
