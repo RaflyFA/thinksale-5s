@@ -10,7 +10,6 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { X } from "lucide-react"
 import { useCart } from "@/lib/cart/cart-context"
-import { useAuth } from "@/lib/auth/auth-context"
 import { cn } from "@/lib/utils/cn"
 
 interface CheckoutModalProps {
@@ -29,7 +28,6 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
   const overlayRef = useRef<HTMLDivElement>(null)
 
   const { items, getTotalPrice, getTotalItems, clearCart } = useCart()
-  const { user } = useAuth()
   const router = useRouter()
 
   const formatPrice = (price: number) => {

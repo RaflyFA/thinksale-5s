@@ -28,6 +28,7 @@ export default function Footer({ className }: FooterProps) {
   const quickLinks = [
     { href: "/", label: "Beranda" },
     { href: "/produk", label: "Semua Produk" },
+    { href: "/team", label: "Tim Developer" },
   ];
 
   const customerServiceLinks = [
@@ -45,9 +46,7 @@ export default function Footer({ className }: FooterProps) {
           {/* Company Information */}
           <div className="lg:col-span-1">
             <div className="flex items-center space-x-2 mb-6">
-              <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-xl">T</span>
-              </div>
+              <img src="/logo.png" alt="ThinkSale Logo" className="w-12" />
               <span className="text-2xl font-bold">ThinkSale</span>
             </div>
 

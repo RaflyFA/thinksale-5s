@@ -1,7 +1,7 @@
 // pages/product/[id].tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   ArrowLeft,
   ChevronLeft,
@@ -15,22 +15,43 @@ import PageLayout from "@/components/layout/page-layout";
 import ProductCard from "@/components/ui/product-card";
 import SectionHeader from "@/components/ui/section-header";
 import ProductConfiguration from "@/components/product/product-configuration";
+import ProductSpecifications from "@/components/product/product-specifications";
 import { products } from "@/lib/data";
-import { useParams, useRouter } from "next/navigation";
-import { useAuth } from "@/lib/auth/auth-context";
+import { useParams } from "next/navigation";
 import { cn } from "@/lib/utils/cn";
 
 export default function ProductDetailPage() {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [showConfiguration, setShowConfiguration] = useState(false);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+  const [selectedRam, setSelectedRam] = useState<string>("");
+  const [selectedSsd, setSelectedSsd] = useState<string>("");
+  const [quantity, setQuantity] = useState<number>(1);
 
   const { id } = useParams();
-  const { user } = useAuth();
-  const router = useRouter();
 
   const productId = Array.isArray(id) ? id[0] : id;
   const product = products.find((p) => p.id === productId) || products[0];
+
+  // Initialize RAM and SSD selections
+  const ramOptions = product.variants ? [...new Set(product.variants.map((v) => v.ram))].sort() : [];
+  const ssdOptions = product.variants ? [...new Set(product.variants.map((v) => v.ssd))].sort() : [];
+
+  // Initialize default selections on mount
+  useEffect(() => {
+    if (product.variants && product.variants.length > 0) {
+      const firstVariant = product.variants[0];
+      setSelectedRam(firstVariant.ram);
+      setSelectedSsd(firstVariant.ssd);
+      setQuantity(1);
+    }
+  }, [product.variants]);
+
+  // Find selected variant and price
+  const selectedVariant = product.variants?.find(
+    (variant) => variant.ram === selectedRam && variant.ssd === selectedSsd,
+  );
+  const currentPrice = selectedVariant ? selectedVariant.price : 0;
 
   const recommendedProducts = products
     .filter((p) => p.id !== productId)
@@ -47,15 +68,6 @@ export default function ProductDetailPage() {
   };
 
   const handleOrderNow = () => {
-    // Cek status autentikasi pengguna
-    if (!user) {
-      // Jika belum login, redirect ke halaman login dengan parameter redirect
-      const currentUrl = `/product/${productId}`;
-      router.push(`/login?redirect=${encodeURIComponent(currentUrl)}`);
-      return;
-    }
-
-    // Jika sudah login, tampilkan modal konfigurasi produk
     setShowConfiguration(true);
   };
 
@@ -183,30 +195,16 @@ export default function ProductDetailPage() {
 
             {/* Specifications */}
             <div className="space-y-3">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Spesifikasi
-              </h3>
-              <div className="bg-gray-50 rounded-xl p-4 space-y-2">
-                {product.specs.map((spec, index) => {
-                  const trimmedSpec = spec.trim();
-                  const isSubItem =
-                    /^[-•]/.test(trimmedSpec) || /^\d/.test(trimmedSpec);
-
-                  return (
-                    <p
-                      key={index}
-                      className={cn(
-                        "text-sm text-gray-700",
-                        isSubItem ? "pl-4 text-gray-600" : "font-medium"
-                      )}
-                    >
-                      {isSubItem
-                        ? `• ${trimmedSpec.replace(/^[-•]?\s*/, "")}`
-                        : trimmedSpec}
-                    </p>
-                  );
-                })}
-              </div>
+              <ProductSpecifications
+                product={product}
+                selectedRam={selectedRam}
+                selectedSsd={selectedSsd}
+                onRamChange={setSelectedRam}
+                onSsdChange={setSelectedSsd}
+                quantity={quantity}
+                onQuantityChange={setQuantity}
+                currentPrice={currentPrice}
+              />
             </div>
 
             {/* Action Buttons */}
@@ -253,6 +251,12 @@ export default function ProductDetailPage() {
         product={product}
         isOpen={showConfiguration}
         onClose={() => setShowConfiguration(false)}
+        selectedRam={selectedRam}
+        selectedSsd={selectedSsd}
+        onRamChange={setSelectedRam}
+        onSsdChange={setSelectedSsd}
+        quantity={quantity}
+        onQuantityChange={setQuantity}
       />
     </PageLayout>
   );

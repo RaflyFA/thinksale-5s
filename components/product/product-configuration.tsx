@@ -1,12 +1,10 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { useRouter } from "next/navigation"
 import { X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import Image from "next/image"
-import { useAuth } from "@/lib/auth/auth-context"
 import { useCart } from "@/lib/cart/cart-context"
 import CheckoutModal from "@/components/checkout/checkout-modal"
 import { cn } from "@/lib/utils/cn"
@@ -16,29 +14,75 @@ interface ProductConfigurationProps {
   product: Product
   isOpen: boolean
   onClose: () => void
+  selectedRam?: string
+  selectedSsd?: string
+  onRamChange?: (ram: string) => void
+  onSsdChange?: (ssd: string) => void
+  quantity?: number
+  onQuantityChange?: (quantity: number) => void
 }
 
-export default function ProductConfiguration({ product, isOpen, onClose }: ProductConfigurationProps) {
+export default function ProductConfiguration({ 
+  product, 
+  isOpen, 
+  onClose,
+  selectedRam: externalRam,
+  selectedSsd: externalSsd,
+  onRamChange: externalOnRamChange,
+  onSsdChange: externalOnSsdChange,
+  quantity: externalQuantity,
+  onQuantityChange: externalOnQuantityChange,
+}: ProductConfigurationProps) {
   const [selectedRam, setSelectedRam] = useState<string>("")
   const [selectedSsd, setSelectedSsd] = useState<string>("")
+  const [quantity, setQuantity] = useState<number>(1)
   const [showCheckout, setShowCheckout] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
 
   const modalRef = useRef<HTMLDivElement>(null)
   const overlayRef = useRef<HTMLDivElement>(null)
 
-  const { user } = useAuth()
   const { addItem } = useCart()
-  const router = useRouter()
 
-  // Initialize default selections when modal opens
+  // Use external state if provided, otherwise use internal state
+  const ram = externalRam !== undefined ? externalRam : selectedRam
+  const ssd = externalSsd !== undefined ? externalSsd : selectedSsd
+  const qty = externalQuantity !== undefined ? externalQuantity : quantity
+
+  const handleRamChange = (newRam: string) => {
+    if (externalOnRamChange) {
+      externalOnRamChange(newRam)
+    } else {
+      setSelectedRam(newRam)
+    }
+  }
+
+  const handleSsdChange = (newSsd: string) => {
+    if (externalOnSsdChange) {
+      externalOnSsdChange(newSsd)
+    } else {
+      setSelectedSsd(newSsd)
+    }
+  }
+
+  const handleQuantityChange = (newQty: number) => {
+    const safeQty = Math.max(1, newQty)
+    if (externalOnQuantityChange) {
+      externalOnQuantityChange(safeQty)
+    } else {
+      setQuantity(safeQty)
+    }
+  }
+
+  // Initialize default selections when modal opens (only if not using external state)
   useEffect(() => {
-    if (isOpen && product.variants && product.variants.length > 0) {
+    if (isOpen && product.variants && product.variants.length > 0 && !externalRam) {
       const firstVariant = product.variants[0]
       setSelectedRam(firstVariant.ram)
       setSelectedSsd(firstVariant.ssd)
+      setQuantity(1)
     }
-  }, [isOpen, product.variants])
+  }, [isOpen, product.variants, externalRam])
 
   // Control body overflow when modal is open
   useEffect(() => {
@@ -89,7 +133,7 @@ export default function ProductConfiguration({ product, isOpen, onClose }: Produ
 
   // Find selected variant and price
   const selectedVariant = product.variants?.find(
-    (variant) => variant.ram === selectedRam && variant.ssd === selectedSsd,
+    (variant) => variant.ram === ram && variant.ssd === ssd,
   )
 
   const currentPrice = selectedVariant ? selectedVariant.price : 0
@@ -103,13 +147,6 @@ export default function ProductConfiguration({ product, isOpen, onClose }: Produ
   }
 
   const handleCheckout = () => {
-    if (!user) {
-      const currentUrl = window.location.pathname + window.location.search
-      router.push(`/login?redirect=${encodeURIComponent(currentUrl)}`)
-      onClose()
-      return
-    }
-
     if (!selectedVariant) {
       alert("Silakan pilih konfigurasi produk")
       return
@@ -120,9 +157,10 @@ export default function ProductConfiguration({ product, isOpen, onClose }: Produ
     // Tambahkan item ke keranjang
     addItem({
       product,
-      ram: selectedRam,
-      ssd: selectedSsd,
+      ram,
+      ssd,
       price: currentPrice,
+      quantity: qty,
     })
 
     // Setelah menambah ke keranjang, langsung buka checkout modal
@@ -184,18 +222,18 @@ export default function ProductConfiguration({ product, isOpen, onClose }: Produ
               <div className="space-y-3 ">
                 <label className="block text-sm font-semibold text-gray-900">RAM</label>
                 <div className="flex flex-wrap gap-2">
-                  {ramOptions.map((ram) => (
+                  {ramOptions.map((ramOption) => (
                     <button
-                      key={ram}
-                      onClick={() => setSelectedRam(ram)}
+                      key={ramOption}
+                      onClick={() => handleRamChange(ramOption)}
                       className={cn(
                         "px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
-                        selectedRam === ram
+                        ram === ramOption
                           ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white"
                           : "bg-gray-100 text-gray-700 hover:bg-gray-200",
                       )}
                     >
-                      {ram}
+                      {ramOption}
                     </button>
                   ))}
                 </div>
@@ -205,28 +243,52 @@ export default function ProductConfiguration({ product, isOpen, onClose }: Produ
               <div className="space-y-3 ">
                 <label className="block text-sm font-semibold text-gray-900">SSD</label>
                 <div className="flex flex-wrap gap-2">
-                  {ssdOptions.map((ssd) => (
+                  {ssdOptions.map((ssdOption) => (
                     <button
-                      key={ssd}
-                      onClick={() => setSelectedSsd(ssd)}
+                      key={ssdOption}
+                      onClick={() => handleSsdChange(ssdOption)}
                       className={cn(
                         "px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 mb-16",
-                        selectedSsd === ssd
+                        ssd === ssdOption
                           ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white"
                           : "bg-gray-100 text-gray-700 hover:bg-gray-200",
                       )}
                     >
-                      {ssd}
+                      {ssdOption}
                     </button>
                   ))}
                 </div>
               </div>
 
+              {/* Quantity Selection */}
+              <div className="space-y-3 -mt-12">
+                <label className="block text-sm font-semibold text-gray-900">Jumlah</label>
+                <div className="inline-flex items-center gap-3 rounded-lg border border-gray-200 px-3 py-2 bg-white shadow-sm">
+                  <button
+                    type="button"
+                    onClick={() => handleQuantityChange(qty - 1)}
+                    className="h-9 w-9 rounded-md border border-gray-200 text-gray-700 hover:bg-gray-50 active:scale-95 transition"
+                    aria-label="Kurangi jumlah"
+                  >
+                    -
+                  </button>
+                  <span className="min-w-[2.5rem] text-center text-base font-semibold text-gray-900">{qty}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleQuantityChange(qty + 1)}
+                    className="h-9 w-9 rounded-md border border-gray-200 text-gray-700 hover:bg-gray-50 active:scale-95 transition"
+                    aria-label="Tambah jumlah"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
               {/* Footer with Total and Checkout Button */}
-              <div className="flex items-center justify-between pt-4 border-t">
+              <div className="flex items-center justify-between pt-6 border-t">
                 <div>
                   <p className="text-xs text-gray-600">Total Harga</p>
-                  <p className="text-lg font-bold text-gray-900">Rp {formatPrice(currentPrice)}</p>
+                  <p className="text-lg font-bold text-gray-900">Rp {formatPrice(currentPrice * qty)}</p>
                 </div>
                 <Button
                   onClick={handleCheckout}

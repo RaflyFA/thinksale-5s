@@ -102,10 +102,10 @@ export default function HomePage() {
           <>
             {/* Hero Banner */}
             <section className="py-8">
-              <div className="bg-gradient-to-r from-blue-600 to-purple-700 rounded-2xl overflow-hidden">
-                <div className="flex flex-col lg:flex-row items-center">
-                  <div className="flex-1 p-8 lg:p-12 text-white">
-                    <h1 className="text-3xl lg:text-5xl lg:leading-[1.2] font-bold mb-8">{featuredProduct.title}</h1>
+              <div className="text-black rounded-2xl overflow-hidden">
+                <div className="flex flex-col lg:flex-row items-center lg">
+                  <div className="flex-1 py-16 ">
+                    <h1 className="text-3xl lg:text-5xl lg:leading-[1.2] lg:mr-6 font-bold mb-8">{featuredProduct.title}</h1>
                     <p className="text-lg lg:text-xl mb-6 opacity-90 leading-relaxed">{featuredProduct.description}</p>
                     <div className="flex flex-col sm:flex-row gap-4">
                       <Button
@@ -117,13 +117,13 @@ export default function HomePage() {
                       </Button>
                     </div>
                   </div>
-                  <div className="flex-1 p-8">
+                  <div className="flex-1 lg:ml-16 lg:mr-5 shadow-2xl rounded-3xl">
                     <Image
                       src={featuredProduct.image || "/placeholder.svg"}
                       alt={featuredProduct.title}
                       width={600}
                       height={400}
-                      className="w-full h-auto object-contain"
+                      className="w-full h-auto object-contain rounded-3xl"
                       priority
                     />
                   </div>

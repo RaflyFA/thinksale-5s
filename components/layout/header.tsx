@@ -3,11 +3,10 @@
 
 import { useState, useRef, useEffect } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { Search, ShoppingCart, User, X } from "lucide-react"
+import { useRouter, usePathname } from "next/navigation"
+import { Search, ShoppingCart, User, X, Code2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { useAuth } from "@/lib/auth/auth-context"
 import { useCart } from "@/lib/cart/cart-context"
 import { cn } from "@/lib/utils/cn"
 
@@ -23,25 +22,17 @@ export default function Header({ searchTerm = "", onSearchChange, className, car
   const mobileSearchInputRef = useRef<HTMLInputElement>(null)
   const mobileSearchContainerRef = useRef<HTMLDivElement>(null)
 
-  const { user } = useAuth()
   const { getTotalItems } = useCart()
   const router = useRouter()
+  const pathname = usePathname()
+  const isTeamPage = pathname === "/team"
 
   const handleCartClick = () => {
-    if (!user) {
-      router.push("/login?redirect=/keranjang")
-    } else {
-      router.push("/keranjang")
-    }
+    router.push("/keranjang")
   }
 
   const handleProfileClick = () => {
-    if (!user) {
-      // Jika belum login, arahkan langsung ke halaman login
-      router.push("/login")
-    } else {
-      router.push("/profil")
-    }
+    router.push("/profil")
   }
 
   const toggleMobileSearch = () => {
@@ -110,14 +101,13 @@ export default function Header({ searchTerm = "", onSearchChange, className, car
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2 flex-shrink-0">
-            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-xl">T</span>
-            </div>
+            <img src="/logo.png" alt="ThinkSale Logo" className="w-12" />
             <span className="text-2xl font-bold text-gray-800 hidden sm:block">ThinkSale</span>
           </Link>
 
-          {/* Search Bar - Desktop */}
-          <div className="hidden md:flex flex-1 max-w-2xl mx-8">
+          {/* Search Bar - Desktop (hidden on team page) */}
+          {!isTeamPage && (
+          <div className="ml-16 hidden md:flex flex-1 max-w-3xl mx-8 items-end">
             <div className="relative w-full">
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
               <Input
@@ -128,10 +118,25 @@ export default function Header({ searchTerm = "", onSearchChange, className, car
               />
             </div>
           </div>
+          )}
 
           {/* Action Buttons */}
           <div className="flex items-center space-x-0 lg:space-x-2 relative">
+            {/* Team Link Button (hidden on team page) */}
+            {!isTeamPage && (
+              <Link href="/team">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="hover:bg-blue-50 hover:text-blue-600 transition-colors p-3 border-2 hover:border-blue-200 rounded-2xl"
+                  title="Lihat Tim Developer"
+                >
+                  <Code2 className="h-6 w-6" />
+                </Button>
+              </Link>
+            )}
             {/* Mobile Search Container */}
+            {!isTeamPage && (
             <div ref={mobileSearchContainerRef} className="md:hidden flex items-center relative">
               {/* Mobile Search Input */}
               <div
@@ -160,21 +165,7 @@ export default function Header({ searchTerm = "", onSearchChange, className, car
                 {isMobileSearchOpen ? <X className="h-5 w-5" /> : <Search className="h-5 w-5" />}
               </Button>
             </div>
-
-            {/* User Button */}
-            <Button variant="ghost" size="icon" onClick={handleProfileClick}>
-              <User className="h-5 w-5" />
-            </Button>
-
-            {/* Cart Button */}
-            <Button variant="ghost" size="icon" className="relative" onClick={handleCartClick}>
-              <ShoppingCart className="h-5 w-5" />
-              {currentCartItemCount > 0 && (
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  {currentCartItemCount > 99 ? "99+" : currentCartItemCount}
-                </span>
-              )}
-            </Button>
+            )}
           </div>
         </div>
       </nav>

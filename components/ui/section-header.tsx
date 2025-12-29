@@ -27,6 +27,7 @@ interface SectionHeaderProps {
   className?: string
   titleClassName?: string
   align?: "left" | "center" | "right"
+  
 }
 
 export default function SectionHeader({
@@ -41,7 +42,7 @@ export default function SectionHeader({
 }: SectionHeaderProps) {
   const alignmentClasses = {
     left: "text-left",
-    center: "text-center",
+    center: "text-center mx-auto",
     right: "text-right",
   }
 
@@ -53,7 +54,7 @@ export default function SectionHeader({
 
           <h2 className={cn("text-2xl lg:text-3xl font-bold text-gray-900 mb-2", titleClassName)}>{title}</h2>
 
-          {description && <p className="text-gray-600 leading-relaxed text-sm lg:text-xl lg:max-w-2xl">{description}</p>}
+          {description && <p className={cn("text-gray-600 leading-relaxed text-sm lg:text-xl lg:max-w-2xl", align === "center" ? "mx-auto" : "")}>{description}</p>}
         </div>
 
         {action && (

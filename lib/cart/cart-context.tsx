@@ -13,7 +13,7 @@ interface CartItem {
 
 interface CartContextType {
   items: CartItem[]
-  addItem: (item: Omit<CartItem, "quantity">) => void
+  addItem: (item: Omit<CartItem, "quantity"> & { quantity?: number }) => void
   removeItem: (productId: string, ram: string, ssd: string) => void
   updateQuantity: (productId: string, ram: string, ssd: string, quantity: number) => void
   clearCart: () => void
@@ -39,7 +39,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("cart", JSON.stringify(items))
   }, [items])
 
-  const addItem = (newItem: Omit<CartItem, "quantity">) => {
+  const addItem = (newItem: Omit<CartItem, "quantity"> & { quantity?: number }) => {
     setItems((prevItems) => {
       const existingItemIndex = prevItems.findIndex(
         (item) => item.product.id === newItem.product.id && item.ram === newItem.ram && item.ssd === newItem.ssd,
@@ -48,11 +48,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
       if (existingItemIndex > -1) {
         // Item already exists, increase quantity
         const updatedItems = [...prevItems]
-        updatedItems[existingItemIndex].quantity += 1
+        updatedItems[existingItemIndex].quantity += newItem.quantity ?? 1
         return updatedItems
       } else {
         // New item, add to cart
-        return [...prevItems, { ...newItem, quantity: 1 }]
+        return [...prevItems, { ...newItem, quantity: newItem.quantity ?? 1 }]
       }
     })
   }

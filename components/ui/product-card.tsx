@@ -15,15 +15,13 @@ import type React from "react"
 
 import Link from "next/link"
 import Image from "next/image"
-import { Star, ShoppingCart } from "lucide-react"
+import { Star } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { cn } from "@/lib/utils/cn"
 import type { Product } from "@/lib/types"
-import { useCart } from "@/lib/cart/cart-context"
 
 interface ProductCardProps {
   product: Product
-  showAddToCart?: boolean
   showWishlist?: boolean
   showRating?: boolean
   showDiscount?: boolean
@@ -34,7 +32,6 @@ interface ProductCardProps {
 
 export default function ProductCard({
   product,
-  showAddToCart = true,
   showWishlist = true,
   showRating = true,
   showDiscount = true,
@@ -42,8 +39,6 @@ export default function ProductCard({
   imageAspectRatio = "square",
   id,
 }: ProductCardProps) {
-  const { addItem } = useCart()
-
   // Ambil harga tertinggi dari semua varian untuk perhitungan harga coret
   const highestPrice =
     product.variants && product.variants.length > 0
@@ -78,22 +73,6 @@ export default function ProductCard({
   // Perhitungan nilai hemat
   const basePrice = product.variants?.[0]?.price || Number.parseInt(product.priceRange.replace(/\./g, ""))
   const savingsAmount = originalPrice - basePrice
-
-  const handleAddToCart = (e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-
-    // Ambil varian pertama sebagai default
-    const defaultVariant = product.variants?.[0]
-    if (defaultVariant) {
-      addItem({
-        product,
-        ram: product.ramOptions[0],
-        ssd: product.ssdOptions[0],
-        price: defaultVariant.price,
-      })
-    }
-  }
 
   return (
     <Card
@@ -135,15 +114,6 @@ export default function ProductCard({
                 {product.name}
               </h3>
             </Link>
-            {showAddToCart && (
-              <button
-                onClick={handleAddToCart}
-                className="ml-2 p-1 hover:bg-gray-100 rounded transition-colors flex-shrink-0"
-                aria-label="Tambah ke keranjang"
-              >
-                <ShoppingCart className="h-4 w-4" />
-              </button>
-            )}
           </div>
 
           <p className="text-xs text-gray-600 mb-2 line-clamp-1">{product.processor}</p>

@@ -272,5 +272,5 @@ export const featuredProduct = {
   title: "Tugas kuliah berat? Bikin desain? Coding? Aman pakai ini.",
   description:
     "ThinkPad kuat buat Multitasking, Zoom, dan Desain. Pilih spesifikasi sesuai yang kamu butuh. Banyak pilihan tapi jangan sampai salah pilih!",
-  image: "/banner1.jpg", // Dihapus ?height=200&width=300
+  image: "/banner1.jpg",
 };
