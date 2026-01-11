@@ -29,7 +29,6 @@ export default function ProductSpecifications({
     return new Intl.NumberFormat("id-ID").format(price)
   }
 
-  // Get unique RAM and SSD options
   const ramOptions = product.variants ? [...new Set(product.variants.map((v) => v.ram))].sort() : []
   const ssdOptions = product.variants ? [...new Set(product.variants.map((v) => v.ssd))].sort() : []
 
@@ -42,7 +41,6 @@ export default function ProductSpecifications({
         </p>
       </div>
 
-      {/* RAM Selection */}
       <div className="space-y-3">
         <label className="block text-sm font-semibold text-gray-900">RAM</label>
         <div className="flex flex-wrap gap-2">
@@ -63,7 +61,6 @@ export default function ProductSpecifications({
         </div>
       </div>
 
-      {/* SSD Selection */}
       <div className="space-y-3">
         <label className="block text-sm font-semibold text-gray-900">SSD</label>
         <div className="flex flex-wrap gap-2">
@@ -84,7 +81,6 @@ export default function ProductSpecifications({
         </div>
       </div>
 
-      {/* Quantity */}
       <div className="space-y-3">
         <label className="block text-sm font-semibold text-gray-900">Jumlah</label>
         <div className="inline-flex items-center gap-3 rounded-lg border border-gray-200 px-3 py-2 bg-white shadow-sm">
@@ -108,7 +104,6 @@ export default function ProductSpecifications({
         </div>
       </div>
 
-      {/* Total Price */}
       <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-100">
         <div className="flex items-center justify-between">
           <div>

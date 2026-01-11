@@ -1,13 +1,3 @@
-/**
- * Scroll to Top Button Component
- *
- * Tombol untuk scroll ke atas halaman
- * Muncul setelah user scroll ke bawah
- *
- * @author ThinkSale Development Team
- * @version 1.0.0
- */
-
 "use client"
 
 import { useState, useEffect } from "react"

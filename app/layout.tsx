@@ -11,7 +11,10 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "ThinkSale - Laptop Terpercaya",
   description: "Toko laptop terpercaya dengan koleksi lengkap ThinkPad dan Dell",
-    generator: 'v0.dev'
+  generator: '',
+  icons: {
+    icon: '/logo.png',
+  },
 }
 
 export default function RootLayout({

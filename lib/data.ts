@@ -1,6 +1,5 @@
 import type { Product, Category } from "./types";
 
-// COMMENT: Ganti data produk sesuai dengan produk yang ingin ditampilkan
 export const products: Product[] = [
   {
     id: "1",
@@ -8,12 +7,12 @@ export const products: Product[] = [
     category: "thinkpad",
     processor: "Intel Core i5 Gen 7",
     description: "Lenovo ThinkPad Slim T470S -  Performa Tangguh dalam Desain Elegan. Desainnya yang ultra-slim (hanya 18,8 mm) dan berat 1,32 kg dapat dibawa ke mana saja. Finishing silver-nya memberikan kesan elegan dan profesional. Ditenagai prosesor Intel Core i5/i7 dan RAM hingga 12GB, performanya lancar untuk multitasking, kerja harian, atau bahkan editing ringan. Layar 14 Full HD IPS. Fitur keamanannya lengkap, termasuk fingerprint reader dan TPM 2.0 untuk proteksi data. Port-nya beragam: USB-C, Thunderbolt, HDMI, dan dukungan WiFi 6 untuk koneksi stabil. Baterainya tahan lama dan mendukung hot-swapping.",
-    image: "/putih 1.png", // Dihapus ?height=200&width=200
+    image: "/putih 1.png",
     images: [
-      "/putih 1.png", // Dihapus ?height=300&width=300
-      "/putih 2.png", // Dihapus ?height=300&width=300
-      "/putih 3.png", // Dihapus ?height=300&width=300
-      "/putih 4.png", // Dihapus ?height=300&width=300
+      "/putih 1.png",
+      "/putih 2.png",
+      "/putih 3.png",
+      "/putih 4.png",
     ],
     ramOptions: ["8 GB", "12 GB", "16 GB"],
     ssdOptions: ["128 GB", "256 GB", "512 GB", "1 TB"],
@@ -59,8 +58,8 @@ export const products: Product[] = [
     category: "thinkpad",
     processor: "Intel Core i5 Gen 8",
     description: "Lenovo Yoga Touchscreen hadir dengan desain convertible dan layar sentuh elegan yang bikin kamu tampil beda. Ditenagai Intel Core i5 Gen 8 dan RAM 8GB, multitasking jadi lancar. SSD sampai 1TB bikin penyimpanan lega. Cocok buat kamu yang produktif, kreatif, dan pengin tampil stylish!",
-    image: "/lenovo yoga.png", // Dihapus ?height=200&width=200
-    images: ["/lenovo yoga.png", "/lenovo yoga 1.png", "/lenovo yoga 2.png"], // Dihapus ?height=200&width=200, ?height=300&width=300
+    image: "/lenovo yoga.png",
+    images: ["/lenovo yoga.png", "/lenovo yoga 1.png", "/lenovo yoga 2.png"],
     ramOptions: ["8 GB"],
     ssdOptions: ["128 GB", "256 GB", "512 GB", "1 TB"],
     priceRange: "3,5 JT - 4,6 JT",
@@ -153,11 +152,11 @@ export const products: Product[] = [
     category: "thinkpad",
     processor: "X1 i7 Gen 6",
     description: "Lenovo X1 Carbon i7 Gen 6. Performa kencang dari RAM 8GB/16GB dan SSD hingga 256GB bikin multitasking anti-lag. Desain tipis dan premium bikin kamu tampil profesional kampus. Cocok untuk editing, presentasi, atau kerja berat lainnya.",
-    image: "/X1 i7 Gen 6-copy.jpg", // Dihapus ?height=200&width=200
+    image: "/X1 i7 Gen 6-copy.jpg",
     images: [
       "/X1 i7 Gen 6.jpg",
       "/X1 i7 Gen 6(1).jpg",
-    ], // Dihapus ?height=300&width=300
+    ],
     ramOptions: ["8 GB", "16 GB"],
     ssdOptions: ["128 GB", "256 GB"],
     priceRange: "4.4 JT - 4.8 JT",
@@ -184,11 +183,11 @@ export const products: Product[] = [
     category: "thinkpad",
     processor: "X1 i7 Gen 5",
     description: "Dengan prosesor tangguh, RAM 8GB, dan SSD sampai 256GB, laptop ini siap temani kamu kerja cepat dan efisien. Desain tipis dan ringan.",
-    image: "/Lenovo X1 Carbon i7 Gen 5.jpg", // Dihapus ?height=200&width=200
+    image: "/Lenovo X1 Carbon i7 Gen 5.jpg",
     images: [
       "/Lenovo X1 Carbon i7 Gen 5.jpg",
       "/public/Lenovo X1 Carbon i7 Gen 5(1).jpg",
-    ], // Dihapus ?height=300&width=300
+    ],
     ramOptions: ["8 GB"],
     ssdOptions: ["128 GB", "256 GB"],
     priceRange: "4.1 JT & 4.2 JT",
@@ -207,7 +206,7 @@ export const products: Product[] = [
     category: "dell",
     processor: "i5 gen 11",
     description: "Laptop kekinian buat kamu yang butuh performa cepat dan stabil! DELL 3420 dibekali prosesor i5 Gen 11, RAM 8GB, dan SSD 512GB. Cocok banget buat multitasking, kerja kantoran, desain, atau kuliah. Desainnya simpel tapi elegan, nugas jadi lebih cepat dan efisien!",
-    image: "/Dell 3420 i5 gen11 .png", // Dihapus ?height=200&width=200
+    image: "/Dell 3420 i5 gen11 .png",
     images: ["/Dell_3420_i5_gen11__(1).png", "/Dell_3420_i5_gen11__(2).png", "/Dell 3420 i5 gen11 (1).png"],
     ramOptions: ["8 GB"],
     ssdOptions: ["512 GB"],
@@ -221,13 +220,13 @@ export const products: Product[] = [
     category: "dell",
     processor: "i5 gen 8",
     description: "Perpaduan antara kecepatan dan efisiensi! DELL Latitude 7490 hadir dengan RAM hingga 16GB dan SSD sampai 256GB, cocok buat kerja berat sekalipun. Prosesor i5 Gen 8 bikin performanya tetap stabil, kencang, Desainnya profesional.",
-    image: "/Dell Latitude 7490 i5 gen 8.png", // Dihapus ?height=200&width=200
+    image: "/Dell Latitude 7490 i5 gen 8.png",
     images: [
       "/Dell Latitude 7490 i5 gen 8.png",
       "/Dell Latitude 7490 i5 gen 8 (1).jpg",
       "/Dell Latitude 7490 i5 gen 8 (2).jpg",
       "/Dell Latitude 7490 i5 gen 8 (3).jpg",
-    ], // Dihapus ?height=200&width=200, ?height=300&width=300
+    ],
     ramOptions: ["8 GB", "16 GB"],
     ssdOptions: ["128 GB", "256 GB"],
     priceRange: "3.9 JT - 4.3 JT",
@@ -250,23 +249,21 @@ export const products: Product[] = [
   },
 ];
 
-// COMMENT: Ganti kategori sesuai dengan kategori yang ingin ditampilkan
 export const categories: Category[] = [
   {
     id: "1",
     name: "ThinkPad",
     slug: "thinkpad",
-    image: "/putih 1.png", // Dihapus ?height=80&width=80
+    image: "/putih 1.png",
   },
   {
     id: "2",
     name: "Dell",
     slug: "dell",
-    image: "/Dell Latitude 7490 i5 gen 8.png", // Dihapus ?height=80&width=80
+    image: "/Dell Latitude 7490 i5 gen 8.png",
   },
 ];
 
-// COMMENT: Ganti produk unggulan sesuai dengan produk yang ingin ditampilkan
 export const featuredProduct = {
   id: "featured",
   title: "Tugas kuliah berat? Bikin desain? Coding? Aman pakai ini.",

@@ -1,13 +1,4 @@
 /**
- * Enhanced Product Card Component
- *
- * Komponen kartu produk yang ditingkatkan dengan fitur:
- * - Hover effects yang smooth
- * - Rating display
- * - Price comparison
- * - Responsive design
- * - Accessibility features
- *
  * @author ThinkSale Development Team
  * @version 1.0.0
  */
@@ -32,16 +23,16 @@ export default function EnhancedProductCard({
   showWishlist = true,
   className = "",
 }: EnhancedProductCardProps) {
-  // Menghitung harga diskon (simulasi)
+
   const originalPrice = Number.parseInt(product.priceRange.replace(/\./g, "")) + 1000000
-  const discountPercentage = Math.floor(Math.random() * 20) + 10 // 10-30% diskon
+  const discountPercentage = Math.floor(Math.random() * 20) + 10
 
   return (
     <Card
       className={`h-full cursor-pointer hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 group overflow-hidden ${className}`}
     >
       <CardContent className="p-0 h-full flex flex-col">
-        {/* Image Container */}
+      
         <div className="aspect-square relative overflow-hidden">
           <Link href={`/product/${product.id}`}>
             <Image
@@ -53,7 +44,7 @@ export default function EnhancedProductCard({
             />
           </Link>
 
-          {/* Badges */}
+          
           <div className="absolute top-3 left-3 right-3 flex justify-between">
             <div className="bg-red-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
               -{discountPercentage}%
@@ -70,7 +61,7 @@ export default function EnhancedProductCard({
             )}
           </div>
 
-          {/* Quick Actions - Muncul saat hover */}
+    
           <div className="absolute inset-x-3 bottom-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
             {showAddToCart && (
               <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-full" size="sm">
@@ -81,7 +72,7 @@ export default function EnhancedProductCard({
           </div>
         </div>
 
-        {/* Product Info */}
+        
         <div className="p-4 flex flex-col flex-grow">
           <Link href={`/product/${product.id}`} className="block">
             <h3 className="font-bold text-sm mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors leading-tight">
@@ -91,7 +82,7 @@ export default function EnhancedProductCard({
 
           <p className="text-xs text-gray-600 mb-2 line-clamp-1">{product.processor}</p>
 
-          {/* Specifications */}
+          
           <div className="text-xs text-gray-500 mb-3 space-y-1">
             <div className="flex justify-between">
               <span>RAM:</span>
@@ -103,7 +94,7 @@ export default function EnhancedProductCard({
             </div>
           </div>
 
-          {/* Rating */}
+          
           <div className="flex items-center mb-3">
             <div className="flex">
               {[...Array(5)].map((_, i) => (
@@ -114,7 +105,7 @@ export default function EnhancedProductCard({
             <span className="text-xs text-gray-400 ml-1">• 127 ulasan</span>
           </div>
 
-          {/* Price */}
+          
           <div className="mt-auto">
             <div className="flex items-baseline space-x-2">
               <p className="font-bold text-blue-600 text-lg">Rp {product.priceRange}</p>

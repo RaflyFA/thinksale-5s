@@ -1,15 +1,4 @@
-/**
- * Design System Constants
- *
- * Konstanta untuk memastikan konsistensi desain di seluruh aplikasi
- * Mencakup colors, spacing, typography, shadows, dan breakpoints
- *
- * @author ThinkSale Development Team
- * @version 1.0.0
- */
-
 export const DESIGN_TOKENS = {
-  // Color Palette
   colors: {
     primary: {
       50: "#eff6ff",
@@ -39,7 +28,6 @@ export const DESIGN_TOKENS = {
     error: "#ef4444",
   },
 
-  // Spacing Scale
   spacing: {
     xs: "0.5rem", // 8px
     sm: "0.75rem", // 12px
@@ -48,10 +36,9 @@ export const DESIGN_TOKENS = {
     xl: "2rem", // 32px
     "2xl": "3rem", // 48px
     "3xl": "4rem", // 64px
-    "4xl": "6rem", // 96px
+    "4xl": "6rem",
   },
 
-  // Typography Scale
   typography: {
     fontFamily: {
       sans: ["Inter", "system-ui", "sans-serif"],
@@ -76,7 +63,6 @@ export const DESIGN_TOKENS = {
     },
   },
 
-  // Border Radius
   borderRadius: {
     sm: "0.375rem",
     md: "0.5rem",
@@ -86,17 +72,13 @@ export const DESIGN_TOKENS = {
     full: "9999px",
   },
 
-  // Shadows
   shadows: {
-    sm: "0 1px 2px 0 rgb(0 0 0 / 0.05)",
     md: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
     lg: "0 10px 15px -3px rgb(0 0 0 / 0.1)",
     xl: "0 20px 25px -5px rgb(0 0 0 / 0.1)",
   },
 
-  // Breakpoints
   breakpoints: {
-    sm: "640px",
     md: "768px",
     lg: "1024px",
     xl: "1280px",
@@ -104,16 +86,12 @@ export const DESIGN_TOKENS = {
   },
 
   // Animation Durations
-  animation: {
-    fast: "150ms",
     normal: "300ms",
     slow: "500ms",
   },
 
   // Z-Index Scale
-  zIndex: {
     dropdown: 1000,
-    sticky: 1020,
     fixed: 1030,
     modal: 1040,
     popover: 1050,
@@ -123,21 +101,15 @@ export const DESIGN_TOKENS = {
 
 // Layout Constants
 export const LAYOUT = {
+export const LAYOUT = {
   maxWidth: "1280px",
-  containerPadding: {
-    mobile: "1rem",
-    desktop: "2rem",
-  },
-  headerHeight: "80px",
-  footerMinHeight: "400px",
+  padding: {oterMinHeight: "400px",
 } as const
 
 // Component Variants
 export const COMPONENT_VARIANTS = {
   button: {
     sizes: ["sm", "md", "lg"] as const,
-    variants: ["primary", "secondary", "outline", "ghost"] as const,
-  },
   card: {
     variants: ["default", "elevated", "outlined"] as const,
   },

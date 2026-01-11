@@ -1,15 +1,5 @@
 "use client"
 
-/**
- * Responsive Hook
- *
- * Custom hook untuk mendeteksi breakpoint dan ukuran layar
- * Membantu dalam membuat komponen yang responsive
- *
- * @author ThinkSale Development Team
- * @version 1.0.0
- */
-
 import { useState, useEffect } from "react"
 
 type Breakpoint = "sm" | "md" | "lg" | "xl" | "2xl"
@@ -30,7 +20,6 @@ export function useResponsive(): UseResponsiveReturn {
       setWindowWidth(window.innerWidth)
     }
 
-    // Set initial width
     handleResize()
 
     window.addEventListener("resize", handleResize)

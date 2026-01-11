@@ -1,9 +1,4 @@
 /**
- * Page Layout Component
- *
- * Layout wrapper yang konsisten untuk semua halaman
- * Menyediakan struktur dasar dengan header dan footer
- *
  * @author ThinkSale Development Team
  * @version 1.0.0
  */

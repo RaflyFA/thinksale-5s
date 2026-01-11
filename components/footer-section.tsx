@@ -23,10 +23,8 @@ export default function FooterSection() {
 
   return (
     <footer className="bg-gray-900 text-white">
-      {/* Main Footer Content */}
       <div className="max-w-7xl mx-auto px-4 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {/* Company Information */}
           <div className="lg:col-span-1">
             <div className="flex items-center space-x-2 mb-6">
               <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
@@ -40,7 +38,6 @@ export default function FooterSection() {
               memberikan produk berkualitas dengan harga terbaik.
             </p>
 
-            {/* Social Media Links */}
             <div className="flex space-x-4">
               <Button
                 variant="ghost"
@@ -77,7 +74,6 @@ export default function FooterSection() {
             </div>
           </div>
 
-          {/* Quick Links */}
           <div>
             <h3 className="text-lg font-semibold mb-6">Tautan Cepat</h3>
             <ul className="space-y-3">
@@ -101,7 +97,7 @@ export default function FooterSection() {
             </ul>
           </div>
 
-          {/* Customer Service */}
+          
           <div>
             <h3 className="text-lg font-semibold mb-6">Layanan Pelanggan</h3>
             <ul className="space-y-3">
@@ -125,11 +121,11 @@ export default function FooterSection() {
             </ul>
           </div>
 
-          {/* Contact Information */}
+         
           <div>
             <h3 className="text-lg font-semibold mb-6">Hubungi Kami</h3>
             <div className="space-y-4">
-              {/* Address */}
+          
               <div className="flex items-start space-x-3">
                 <MapPin className="h-5 w-5 text-blue-400 mt-1 flex-shrink-0" />
                 <div>
@@ -143,7 +139,7 @@ export default function FooterSection() {
                 </div>
               </div>
 
-              {/* Phone */}
+            
               <div className="flex items-center space-x-3">
                 <Phone className="h-5 w-5 text-blue-400 flex-shrink-0" />
                 <div>
@@ -152,7 +148,7 @@ export default function FooterSection() {
                 </div>
               </div>
 
-              {/* Email */}
+            
               <div className="flex items-center space-x-3">
                 <Mail className="h-5 w-5 text-blue-400 flex-shrink-0" />
                 <div>
@@ -161,7 +157,7 @@ export default function FooterSection() {
                 </div>
               </div>
 
-              {/* Business Hours */}
+              
               <div className="flex items-start space-x-3">
                 <Clock className="h-5 w-5 text-blue-400 mt-1 flex-shrink-0" />
                 <div>
@@ -178,7 +174,6 @@ export default function FooterSection() {
           </div>
         </div>
 
-        {/* Newsletter Section */}
         <div className="border-t border-gray-800 mt-12 pt-8">
           <div className="max-w-2xl mx-auto text-center">
             <h3 className="text-xl font-semibold mb-4">Berlangganan Newsletter Kami</h3>
@@ -198,7 +193,7 @@ export default function FooterSection() {
         </div>
       </div>
 
-      {/* Bottom Footer */}
+  
       <div className="border-t border-gray-800">
         <div className="max-w-7xl mx-auto px-4 py-6">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">

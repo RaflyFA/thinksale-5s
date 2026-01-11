@@ -22,9 +22,9 @@ interface ProductConfigurationProps {
   onQuantityChange?: (quantity: number) => void
 }
 
-export default function ProductConfiguration({ 
-  product, 
-  isOpen, 
+export default function ProductConfiguration({
+  product,
+  isOpen,
   onClose,
   selectedRam: externalRam,
   selectedSsd: externalSsd,
@@ -126,10 +126,7 @@ export default function ProductConfiguration({
     }
   }, [isOpen, onClose])
 
-  const selectedVariant = product.variants?.find(
-    (variant) => variant.ram === ram && variant.ssd === ssd,
-  )
-
+  const selectedVariant = product.variants?.find((variant) => variant.ram === ram && variant.ssd === ssd)
   const currentPrice = selectedVariant ? selectedVariant.price : 0
 
   const ramOptions = product.variants ? [...new Set(product.variants.map((v) => v.ram))].sort() : []
@@ -155,11 +152,9 @@ export default function ProductConfiguration({
       quantity: qty,
     })
 
-    setTimeout(() => {
-      setIsProcessing(false)
-      onClose()
-      setShowCheckout(true)
-    }, 500)
+    setIsProcessing(false)
+    onClose()
+    setShowCheckout(true)
   }
 
   return (
@@ -197,7 +192,6 @@ export default function ProductConfiguration({
             </CardHeader>
 
             <CardContent className="p-6 space-y-6 mb-8 lg:mb-2">
-
               <div className="flex gap-4 mb-10">
                 <div className="w-36 h-36 lg:w-52 lg:h-52 relative bg-gray-50 rounded-lg overflow-hidden flex-shrink-0">
                   <Image src={product.image || "/placeholder.svg"} alt={product.name} fill className="object-cover " />
@@ -208,7 +202,6 @@ export default function ProductConfiguration({
                   <p className="text-blue-600 font-bold text-lg mt-2">Rp {formatPrice(currentPrice)}</p>
                 </div>
               </div>
-
 
               <div className="space-y-3 ">
                 <label className="block text-sm font-semibold text-gray-900">RAM</label>
@@ -230,7 +223,6 @@ export default function ProductConfiguration({
                 </div>
               </div>
 
-
               <div className="space-y-3 ">
                 <label className="block text-sm font-semibold text-gray-900">SSD</label>
                 <div className="flex flex-wrap gap-2">
@@ -250,7 +242,6 @@ export default function ProductConfiguration({
                   ))}
                 </div>
               </div>
-
 
               <div className="space-y-3 -mt-12">
                 <label className="block text-sm font-semibold text-gray-900">Jumlah</label>
@@ -275,7 +266,6 @@ export default function ProductConfiguration({
                 </div>
               </div>
 
-
               <div className="flex items-center justify-between pt-6 border-t">
                 <div>
                   <p className="text-xs text-gray-600">Total Harga</p>
@@ -294,12 +284,7 @@ export default function ProductConfiguration({
         </div>
       </div>
 
-        {showCheckout && (
-          <CheckoutModal
-            isOpen={showCheckout}
-            onClose={() => setShowCheckout(false)}
-          />
-        )}
-      </>
+      <CheckoutModal isOpen={showCheckout} onClose={() => setShowCheckout(false)} />
+    </>
   )
 }

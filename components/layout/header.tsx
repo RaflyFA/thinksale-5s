@@ -39,14 +39,12 @@ export default function Header({ searchTerm = "", onSearchChange, className, car
     setIsMobileSearchOpen((prev) => !prev)
   }
 
-  // Focus input when mobile search opens
   useEffect(() => {
     if (isMobileSearchOpen && mobileSearchInputRef.current) {
       mobileSearchInputRef.current.focus()
     }
   }, [isMobileSearchOpen])
 
-  // Close mobile search when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -67,7 +65,6 @@ export default function Header({ searchTerm = "", onSearchChange, className, car
     }
   }, [isMobileSearchOpen])
 
-  // Close mobile search on ESC key
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape" && isMobileSearchOpen) {
@@ -122,7 +119,6 @@ export default function Header({ searchTerm = "", onSearchChange, className, car
 
           {/* Action Buttons */}
           <div className="flex items-center space-x-0 lg:space-x-2 relative">
-            {/* Team Link Button (hidden on team page) */}
             {!isTeamPage && (
               <Link href="/team">
                 <Button
@@ -135,7 +131,6 @@ export default function Header({ searchTerm = "", onSearchChange, className, car
                 </Button>
               </Link>
             )}
-            {/* Mobile Search Container */}
             {!isTeamPage && (
             <div ref={mobileSearchContainerRef} className="md:hidden flex items-center relative">
               {/* Mobile Search Input */}

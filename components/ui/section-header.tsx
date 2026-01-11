@@ -1,15 +1,5 @@
 "use client"
 
-/**
- * Section Header Component
- *
- * Komponen header section yang konsisten
- * Untuk judul dan deskripsi section di seluruh aplikasi
- *
- * @author ThinkSale Development Team
- * @version 1.0.0
- */
-
 import type { ReactNode } from "react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils/cn"
@@ -27,7 +17,6 @@ interface SectionHeaderProps {
   className?: string
   titleClassName?: string
   align?: "left" | "center" | "right"
-  
 }
 
 export default function SectionHeader({

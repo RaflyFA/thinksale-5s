@@ -16,10 +16,10 @@ export interface Product {
   ramOptions: string[];
   ssdOptions: string[];
   priceRange: string;
-  specs: string[]; // Pastikan ini tetap string[] jika menggunakan cara simpel
+  specs: string[];
   variants: ProductVariant[];
-  rating?: number; // <--- TAMBAHKAN INI
-  reviewCount?: number; // <--- TAMBAHKAN INI
+  rating?: number;
+  reviewCount?: number;
 }
 
 export interface Category {
